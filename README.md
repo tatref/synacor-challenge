@@ -1,0 +1,1 @@
+https://challenge.synacor.com/
