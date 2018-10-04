@@ -207,47 +207,25 @@ impl VM {
         match instruction {
             Opcode::Halt => ret = true,
             Opcode::Set(a, b) => {
-                let v = match b {
-                    Value::Number(x) => *x,
-                    Value::Register(x) => self.registers[*x],
-                    Value::Invalid => panic!("Out: invalid number"),
-                };
+                let val = self.get_value(b).expect("Invalid number");
+                let reg = self.get_register(a).expect("Not a register");
 
-                match a {
-                    Value::Number(x) => panic!("set to non-register '{:?}'", a),
-                    Value::Register(x) => self.registers[*x] = v,
-                    Value::Invalid => panic!("Out: invalid number"),
-                };
+                self.registers[reg] = val;
             },
             Opcode::Push(a) => {
-                let v = match a {
-                    Value::Number(x) => *x,
-                    Value::Register(x) => self.registers[*x],
-                    Value::Invalid => panic!("Out: invalid number"),
-                };
+                let val = self.get_value(a).expect("Invalid number");
 
-                self.stack.push(v);
+                self.stack.push(val);
             },
             Opcode::Pop(a) => {
                 let val = self.stack.pop().expect("Pop: empty stack");
+                let reg = self.get_register(a).expect("Not a register");
 
-                match a {
-                    Value::Number(x) => panic!("pop to non register '{:?}'", a),
-                    Value::Register(x) => self.registers[*x] = val,
-                    Value::Invalid => panic!("Out: invalid number"),
-                };
+                self.registers[reg] = val;
             },
             Opcode::Eq(a, b, c) => {
-                let val_b = match b {
-                    Value::Number(x) => *x,
-                    Value::Register(x) => self.registers[*x],
-                    Value::Invalid => panic!("Out: invalid number"),
-                };
-                let val_c = match c {
-                    Value::Number(x) => *x,
-                    Value::Register(x) => self.registers[*x],
-                    Value::Invalid => panic!("Out: invalid number"),
-                };
+                let val_b = self.get_value(b).expect("Invalid number");
+                let val_c = self.get_value(c).expect("Invalid number");
 
                 let val_a = if val_b == val_c {
                     1
@@ -256,73 +234,35 @@ impl VM {
                     0
                 };
 
-                match a {
-                    Value::Number(x) => panic!("eq to non-register '{:?}'", a),
-                    Value::Register(x) => self.registers[*x] = val_a,
-                    Value::Invalid => panic!("Out: invalid number"),
-                };
+                let reg = self.get_register(a).expect("Not a register");
+                self.registers[reg] = val_a;
             },
             Opcode::Jmp(a, b) => {
-                match a {
-                    Value::Number(x) => self.ip = *x as usize,
-                    Value::Register(x) => self.ip = self.registers[*x] as usize,
-                    Value::Invalid => panic!("Out: invalid number"),
-                };
+                self.ip = self.get_value(a).expect("Invalid number") as usize;
             },
             Opcode::Jt(a, b) => {
-                let must_jump = match a {
-                    Value::Number(x) => *x != 0,
-                    Value::Register(x) => self.registers[*x] != 0,
-                    Value::Invalid => panic!("Out: invalid number"),
-                };
+                let must_jump = self.get_value(a).expect("Invalid number") != 0;
 
                 if must_jump {
-                    match b {
-                        Value::Number(x) => self.ip = *x as usize,
-                        Value::Register(x) => self.ip = self.registers[*x] as usize,
-                        Value::Invalid => panic!("Out: invalid number"),
-                    };
+                    self.ip = self.get_value(b).expect("Invalid number") as usize;
                 }
             },
             Opcode::Jf(a, b) => {
-                let must_jump = match a {
-                    Value::Number(x) => *x == 0,
-                    Value::Register(x) => self.registers[*x] == 0,
-                    Value::Invalid => panic!("Out: invalid number"),
-                };
+                let must_jump = self.get_value(a).expect("Invalid number") == 0;
 
                 if must_jump {
-                    match b {
-                        Value::Number(x) => self.ip = *x as usize,
-                        Value::Register(x) => self.ip = self.registers[*x] as usize,
-                        Value::Invalid => panic!("Out: invalid number"),
-                    };
+                    self.ip = self.get_value(b).expect("Invalid number") as usize;
                 }
             },
             Opcode::Add(a, b, c) => {
-                let val_b = match b {
-                    Value::Number(x) => *x,
-                    Value::Register(x) => self.registers[*x],
-                    Value::Invalid => panic!("Out: invalid number"),
-                };
-                let val_c = match c {
-                    Value::Number(x) => *x,
-                    Value::Register(x) => self.registers[*x],
-                    Value::Invalid => panic!("Out: invalid number"),
-                };
+                let val_b = self.get_value(b).expect("Invalid number");
+                let val_c = self.get_value(c).expect("Invalid number");
+                let reg = self.get_register(a).expect("Not a register");
 
-                match a {
-                    Value::Number(x) => panic!("set to non-register '{:?}'", a),
-                    Value::Register(x) => self.registers[*x] = (val_b + val_c) % 32768,
-                    Value::Invalid => panic!("Out: invalid number"),
-                };
+                self.registers[reg] = (val_b + val_c) % 32768;
             },
             Opcode::Out(a) => {
-                let c = match a {
-                    Value::Number(x) => *x,
-                    Value::Register(x) => self.registers[*x],
-                    Value::Invalid => panic!("Out: invalid number"),
-                };
+                let c = self.get_value(a).expect("Invalid number");
 
                 print!("{}", c as u8 as char);
             },
@@ -331,6 +271,22 @@ impl VM {
         }
 
         ret
+    }
+
+    fn get_value(&self, value: &Value) -> Option<u16> {
+        match value {
+            Value::Number(x) => Some(*x),
+            Value::Register(x) => Some(self.registers[*x]),
+            Value::Invalid => None,
+        }
+    }
+
+    fn get_register(&self, value: &Value) -> Option<usize> {
+        match value {
+            Value::Number(x) => None,
+            Value::Register(x) => Some(*x),
+            Value::Invalid => None,
+        }
     }
 }
 
