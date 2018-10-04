@@ -56,9 +56,20 @@ impl Value {
 
 #[derive(Copy, Clone, Debug)]
 enum Opcode {
-    Halt,
-    Out(Value),
-    Noop,
+    /* 0  */ Halt,
+    /* 1  */ Set(Value, Value),
+    /* 2  */ Push(Value),
+    /* 3  */ Pop(Value),
+    /* 4  */ Eq(Value, Value, Value),
+
+    /* 6  */ Jmp(Value, Value),
+    /* 7  */ Jt(Value, Value),
+    /* 8  */ Jf(Value, Value),
+    /* 9  */ Add(Value, Value, Value),
+
+    /* 19 */ Out(Value),
+    /* 20 */
+    /* 21 */ Noop,
 }
 
 const MEM_SIZE: usize = 32768;
@@ -103,7 +114,6 @@ impl VM {
             )
             .collect();
 
-        println!("data len={}", data.len());
         if data.len() >= MEM_SIZE {
             panic!("File is too big");
         }
@@ -140,15 +150,39 @@ impl VM {
 
       match instr_type {
           0 => (Opcode::Halt, 1),
-          //1 => unimplemented!("{}", instr_type),
-          //2 => unimplemented!("{}", instr_type),
-          //3 => unimplemented!("{}", instr_type),
-          //4 => unimplemented!("{}", instr_type),
+          1 => (Opcode::Set(
+                  Value::new(self.memory[self.ip + 1]),
+                  Value::new(self.memory[self.ip + 2])
+          ), 3),
+          2 => (Opcode::Push(
+                  Value::new(self.memory[self.ip + 1])
+          ), 2),
+          3 => (Opcode::Pop(
+                  Value::new(self.memory[self.ip + 1])
+          ), 2),
+          4 => (Opcode::Eq(
+                  Value::new(self.memory[self.ip + 1]),
+                  Value::new(self.memory[self.ip + 2]),
+                  Value::new(self.memory[self.ip + 3])
+          ), 4),
           //5 => unimplemented!("{}", instr_type),
-          //6 => unimplemented!("{}", instr_type),
-          //7 => unimplemented!("{}", instr_type),
-          //8 => unimplemented!("{}", instr_type),
-          //9 => unimplemented!("{}", instr_type),
+          6 => (Opcode::Jmp(
+                  Value::new(self.memory[self.ip + 1]),
+                  Value::new(self.memory[self.ip + 2])
+          ), 3),
+          7 => (Opcode::Jt(
+                  Value::new(self.memory[self.ip + 1]),
+                  Value::new(self.memory[self.ip + 2])
+          ), 3),
+          8 => (Opcode::Jf(
+                  Value::new(self.memory[self.ip + 1]),
+                  Value::new(self.memory[self.ip + 2])
+          ), 3),
+          9 => (Opcode::Add(
+              Value::new(self.memory[self.ip + 1]),
+              Value::new(self.memory[self.ip + 2]),
+              Value::new(self.memory[self.ip + 3])
+          ), 4),
           //11 => unimplemented!("{}", instr_type),
           //12 => unimplemented!("{}", instr_type),
           //13 => unimplemented!("{}", instr_type),
@@ -160,30 +194,140 @@ impl VM {
           19 => (Opcode::Out(Value::new(self.memory[self.ip + 1])), 2),
           //20 => unimplemented!("{}", instr_type),
           21 => (Opcode::Noop, 1),
-          //_ => unreachable!(),
-          _ => (Opcode::Noop, 1),
+          x => unreachable!("unknown instr {}", x),
       }
     }
 
     fn execute(&mut self, instruction: &Opcode, next_instruction_ptr: usize) -> bool {
-        //println!("{:?}", instruction);
+        println!("{:?}", instruction);
 
         self.ip = next_instruction_ptr;
 
         let mut ret = false;
         match instruction {
             Opcode::Halt => ret = true,
-            Opcode::Noop => (),
-            Opcode::Out(x) => {
-                let c = match x {
+            Opcode::Set(a, b) => {
+                let v = match b {
+                    Value::Number(x) => *x,
+                    Value::Register(x) => self.registers[*x],
+                    Value::Invalid => panic!("Out: invalid number"),
+                };
+
+                match a {
+                    Value::Number(x) => panic!("set to non-register '{:?}'", a),
+                    Value::Register(x) => self.registers[*x] = v,
+                    Value::Invalid => panic!("Out: invalid number"),
+                };
+            },
+            Opcode::Push(a) => {
+                let v = match a {
+                    Value::Number(x) => *x,
+                    Value::Register(x) => self.registers[*x],
+                    Value::Invalid => panic!("Out: invalid number"),
+                };
+
+                self.stack.push(v);
+            },
+            Opcode::Pop(a) => {
+                let val = self.stack.pop().expect("Pop: empty stack");
+
+                match a {
+                    Value::Number(x) => panic!("pop to non register '{:?}'", a),
+                    Value::Register(x) => self.registers[*x] = val,
+                    Value::Invalid => panic!("Out: invalid number"),
+                };
+            },
+            Opcode::Eq(a, b, c) => {
+                let val_b = match b {
+                    Value::Number(x) => *x,
+                    Value::Register(x) => self.registers[*x],
+                    Value::Invalid => panic!("Out: invalid number"),
+                };
+                let val_c = match c {
+                    Value::Number(x) => *x,
+                    Value::Register(x) => self.registers[*x],
+                    Value::Invalid => panic!("Out: invalid number"),
+                };
+
+                let val_a = if val_b == val_c {
+                    1
+                }
+                else {
+                    0
+                };
+
+                match a {
+                    Value::Number(x) => panic!("eq to non-register '{:?}'", a),
+                    Value::Register(x) => self.registers[*x] = val_a,
+                    Value::Invalid => panic!("Out: invalid number"),
+                };
+            },
+            Opcode::Jmp(a, b) => {
+                match a {
+                    Value::Number(x) => self.ip = *x as usize,
+                    Value::Register(x) => self.ip = self.registers[*x] as usize,
+                    Value::Invalid => panic!("Out: invalid number"),
+                };
+            },
+            Opcode::Jt(a, b) => {
+                let must_jump = match a {
+                    Value::Number(x) => *x != 0,
+                    Value::Register(x) => self.registers[*x] != 0,
+                    Value::Invalid => panic!("Out: invalid number"),
+                };
+
+                if must_jump {
+                    match b {
+                        Value::Number(x) => self.ip = *x as usize,
+                        Value::Register(x) => self.ip = self.registers[*x] as usize,
+                        Value::Invalid => panic!("Out: invalid number"),
+                    };
+                }
+            },
+            Opcode::Jf(a, b) => {
+                let must_jump = match a {
+                    Value::Number(x) => *x == 0,
+                    Value::Register(x) => self.registers[*x] == 0,
+                    Value::Invalid => panic!("Out: invalid number"),
+                };
+
+                if must_jump {
+                    match b {
+                        Value::Number(x) => self.ip = *x as usize,
+                        Value::Register(x) => self.ip = self.registers[*x] as usize,
+                        Value::Invalid => panic!("Out: invalid number"),
+                    };
+                }
+            },
+            Opcode::Add(a, b, c) => {
+                let val_b = match b {
+                    Value::Number(x) => *x,
+                    Value::Register(x) => self.registers[*x],
+                    Value::Invalid => panic!("Out: invalid number"),
+                };
+                let val_c = match c {
+                    Value::Number(x) => *x,
+                    Value::Register(x) => self.registers[*x],
+                    Value::Invalid => panic!("Out: invalid number"),
+                };
+
+                match a {
+                    Value::Number(x) => panic!("set to non-register '{:?}'", a),
+                    Value::Register(x) => self.registers[*x] = (val_b + val_c) % 32768,
+                    Value::Invalid => panic!("Out: invalid number"),
+                };
+            },
+            Opcode::Out(a) => {
+                let c = match a {
                     Value::Number(x) => *x,
                     Value::Register(x) => self.registers[*x],
                     Value::Invalid => panic!("Out: invalid number"),
                 };
 
                 print!("{}", c as u8 as char);
-            }
-            _ => (),
+            },
+            Opcode::Noop => (),
+            _ => unreachable!(),  // TODO: delete
         }
 
         ret
