@@ -68,6 +68,8 @@ enum Opcode {
     /* 12 */ And(Value, Value, Value),
     /* 13 */ Or(Value, Value, Value),
     /* 14 */ Not(Value, Value),
+
+    /* 17 */ Call(Value),
     /* 19 */ Out(Value),
     /* 20 */
     /* 21 */ Noop,
@@ -205,7 +207,9 @@ impl VM {
           ), 3),
           //15 => unimplemented!("{}", instr_type),
           //16 => unimplemented!("{}", instr_type),
-          //17 => unimplemented!("{}", instr_type),
+          17 => (Opcode::Call(
+                  Value::new(self.memory[self.ip + 1]),
+          ), 2),
           //18 => unimplemented!("{}", instr_type),
           19 => (Opcode::Out(Value::new(self.memory[self.ip + 1])), 2),
           //20 => unimplemented!("{}", instr_type),
@@ -310,6 +314,12 @@ impl VM {
                 let reg = self.get_register(a).expect("Not a register");
 
                 self.registers[reg] = (!val_b) % 32768;
+            },
+            Opcode::Call(a) => {
+                let addr = self.get_value(a).expect("Invalid number");
+
+                self.stack.push(self.ip as u16);
+                self.ip = addr as usize;
             },
             Opcode::Out(a) => {
                 let c = self.get_value(a).expect("Invalid number");
