@@ -6,6 +6,7 @@ use std::io::prelude::*;
 use std::fs::File;
 use std::path::Path; 
 use std::fmt;
+use std::io;
 
 use byteorder::{ByteOrder, ReadBytesExt, WriteBytesExt, BigEndian, LittleEndian};
 
@@ -75,7 +76,7 @@ enum Opcode {
     /* 17 */ Call(Value),
     /* 18 */ Ret,
     /* 19 */ Out(Value),
-    /* 20 */
+    /* 20 */ In(Value),
     /* 21 */ Noop,
 }
 
@@ -92,6 +93,7 @@ struct VM {
     pc: usize,
 
     output: Vec<char>,
+    input: Vec<char>,
 }
 
 
@@ -118,6 +120,7 @@ impl VM {
             pc: 0,
 
             output: Vec::new(),
+            input: Vec::new(),
         }
     }
 
@@ -151,11 +154,11 @@ impl VM {
             self.memory[i] = program[i];
         }
     }
-
+    
     fn run_until_halt(&mut self) {
         while !self.step() {}
 
-        print!("{}", self.output.iter().collect::<String>());
+        print!("\n\nHalt: {}", self.output.iter().collect::<String>());
     }
 
     fn step(&mut self) -> bool {
@@ -248,14 +251,14 @@ impl VM {
           ), 2),
           18 => (Opcode::Ret, 1),
           19 => (Opcode::Out(Value::new(self.memory[self.ip + 1])), 2),
-          //20 => unimplemented!("{}", instr_type),
+          20 => (Opcode::In(Value::new(self.memory[self.ip + 1])), 2),
           21 => (Opcode::Noop, 1),
           x => unreachable!("Fetch: unknown instr '{}'", x),
       }
     }
 
     fn execute(&mut self, instruction: &Opcode, next_instruction_ptr: usize) -> bool {
-        println!("{:?}", instruction);
+        //println!("{:?}", instruction);
 
         self.ip = next_instruction_ptr;
 
@@ -343,7 +346,7 @@ impl VM {
                 let val_c = self.get_value(c).expect("Invalid number");
                 let reg = self.get_register(a).expect("Not a register");
 
-                self.registers[reg] = val_b % val_c;  //TODO % 32768?
+                self.registers[reg] = val_b % val_c;
             },
             Opcode::And(a, b, c) => {
                 let val_b = self.get_value(b).expect("Invalid number");
@@ -395,10 +398,39 @@ impl VM {
                 let c = self.get_value(a).expect("Invalid number");
 
                 self.output.push(c as u8 as char);
-                print!("{}", c as u8 as char);
+                //print!("{}", c as u8 as char);
+            },
+            Opcode::In(a) => {
+                let reg = self.get_register(a).expect("In: not a register");
+
+                match self.input.pop() {
+                    Some(c) => {
+                        // just feed the current input
+                        self.registers[reg as usize] = c as u16;
+                    },
+                    None => {
+                        // asking for new output
+                        // first, flush current output
+                        let out = self.output.iter().collect::<String>();  //TODO: separate function
+                        print!("{}", out);
+                        self.output = Vec::new();
+
+
+                        // read input
+                        let mut buff = String::new();
+                        io::stdin().
+                            read_line(&mut buff)
+                            .expect("In: unable to read");
+                        self.input = buff.chars().collect();
+                        self.input.reverse();
+
+                        // then feed 1 char
+                        let c = self.input.pop().unwrap();
+                        self.registers[reg as usize] = c as u16;
+                    }
+                }
             },
             Opcode::Noop => (),
-            _ => unreachable!(),  // TODO: delete
         }
 
         must_halt
