@@ -61,7 +61,7 @@ enum Opcode {
     /* 2  */ Push(Value),
     /* 3  */ Pop(Value),
     /* 4  */ Eq(Value, Value, Value),
-
+    /* 5  */ Gt(Value, Value, Value),
     /* 6  */ Jmp(Value, Value),
     /* 7  */ Jt(Value, Value),
     /* 8  */ Jf(Value, Value),
@@ -165,7 +165,11 @@ impl VM {
                   Value::new(self.memory[self.ip + 2]),
                   Value::new(self.memory[self.ip + 3])
           ), 4),
-          //5 => unimplemented!("{}", instr_type),
+          5 => (Opcode::Gt(
+                  Value::new(self.memory[self.ip + 1]),
+                  Value::new(self.memory[self.ip + 2]),
+                  Value::new(self.memory[self.ip + 3])
+          ), 4),
           6 => (Opcode::Jmp(
                   Value::new(self.memory[self.ip + 1]),
                   Value::new(self.memory[self.ip + 2])
@@ -228,6 +232,20 @@ impl VM {
                 let val_c = self.get_value(c).expect("Invalid number");
 
                 let val_a = if val_b == val_c {
+                    1
+                }
+                else {
+                    0
+                };
+
+                let reg = self.get_register(a).expect("Not a register");
+                self.registers[reg] = val_a;
+            },
+            Opcode::Gt(a, b, c) => {
+                let val_b = self.get_value(b).expect("Invalid number");
+                let val_c = self.get_value(c).expect("Invalid number");
+
+                let val_a = if val_b > val_c {
                     1
                 }
                 else {
