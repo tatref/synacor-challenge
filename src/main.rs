@@ -64,6 +64,7 @@ enum Opcode {
     /* 7  */ Jt(Value, Value),
     /* 8  */ Jf(Value, Value),
     /* 9  */ Add(Value, Value, Value),
+    /* 10 */ Mult(Value, Value, Value),
 
     /* 12 */ And(Value, Value, Value),
     /* 13 */ Or(Value, Value, Value),
@@ -190,6 +191,11 @@ impl VM {
               Value::new(self.memory[self.ip + 2]),
               Value::new(self.memory[self.ip + 3]),
           ), 4),
+          10 => (Opcode::Mult(
+              Value::new(self.memory[self.ip + 1]),
+              Value::new(self.memory[self.ip + 2]),
+              Value::new(self.memory[self.ip + 3]),
+          ), 4),
           //11 => unimplemented!("{}", instr_type),
           12 => (Opcode::And(
                   Value::new(self.memory[self.ip + 1]),
@@ -293,7 +299,14 @@ impl VM {
                 let val_c = self.get_value(c).expect("Invalid number");
                 let reg = self.get_register(a).expect("Not a register");
 
-                self.registers[reg] = (val_b + val_c) % 32768;
+                self.registers[reg] = (val_b + val_c) % 32768;  //TODO wrapping_add?
+            },
+            Opcode::Mult(a, b, c) => {
+                let val_b = self.get_value(b).expect("Invalid number");
+                let val_c = self.get_value(c).expect("Invalid number");
+                let reg = self.get_register(a).expect("Not a register");
+
+                self.registers[reg] = val_b.wrapping_mul(val_c) % 32768;
             },
             Opcode::And(a, b, c) => {
                 let val_b = self.get_value(b).expect("Invalid number");
