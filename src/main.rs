@@ -5,6 +5,7 @@
 use std::io::prelude::*;
 use std::fs::File;
 use std::path::Path; 
+use std::fmt;
 
 use byteorder::{ByteOrder, ReadBytesExt, WriteBytesExt, BigEndian, LittleEndian};
 
@@ -70,7 +71,7 @@ enum Opcode {
     /* 13 */ Or(Value, Value, Value),
     /* 14 */ Not(Value, Value),
     /* 15 */ Rmem(Value, Value),
-
+    /* 16 */ Wmem(Value, Value),
     /* 17 */ Call(Value),
     /* 19 */ Out(Value),
     /* 20 */
@@ -81,14 +82,27 @@ const MEM_SIZE: usize = 32768;
 
 #[derive(Clone)]
 struct VM {
-    //memory: Vec<u16>,
     memory: [u16; MEM_SIZE],
     registers: [u16; 8],
     stack: Vec<u16>,
     /// Instruction pointer (next instruction)
     ip: usize,
     /// Program counter (number of executed instructions)
-    pc: usize
+    pc: usize,
+
+    output: Vec<char>,
+}
+
+
+impl fmt::Debug for VM {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        writeln!(f, "VM {{")?;
+        writeln!(f, "  registers: {:?}", self.registers)?;
+        writeln!(f, "  stack: {:?}", self.stack)?;
+        writeln!(f, "  ip: {:?}", self.ip)?;
+        writeln!(f, "  pc: {:?}", self.pc)?;
+        write!(f, "}}")
+    }
 }
 
 
@@ -101,6 +115,8 @@ impl VM {
             stack: Vec::new(),
             ip: 0,
             pc: 0,
+
+            output: Vec::new(),
         }
     }
 
@@ -135,8 +151,10 @@ impl VM {
         }
     }
 
-    fn run(&mut self) {
+    fn run_until_halt(&mut self) {
         while !self.step() {}
+
+        print!("{}", self.output.iter().collect::<String>());
     }
 
     fn step(&mut self) -> bool {
@@ -220,7 +238,10 @@ impl VM {
                   Value::new(self.memory[self.ip + 1]),
                   Value::new(self.memory[self.ip + 2]),
                   ), 3),
-          //16 => unimplemented!("{}", instr_type),
+          16 => (Opcode::Wmem(
+                  Value::new(self.memory[self.ip + 1]),
+                  Value::new(self.memory[self.ip + 2]),
+                  ), 3),
           17 => (Opcode::Call(
                   Value::new(self.memory[self.ip + 1]),
           ), 2),
@@ -351,6 +372,12 @@ impl VM {
 
                 self.registers[reg] = val;
             },
+            Opcode::Wmem(a, b) => {
+                let val = self.get_value(b).expect("Invalid number");
+                let addr = self.get_value(a).expect("Not a register");
+
+                self.memory[addr as usize] = val;
+            },
             Opcode::Call(a) => {
                 let addr = self.get_value(a).expect("Invalid number");
 
@@ -360,6 +387,7 @@ impl VM {
             Opcode::Out(a) => {
                 let c = self.get_value(a).expect("Invalid number");
 
+                self.output.push(c as u8 as char);
                 print!("{}", c as u8 as char);
             },
             Opcode::Noop => (),
@@ -391,6 +419,6 @@ fn main() {
     let mut vm = VM::new();
     vm.load_program_from_file("challenge.bin").unwrap();
 
-    vm.run();
+    vm.run_until_halt();
 
 }
