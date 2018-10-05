@@ -153,51 +153,51 @@ impl VM {
           0 => (Opcode::Halt, 1),
           1 => (Opcode::Set(
                   Value::new(self.memory[self.ip + 1]),
-                  Value::new(self.memory[self.ip + 2])
+                  Value::new(self.memory[self.ip + 2]),
           ), 3),
           2 => (Opcode::Push(
-                  Value::new(self.memory[self.ip + 1])
+                  Value::new(self.memory[self.ip + 1]),
           ), 2),
           3 => (Opcode::Pop(
-                  Value::new(self.memory[self.ip + 1])
+                  Value::new(self.memory[self.ip + 1]),
           ), 2),
           4 => (Opcode::Eq(
                   Value::new(self.memory[self.ip + 1]),
                   Value::new(self.memory[self.ip + 2]),
-                  Value::new(self.memory[self.ip + 3])
+                  Value::new(self.memory[self.ip + 3]),
           ), 4),
           5 => (Opcode::Gt(
                   Value::new(self.memory[self.ip + 1]),
                   Value::new(self.memory[self.ip + 2]),
-                  Value::new(self.memory[self.ip + 3])
+                  Value::new(self.memory[self.ip + 3]),
           ), 4),
           6 => (Opcode::Jmp(
                   Value::new(self.memory[self.ip + 1]),
-                  Value::new(self.memory[self.ip + 2])
+                  Value::new(self.memory[self.ip + 2]),
           ), 3),
           7 => (Opcode::Jt(
                   Value::new(self.memory[self.ip + 1]),
-                  Value::new(self.memory[self.ip + 2])
+                  Value::new(self.memory[self.ip + 2]),
           ), 3),
           8 => (Opcode::Jf(
                   Value::new(self.memory[self.ip + 1]),
-                  Value::new(self.memory[self.ip + 2])
+                  Value::new(self.memory[self.ip + 2]),
           ), 3),
           9 => (Opcode::Add(
               Value::new(self.memory[self.ip + 1]),
               Value::new(self.memory[self.ip + 2]),
-              Value::new(self.memory[self.ip + 3])
+              Value::new(self.memory[self.ip + 3]),
           ), 4),
           //11 => unimplemented!("{}", instr_type),
           12 => (Opcode::And(
                   Value::new(self.memory[self.ip + 1]),
                   Value::new(self.memory[self.ip + 2]),
-                  Value::new(self.memory[self.ip + 3])
+                  Value::new(self.memory[self.ip + 3]),
           ), 4),
           13 => (Opcode::Or(
                   Value::new(self.memory[self.ip + 1]),
                   Value::new(self.memory[self.ip + 2]),
-                  Value::new(self.memory[self.ip + 3])
+                  Value::new(self.memory[self.ip + 3]),
           ), 4),
           14 => (Opcode::Not(
                   Value::new(self.memory[self.ip + 1]),
