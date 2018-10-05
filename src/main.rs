@@ -9,8 +9,6 @@ use std::path::Path;
 use byteorder::{ByteOrder, ReadBytesExt, WriteBytesExt, BigEndian, LittleEndian};
 
 
-// TODO:
-// * test Value::new
 
 
 #[cfg(test)]
@@ -69,6 +67,7 @@ enum Opcode {
 
     /* 12 */ And(Value, Value, Value),
     /* 13 */ Or(Value, Value, Value),
+    /* 14 */ Not(Value, Value),
     /* 19 */ Out(Value),
     /* 20 */
     /* 21 */ Noop,
@@ -200,7 +199,10 @@ impl VM {
                   Value::new(self.memory[self.ip + 2]),
                   Value::new(self.memory[self.ip + 3])
           ), 4),
-          //14 => unimplemented!("{}", instr_type),
+          14 => (Opcode::Not(
+                  Value::new(self.memory[self.ip + 1]),
+                  Value::new(self.memory[self.ip + 2]),
+          ), 3),
           //15 => unimplemented!("{}", instr_type),
           //16 => unimplemented!("{}", instr_type),
           //17 => unimplemented!("{}", instr_type),
@@ -208,7 +210,7 @@ impl VM {
           19 => (Opcode::Out(Value::new(self.memory[self.ip + 1])), 2),
           //20 => unimplemented!("{}", instr_type),
           21 => (Opcode::Noop, 1),
-          x => unreachable!("unknown instr {}", x),
+          x => unreachable!("Fetch: unknown instr '{}'", x),
       }
     }
 
@@ -302,6 +304,12 @@ impl VM {
                 let reg = self.get_register(a).expect("Not a register");
 
                 self.registers[reg] = (val_b | val_c) % 32768;
+            },
+            Opcode::Not(a, b) => {
+                let val_b = self.get_value(b).expect("Invalid number");
+                let reg = self.get_register(a).expect("Not a register");
+
+                self.registers[reg] = (!val_b) % 32768;
             },
             Opcode::Out(a) => {
                 let c = self.get_value(a).expect("Invalid number");
