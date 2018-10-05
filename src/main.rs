@@ -73,6 +73,7 @@ enum Opcode {
     /* 15 */ Rmem(Value, Value),
     /* 16 */ Wmem(Value, Value),
     /* 17 */ Call(Value),
+    /* 18 */ Ret,
     /* 19 */ Out(Value),
     /* 20 */
     /* 21 */ Noop,
@@ -245,7 +246,7 @@ impl VM {
           17 => (Opcode::Call(
                   Value::new(self.memory[self.ip + 1]),
           ), 2),
-          //18 => unimplemented!("{}", instr_type),
+          18 => (Opcode::Ret, 1),
           19 => (Opcode::Out(Value::new(self.memory[self.ip + 1])), 2),
           //20 => unimplemented!("{}", instr_type),
           21 => (Opcode::Noop, 1),
@@ -258,9 +259,9 @@ impl VM {
 
         self.ip = next_instruction_ptr;
 
-        let mut ret = false;
+        let mut must_halt = false;
         match instruction {
-            Opcode::Halt => ret = true,
+            Opcode::Halt => must_halt = true,
             Opcode::Set(a, b) => {
                 let val = self.get_value(b).expect("Invalid number");
                 let reg = self.get_register(a).expect("Not a register");
@@ -384,6 +385,12 @@ impl VM {
                 self.stack.push(self.ip as u16);
                 self.ip = addr as usize;
             },
+            Opcode::Ret => {
+                match self.stack.pop() {
+                    Some(addr) => self.ip = addr as usize,
+                    None => must_halt = true,
+                }
+            },
             Opcode::Out(a) => {
                 let c = self.get_value(a).expect("Invalid number");
 
@@ -394,7 +401,7 @@ impl VM {
             _ => unreachable!(),  // TODO: delete
         }
 
-        ret
+        must_halt
     }
 
     fn get_value(&self, value: &Value) -> Option<u16> {
