@@ -2,6 +2,7 @@
 #![allow(unused_imports)]
 #![allow(dead_code)]
 
+
 use std::io::prelude::*;
 use std::fs::File;
 use std::path::Path; 
@@ -9,6 +10,9 @@ use std::fmt;
 use std::io;
 
 use byteorder::{ByteOrder, ReadBytesExt, WriteBytesExt, BigEndian, LittleEndian};
+
+use rustyline::error::ReadlineError;
+use rustyline::Editor;
 
 
 
@@ -33,6 +37,81 @@ mod tests {
         vm.load_program_from_mem(program);
 
         Ok(())
+    }
+}
+
+
+mod game {
+    use regex::Regex;
+
+    struct GameSolver {
+        game: Game,
+        //levels: GraphMap<Game, ()>;
+    }
+
+
+    #[derive(Copy, Clone, Debug)]
+    enum GameState {
+        Dead,
+        Playing,
+    }
+    #[derive(Clone, Debug)]
+    struct Game {
+        state: GameState,
+        level: Level,
+    }
+
+    #[derive(Clone, Debug)]
+    struct Level {
+        name: String,
+        things: Vec<String>,
+        exits: Vec<String>,
+    }
+
+    impl Level {
+        fn from(raw: &str) -> Option<Self> {
+            let re_name = Regex::new(r"^== (\w+) ==\n").unwrap();
+            let name = re_name.captures(raw).expect("No level name").get(1)
+                .unwrap().as_str().into();
+
+            fn get_things(raw: &str) -> Vec<String> {
+                let re_things = Regex::new(r"(?s)There are \d+ things:\n([^\n]+\n)+").unwrap();
+                let things_str = match re_things.captures(raw) {
+                    Some(x) => x.get(0).unwrap().as_str(),
+                    None => return Vec::new(),
+                };
+
+                let things = things_str.lines()
+                    .skip(1)
+                    .map(|line| line.get(2..).unwrap().to_string())
+                    .collect::<Vec<_>>();
+                things
+            }
+            let things = get_things(raw);
+
+            fn get_exits(raw: &str) -> Vec<String> {
+                let re_exits = Regex::new(r"(?s)There are \d+ exits:\n([^\n]+\n)+").unwrap();
+                let exits_str = match re_exits.captures(raw) {
+                    Some(x) => x.get(0).unwrap().as_str(),
+                    None => return Vec::new(),
+                };
+
+                let exits = exits_str.lines()
+                    .skip(1)
+                    .map(|line| line.get(2..).unwrap().to_string())
+                    .collect::<Vec<_>>();
+                exits
+            }
+            let exits = get_exits(raw);
+
+            let level = Level {
+                name,
+                things,
+                exits,
+            };
+
+            Some(level)
+        }
     }
 }
 
@@ -83,17 +162,45 @@ enum Opcode {
 const MEM_SIZE: usize = 32768;
 
 #[derive(Clone)]
-struct VM {
+pub struct VM {
     memory: [u16; MEM_SIZE],
     registers: [u16; 8],
     stack: Vec<u16>,
-    /// Instruction pointer (next instruction)
+    /// Instruction Pointer (next instruction)
     ip: usize,
-    /// Program counter (number of executed instructions)
+    /// Program Counter
     pc: usize,
 
     output: Vec<char>,
     input: Vec<char>,
+}
+
+
+impl PartialEq for VM {
+    fn eq(&self, other: &Self) -> bool {
+        for (x, y) in self.memory.iter().zip(other.memory.iter()) {
+            if x != y {
+                return false;
+            }
+        }
+        if self.registers != other.registers {
+            return false;
+        }
+        if self.ip != other.ip {
+            return false;
+        }
+        if self.pc != other.pc {
+            return false;
+        }
+        if self.output != other.output {
+            return false;
+        }
+        if self.input != other.input {
+            return false;
+        }
+
+        true
+    }
 }
 
 
@@ -104,6 +211,7 @@ impl fmt::Debug for VM {
         writeln!(f, "  stack: {:?}", self.stack)?;
         writeln!(f, "  ip: {:?}", self.ip)?;
         writeln!(f, "  pc: {:?}", self.pc)?;
+        writeln!(f, "  memory: [...]")?;
         write!(f, "}}")
     }
 }
@@ -112,7 +220,6 @@ impl fmt::Debug for VM {
 impl VM {
     fn new() -> Self {
         VM {
-            //memory: Vec::new(),
             memory: [0u16; MEM_SIZE],
             registers: [0u16; 8],
             stack: Vec::new(),
@@ -122,6 +229,14 @@ impl VM {
             output: Vec::new(),
             input: Vec::new(),
         }
+    }
+
+    fn default() -> Self {
+        let mut vm = VM::new();
+        vm.load_program_from_file("challenge.bin")
+            .expect("Unable to load default 'challenge.bin'");
+
+        vm
     }
 
     fn load_program_from_file<P: AsRef<Path>>(&mut self, path: P) -> Result<(), ()> {
@@ -166,7 +281,6 @@ impl VM {
 
         let next_instruction_ptr = self.ip + size;
         let must_exit = self.execute(&instruction, next_instruction_ptr);
-
         self.pc += 1;
 
         must_exit
@@ -454,10 +568,127 @@ impl VM {
 }
 
 
+mod cli {
+    use super::VM;
+    use clap::{App, Arg, SubCommand, AppSettings};
+
+    pub struct Cli<'a, 'b> {
+        pub app: App<'a, 'b>,
+
+        pub vm: VM,
+        pub snapshots: Vec<VM>,
+    }
+
+    impl <'a, 'b> Cli<'a, 'b> {
+        pub fn new(vm: VM) -> Self {
+            let app = App::new("cli")
+                .setting(AppSettings::NoBinaryName)
+                .subcommand(
+                    SubCommand::with_name("help")
+                    .alias("h")
+                )
+                .subcommand(
+                    SubCommand::with_name("info")
+                    .alias("i")
+                    .subcommand(
+                        SubCommand::with_name("vm")
+                    )
+                    .subcommand(
+                        SubCommand::with_name("snapshots")
+                        .alias("snapshot")
+                        .alias("snap")
+                        .alias("s")
+                    )
+                )
+                .subcommand(
+                    SubCommand::with_name("snapshot")
+                    .alias("snap")
+                )
+                .subcommand(
+                    SubCommand::with_name("step")
+                    .alias("s")
+                    .arg(
+                        Arg::with_name("count")
+                        .default_value("1")
+                    )
+                );
+
+            Cli {
+                app,
+                vm,
+                snapshots: Vec::new(),
+            }
+        }
+
+        fn show_help(&self) -> Result<(), ()> {
+            print!("HELP!");
+
+            Ok(())
+        }
+
+        fn take_snapshot(&mut self) {
+            self.snapshots.push(self.vm.clone());
+        }
+
+        pub fn parse_command(&mut self, raw: &str) -> Result<(), ()> {
+            if raw.split_whitespace().next().is_none() {
+                // empy command
+                return Ok(());
+            }
+
+            let argv = raw.split_whitespace();
+
+            let args = self.app.clone().get_matches_from_safe(argv)
+                .map_err( |e| { println!("Unknown command"); () })?;
+            //println!("{:#?}", args);
+
+            match args.subcommand() {
+                ("info", Some(sub)) => {
+                    match sub.subcommand() {
+                        ("vm", _) => println!("{:?}", self.vm),
+                        ("snapshots", _) => {
+                            println!("{} snapshots:", self.snapshots.len());
+                            println!("{:?}", self.snapshots);
+                        },
+                        _ => println!("{:?}", self.vm),
+                    }
+                },
+                ("snapshot", _) => {
+                    self.take_snapshot();
+                },
+                ("step", Some(sub)) => {
+                    let count: usize = sub.value_of("count").unwrap().parse().unwrap();
+                    for i in 0..count {
+                        self.vm.step();
+                    }
+                },
+                ("help", _) => {
+                    self.show_help().unwrap();
+                }
+                _ => unreachable!(),
+            }
+
+            Ok(())
+
+        } // end fn parse_command
+    }
+}
+
+
 fn main() {
-    let mut vm = VM::new();
-    vm.load_program_from_file("challenge.bin").unwrap();
+    let vm = VM::default();
 
-    vm.run_until_halt();
+    let mut rl = Editor::<()>::new();
+    let mut cli = cli::Cli::new(vm);
 
+    loop {
+        let readline = rl.readline(">> ");
+        match readline {
+            Ok(line) => {
+                rl.add_history_entry(line.as_ref());
+                let _ = cli.parse_command(&line);
+            },
+            _ => break,
+        }
+    }
 }
