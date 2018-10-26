@@ -588,21 +588,27 @@ mod cli {
                     .alias("h")
                 )
                 .subcommand(
-                    SubCommand::with_name("info")
-                    .alias("i")
-                    .subcommand(
-                        SubCommand::with_name("vm")
-                    )
-                    .subcommand(
-                        SubCommand::with_name("snapshots")
-                        .alias("snapshot")
-                        .alias("snap")
-                        .alias("s")
-                    )
+                    SubCommand::with_name("vm")
                 )
                 .subcommand(
                     SubCommand::with_name("snapshot")
                     .alias("snap")
+                    .subcommand(
+                        SubCommand::with_name("take")
+                        .alias("t")
+                    )
+                    .subcommand(
+                        SubCommand::with_name("revert")
+                        .alias("r")
+                        .arg(
+                            Arg::with_name("idx")
+                            .required(true)
+                        )
+                    )
+                    .subcommand(
+                        SubCommand::with_name("list")
+                        .alias("l")
+                    )
                 )
                 .subcommand(
                     SubCommand::with_name("step")
@@ -630,6 +636,17 @@ mod cli {
             self.snapshots.push(self.vm.clone());
         }
 
+        fn revert_snapshot(&mut self, idx: usize) {
+            if idx < self.snapshots.len() {
+                let snap = self.snapshots.remove(idx);
+                self.vm = snap;
+                println!("Reverted {}", idx);
+            }
+            else {
+                println!("Can revert snapshot {}", idx);
+            }
+        }
+
         pub fn parse_command(&mut self, raw: &str) -> Result<(), ()> {
             if raw.split_whitespace().next().is_none() {
                 // empy command
@@ -643,18 +660,19 @@ mod cli {
             //println!("{:#?}", args);
 
             match args.subcommand() {
-                ("info", Some(sub)) => {
+                ("vm", Some(sub)) => {
+                    println!("{:?}", self.vm);
+                },
+                ("snapshot", Some(sub)) => {
                     match sub.subcommand() {
-                        ("vm", _) => println!("{:?}", self.vm),
-                        ("snapshots", _) => {
+                        ("take", _) => self.take_snapshot(),
+                        ("revert", Some(subsub)) => { self.revert_snapshot(subsub.value_of("idx").unwrap().parse().unwrap()) },
+                        ("list", _) => {
                             println!("{} snapshots:", self.snapshots.len());
                             println!("{:?}", self.snapshots);
                         },
-                        _ => println!("{:?}", self.vm),
+                        _ => self.take_snapshot(),
                     }
-                },
-                ("snapshot", _) => {
-                    self.take_snapshot();
                 },
                 ("step", Some(sub)) => {
                     let count: usize = sub.value_of("count").unwrap().parse().unwrap();
@@ -663,7 +681,7 @@ mod cli {
                     }
                 },
                 ("help", _) => {
-                    self.show_help().unwrap();
+                    self.app.print_long_help();
                 }
                 _ => unreachable!(),
             }
