@@ -128,7 +128,6 @@ impl Value {
             0..=32767 => Value::Number(v),
             32768..=32775 => Value::Register((v - 32768) as usize),
             32776..=65535 => Value::Invalid,
-            _ => unreachable!(),
         }
     }
 }
@@ -588,40 +587,44 @@ impl VM {
 
 mod cli {
     use super::VM;
-    use clap::{App, AppSettings, Arg, SubCommand};
+    //use clap::{App, AppSettings, Arg, SubCommand};
+    use clap::{builder::RangedU64ValueParser, Arg, Command};
 
-    pub struct Cli<'a, 'b> {
-        pub app: App<'a, 'b>,
+    pub struct Cli {
+        pub cli: Command,
 
         pub vm: VM,
         pub snapshots: Vec<VM>,
     }
 
-    impl<'a, 'b> Cli<'a, 'b> {
+    impl Cli {
         pub fn new(vm: VM) -> Self {
-            let app = App::new("cli")
-                .setting(AppSettings::NoBinaryName)
-                .subcommand(SubCommand::with_name("help").alias("h"))
-                .subcommand(SubCommand::with_name("vm"))
+            let cli = Command::new("cli")
+                .subcommand_required(true)
+                .no_binary_name(true)
+                .subcommand(Command::new("help").alias("h"))
+                .subcommand(Command::new("vm"))
                 .subcommand(
-                    SubCommand::with_name("snapshot")
+                    Command::new("snapshot")
                         .alias("snap")
-                        .subcommand(SubCommand::with_name("take").alias("t"))
+                        .subcommand(Command::new("take").alias("t"))
                         .subcommand(
-                            SubCommand::with_name("revert")
+                            Command::new("revert")
                                 .alias("r")
-                                .arg(Arg::with_name("idx").required(true)),
+                                .arg(Arg::new("idx").required(true)),
                         )
-                        .subcommand(SubCommand::with_name("list").alias("l")),
+                        .subcommand(Command::new("list").alias("l")),
                 )
                 .subcommand(
-                    SubCommand::with_name("step")
-                        .alias("s")
-                        .arg(Arg::with_name("count").default_value("1")),
+                    Command::new("step").alias("s").arg(
+                        Arg::new("count")
+                            .value_parser(RangedU64ValueParser::<u32>::new())
+                            .default_value("1"),
+                    ),
                 );
 
-            Cli {
-                app,
+            Self {
+                cli,
                 vm,
                 snapshots: Vec::new(),
             }
@@ -647,45 +650,45 @@ mod cli {
             }
         }
 
-        pub fn parse_command(&mut self, raw: &str) -> Result<(), ()> {
+        pub fn parse_command(&mut self, raw: &str) -> Result<(), Box<dyn std::error::Error>> {
             if raw.split_whitespace().next().is_none() {
                 // empy command
                 return Ok(());
             }
 
+            //dbg!(&raw);
             let argv = raw.split_whitespace();
 
-            let args = self.app.clone().get_matches_from_safe(argv).map_err(|e| {
-                println!("Unknown command");
-                ()
-            })?;
-            //println!("{:#?}", args);
+            let args = self.cli.clone().try_get_matches_from(argv)?;
+            //dbg!(&args);
 
             match args.subcommand() {
-                ("vm", Some(sub)) => {
+                Some(("vm", sub)) => {
                     println!("{:?}", self.vm);
                 }
-                ("snapshot", Some(sub)) => match sub.subcommand() {
-                    ("take", _) => self.take_snapshot(),
-                    ("revert", Some(subsub)) => {
-                        self.revert_snapshot(subsub.value_of("idx").unwrap().parse().unwrap())
+                Some(("snapshot", sub)) => match sub.subcommand() {
+                    Some(("take", _)) => self.take_snapshot(),
+                    Some(("revert", subsub)) => {
+                        let idx = *subsub.get_one("idx").ok_or_else(|| "Provide idx")?;
+                        self.revert_snapshot(idx);
                     }
-                    ("list", _) => {
+                    Some(("list", _)) => {
                         println!("{} snapshots:", self.snapshots.len());
                         println!("{:?}", self.snapshots);
                     }
                     _ => self.take_snapshot(),
                 },
-                ("step", Some(sub)) => {
-                    let count: usize = sub.value_of("count").unwrap().parse().unwrap();
+                Some(("step", sub)) => {
+                    let count: u32 = *sub.get_one("count").ok_or_else(|| "Provide count")?;
                     for i in 0..count {
                         self.vm.step();
                     }
                 }
-                ("help", _) => {
-                    self.app.print_long_help();
+                Some(("help", _)) => {
+                    self.cli.print_long_help().unwrap();
                 }
-                _ => unreachable!(),
+                Some((x, y)) => println!("Unknown command {x:?}"),
+                None => (),
             }
 
             Ok(())
@@ -703,7 +706,7 @@ fn main() {
         let readline = rl.readline(">> ");
         match readline {
             Ok(line) => {
-                rl.add_history_entry(&line);
+                rl.add_history_entry(&line).unwrap();
                 let _ = cli.parse_command(&line);
             }
             _ => break,
