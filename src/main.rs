@@ -2,25 +2,21 @@
 #![allow(unused_imports)]
 #![allow(dead_code)]
 
-
-use std::io::prelude::*;
-use std::fs::File;
-use std::path::Path; 
 use std::fmt;
+use std::fs::File;
 use std::io;
+use std::io::prelude::*;
+use std::path::Path;
 
-use byteorder::{ByteOrder, ReadBytesExt, WriteBytesExt, BigEndian, LittleEndian};
+use byteorder::{BigEndian, ByteOrder, LittleEndian, ReadBytesExt, WriteBytesExt};
 
 use rustyline::error::ReadlineError;
-use rustyline::Editor;
-
-
-
+use rustyline::{DefaultEditor, Editor};
 
 #[cfg(test)]
 mod tests {
     #[test]
-    fn load_program_from_file() -> Result<(), ()>{
+    fn load_program_from_file() -> Result<(), ()> {
         use super::VM;
 
         let f = "challenge.bin";
@@ -29,17 +25,16 @@ mod tests {
     }
 
     #[test]
-    fn load_program_from_mem() -> Result<(), ()>{
+    fn load_program_from_mem() -> Result<(), ()> {
         use super::VM;
 
         let mut vm = VM::new();
-        let program = vec![9,32768,32769,4,19,32768];
-        vm.load_program_from_mem(program);
+        let program = [9, 32768, 32769, 4, 19, 32768];
+        vm.load_program_from_mem(&program);
 
         Ok(())
     }
 }
-
 
 mod game {
     use regex::Regex;
@@ -48,7 +43,6 @@ mod game {
         game: Game,
         //levels: GraphMap<Game, ()>;
     }
-
 
     #[derive(Copy, Clone, Debug)]
     enum GameState {
@@ -71,8 +65,13 @@ mod game {
     impl Level {
         fn from(raw: &str) -> Option<Self> {
             let re_name = Regex::new(r"^== (\w+) ==\n").unwrap();
-            let name = re_name.captures(raw).expect("No level name").get(1)
-                .unwrap().as_str().into();
+            let name = re_name
+                .captures(raw)
+                .expect("No level name")
+                .get(1)
+                .unwrap()
+                .as_str()
+                .into();
 
             fn get_things(raw: &str) -> Vec<String> {
                 let re_things = Regex::new(r"(?s)There are \d+ things:\n([^\n]+\n)+").unwrap();
@@ -81,7 +80,8 @@ mod game {
                     None => return Vec::new(),
                 };
 
-                let things = things_str.lines()
+                let things = things_str
+                    .lines()
                     .skip(1)
                     .map(|line| line.get(2..).unwrap().to_string())
                     .collect::<Vec<_>>();
@@ -96,7 +96,8 @@ mod game {
                     None => return Vec::new(),
                 };
 
-                let exits = exits_str.lines()
+                let exits = exits_str
+                    .lines()
                     .skip(1)
                     .map(|line| line.get(2..).unwrap().to_string())
                     .collect::<Vec<_>>();
@@ -115,7 +116,6 @@ mod game {
     }
 }
 
-
 #[derive(Copy, Clone, Debug)]
 enum Value {
     Number(u16),
@@ -125,9 +125,9 @@ enum Value {
 impl Value {
     fn new(v: u16) -> Self {
         match v {
-            0 ... 32767 => Value::Number(v),
-            32768 ... 32775 => Value::Register((v - 32768) as usize),
-            32776 ... 65535 => Value::Invalid,
+            0..=32767 => Value::Number(v),
+            32768..=32775 => Value::Register((v - 32768) as usize),
+            32776..=65535 => Value::Invalid,
             _ => unreachable!(),
         }
     }
@@ -175,7 +175,6 @@ pub struct VM {
     input: Vec<char>,
 }
 
-
 impl PartialEq for VM {
     fn eq(&self, other: &Self) -> bool {
         for (x, y) in self.memory.iter().zip(other.memory.iter()) {
@@ -203,7 +202,6 @@ impl PartialEq for VM {
     }
 }
 
-
 impl fmt::Debug for VM {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         writeln!(f, "VM {{")?;
@@ -215,7 +213,6 @@ impl fmt::Debug for VM {
         write!(f, "}}")
     }
 }
-
 
 impl VM {
     fn new() -> Self {
@@ -250,8 +247,7 @@ impl VM {
             .map(|x| {
                 let pair = x.iter().map(|x| *x).collect::<Vec<u8>>();
                 LittleEndian::read_u16(&pair)
-            }
-            )
+            })
             .collect();
 
         if data.len() >= MEM_SIZE {
@@ -269,7 +265,7 @@ impl VM {
             self.memory[i] = program[i];
         }
     }
-    
+
     fn run_until_halt(&mut self) {
         while !self.step() {}
 
@@ -287,88 +283,124 @@ impl VM {
     }
 
     fn fetch(&self) -> (Opcode, usize) {
-      let instr_type = self.memory[self.ip];
+        let instr_type = self.memory[self.ip];
 
-      match instr_type {
-          0 => (Opcode::Halt, 1),
-          1 => (Opcode::Set(
-                  Value::new(self.memory[self.ip + 1]),
-                  Value::new(self.memory[self.ip + 2]),
-          ), 3),
-          2 => (Opcode::Push(
-                  Value::new(self.memory[self.ip + 1]),
-          ), 2),
-          3 => (Opcode::Pop(
-                  Value::new(self.memory[self.ip + 1]),
-          ), 2),
-          4 => (Opcode::Eq(
-                  Value::new(self.memory[self.ip + 1]),
-                  Value::new(self.memory[self.ip + 2]),
-                  Value::new(self.memory[self.ip + 3]),
-          ), 4),
-          5 => (Opcode::Gt(
-                  Value::new(self.memory[self.ip + 1]),
-                  Value::new(self.memory[self.ip + 2]),
-                  Value::new(self.memory[self.ip + 3]),
-          ), 4),
-          6 => (Opcode::Jmp(
-                  Value::new(self.memory[self.ip + 1]),
-                  Value::new(self.memory[self.ip + 2]),
-          ), 3),
-          7 => (Opcode::Jt(
-                  Value::new(self.memory[self.ip + 1]),
-                  Value::new(self.memory[self.ip + 2]),
-          ), 3),
-          8 => (Opcode::Jf(
-                  Value::new(self.memory[self.ip + 1]),
-                  Value::new(self.memory[self.ip + 2]),
-          ), 3),
-          9 => (Opcode::Add(
-              Value::new(self.memory[self.ip + 1]),
-              Value::new(self.memory[self.ip + 2]),
-              Value::new(self.memory[self.ip + 3]),
-          ), 4),
-          10 => (Opcode::Mult(
-              Value::new(self.memory[self.ip + 1]),
-              Value::new(self.memory[self.ip + 2]),
-              Value::new(self.memory[self.ip + 3]),
-          ), 4),
-          11 => (Opcode::Mod(
-              Value::new(self.memory[self.ip + 1]),
-              Value::new(self.memory[self.ip + 2]),
-              Value::new(self.memory[self.ip + 3]),
-          ), 4),
-          12 => (Opcode::And(
-                  Value::new(self.memory[self.ip + 1]),
-                  Value::new(self.memory[self.ip + 2]),
-                  Value::new(self.memory[self.ip + 3]),
-          ), 4),
-          13 => (Opcode::Or(
-                  Value::new(self.memory[self.ip + 1]),
-                  Value::new(self.memory[self.ip + 2]),
-                  Value::new(self.memory[self.ip + 3]),
-          ), 4),
-          14 => (Opcode::Not(
-                  Value::new(self.memory[self.ip + 1]),
-                  Value::new(self.memory[self.ip + 2]),
-          ), 3),
-          15 => (Opcode::Rmem(
-                  Value::new(self.memory[self.ip + 1]),
-                  Value::new(self.memory[self.ip + 2]),
-                  ), 3),
-          16 => (Opcode::Wmem(
-                  Value::new(self.memory[self.ip + 1]),
-                  Value::new(self.memory[self.ip + 2]),
-                  ), 3),
-          17 => (Opcode::Call(
-                  Value::new(self.memory[self.ip + 1]),
-          ), 2),
-          18 => (Opcode::Ret, 1),
-          19 => (Opcode::Out(Value::new(self.memory[self.ip + 1])), 2),
-          20 => (Opcode::In(Value::new(self.memory[self.ip + 1])), 2),
-          21 => (Opcode::Noop, 1),
-          x => unreachable!("Fetch: unknown instr '{}'", x),
-      }
+        match instr_type {
+            0 => (Opcode::Halt, 1),
+            1 => (
+                Opcode::Set(
+                    Value::new(self.memory[self.ip + 1]),
+                    Value::new(self.memory[self.ip + 2]),
+                ),
+                3,
+            ),
+            2 => (Opcode::Push(Value::new(self.memory[self.ip + 1])), 2),
+            3 => (Opcode::Pop(Value::new(self.memory[self.ip + 1])), 2),
+            4 => (
+                Opcode::Eq(
+                    Value::new(self.memory[self.ip + 1]),
+                    Value::new(self.memory[self.ip + 2]),
+                    Value::new(self.memory[self.ip + 3]),
+                ),
+                4,
+            ),
+            5 => (
+                Opcode::Gt(
+                    Value::new(self.memory[self.ip + 1]),
+                    Value::new(self.memory[self.ip + 2]),
+                    Value::new(self.memory[self.ip + 3]),
+                ),
+                4,
+            ),
+            6 => (
+                Opcode::Jmp(
+                    Value::new(self.memory[self.ip + 1]),
+                    Value::new(self.memory[self.ip + 2]),
+                ),
+                3,
+            ),
+            7 => (
+                Opcode::Jt(
+                    Value::new(self.memory[self.ip + 1]),
+                    Value::new(self.memory[self.ip + 2]),
+                ),
+                3,
+            ),
+            8 => (
+                Opcode::Jf(
+                    Value::new(self.memory[self.ip + 1]),
+                    Value::new(self.memory[self.ip + 2]),
+                ),
+                3,
+            ),
+            9 => (
+                Opcode::Add(
+                    Value::new(self.memory[self.ip + 1]),
+                    Value::new(self.memory[self.ip + 2]),
+                    Value::new(self.memory[self.ip + 3]),
+                ),
+                4,
+            ),
+            10 => (
+                Opcode::Mult(
+                    Value::new(self.memory[self.ip + 1]),
+                    Value::new(self.memory[self.ip + 2]),
+                    Value::new(self.memory[self.ip + 3]),
+                ),
+                4,
+            ),
+            11 => (
+                Opcode::Mod(
+                    Value::new(self.memory[self.ip + 1]),
+                    Value::new(self.memory[self.ip + 2]),
+                    Value::new(self.memory[self.ip + 3]),
+                ),
+                4,
+            ),
+            12 => (
+                Opcode::And(
+                    Value::new(self.memory[self.ip + 1]),
+                    Value::new(self.memory[self.ip + 2]),
+                    Value::new(self.memory[self.ip + 3]),
+                ),
+                4,
+            ),
+            13 => (
+                Opcode::Or(
+                    Value::new(self.memory[self.ip + 1]),
+                    Value::new(self.memory[self.ip + 2]),
+                    Value::new(self.memory[self.ip + 3]),
+                ),
+                4,
+            ),
+            14 => (
+                Opcode::Not(
+                    Value::new(self.memory[self.ip + 1]),
+                    Value::new(self.memory[self.ip + 2]),
+                ),
+                3,
+            ),
+            15 => (
+                Opcode::Rmem(
+                    Value::new(self.memory[self.ip + 1]),
+                    Value::new(self.memory[self.ip + 2]),
+                ),
+                3,
+            ),
+            16 => (
+                Opcode::Wmem(
+                    Value::new(self.memory[self.ip + 1]),
+                    Value::new(self.memory[self.ip + 2]),
+                ),
+                3,
+            ),
+            17 => (Opcode::Call(Value::new(self.memory[self.ip + 1])), 2),
+            18 => (Opcode::Ret, 1),
+            19 => (Opcode::Out(Value::new(self.memory[self.ip + 1])), 2),
+            20 => (Opcode::In(Value::new(self.memory[self.ip + 1])), 2),
+            21 => (Opcode::Noop, 1),
+            x => unreachable!("Fetch: unknown instr '{}'", x),
+        }
     }
 
     fn execute(&mut self, instruction: &Opcode, next_instruction_ptr: usize) -> bool {
@@ -384,104 +416,94 @@ impl VM {
                 let reg = self.get_register(a).expect("Not a register");
 
                 self.registers[reg] = val;
-            },
+            }
             Opcode::Push(a) => {
                 let val = self.get_value(a).expect("Invalid number");
 
                 self.stack.push(val);
-            },
+            }
             Opcode::Pop(a) => {
                 let val = self.stack.pop().expect("Pop: empty stack");
                 let reg = self.get_register(a).expect("Not a register");
 
                 self.registers[reg] = val;
-            },
+            }
             Opcode::Eq(a, b, c) => {
                 let val_b = self.get_value(b).expect("Invalid number");
                 let val_c = self.get_value(c).expect("Invalid number");
 
-                let val_a = if val_b == val_c {
-                    1
-                }
-                else {
-                    0
-                };
+                let val_a = if val_b == val_c { 1 } else { 0 };
 
                 let reg = self.get_register(a).expect("Not a register");
                 self.registers[reg] = val_a;
-            },
+            }
             Opcode::Gt(a, b, c) => {
                 let val_b = self.get_value(b).expect("Invalid number");
                 let val_c = self.get_value(c).expect("Invalid number");
 
-                let val_a = if val_b > val_c {
-                    1
-                }
-                else {
-                    0
-                };
+                let val_a = if val_b > val_c { 1 } else { 0 };
 
                 let reg = self.get_register(a).expect("Not a register");
                 self.registers[reg] = val_a;
-            },
+            }
             Opcode::Jmp(a, b) => {
                 self.ip = self.get_value(a).expect("Invalid number") as usize;
-            },
+            }
             Opcode::Jt(a, b) => {
                 let must_jump = self.get_value(a).expect("Invalid number") != 0;
 
                 if must_jump {
                     self.ip = self.get_value(b).expect("Invalid number") as usize;
                 }
-            },
+            }
             Opcode::Jf(a, b) => {
                 let must_jump = self.get_value(a).expect("Invalid number") == 0;
 
                 if must_jump {
                     self.ip = self.get_value(b).expect("Invalid number") as usize;
                 }
-            },
+            }
             Opcode::Add(a, b, c) => {
                 let val_b = self.get_value(b).expect("Invalid number");
                 let val_c = self.get_value(c).expect("Invalid number");
                 let reg = self.get_register(a).expect("Not a register");
 
-                self.registers[reg] = (val_b + val_c) % 32768;  //TODO wrapping_add?
-            },
+                self.registers[reg] = (val_b + val_c) % 32768; //TODO wrapping_add?
+            }
             Opcode::Mult(a, b, c) => {
                 let val_b = self.get_value(b).expect("Invalid number");
                 let val_c = self.get_value(c).expect("Invalid number");
                 let reg = self.get_register(a).expect("Not a register");
 
                 self.registers[reg] = val_b.wrapping_mul(val_c) % 32768;
-            },
+            }
             Opcode::Mod(a, b, c) => {
                 let val_b = self.get_value(b).expect("Invalid number");
                 let val_c = self.get_value(c).expect("Invalid number");
                 let reg = self.get_register(a).expect("Not a register");
 
                 self.registers[reg] = val_b % val_c;
-            },
+            }
             Opcode::And(a, b, c) => {
                 let val_b = self.get_value(b).expect("Invalid number");
                 let val_c = self.get_value(c).expect("Invalid number");
                 let reg = self.get_register(a).expect("Not a register");
 
                 self.registers[reg] = (val_b & val_c) % 32768;
-            },
+            }
             Opcode::Or(a, b, c) => {
                 let val_b = self.get_value(b).expect("Invalid number");
                 let val_c = self.get_value(c).expect("Invalid number");
                 let reg = self.get_register(a).expect("Not a register");
 
                 self.registers[reg] = (val_b | val_c) % 32768;
-            },
+            }
             Opcode::Not(a, b) => {
                 let val_b = self.get_value(b).expect("Invalid number");
                 let reg = self.get_register(a).expect("Not a register");
 
                 self.registers[reg] = (!val_b) % 32768;
-            },
+            }
             Opcode::Rmem(a, b) => {
                 let addr = self.get_value(b).expect("Invalid number");
                 let reg = self.get_register(a).expect("Not a register");
@@ -489,31 +511,29 @@ impl VM {
                 let val = self.memory[addr as usize];
 
                 self.registers[reg] = val;
-            },
+            }
             Opcode::Wmem(a, b) => {
                 let val = self.get_value(b).expect("Invalid number");
                 let addr = self.get_value(a).expect("Not a register");
 
                 self.memory[addr as usize] = val;
-            },
+            }
             Opcode::Call(a) => {
                 let addr = self.get_value(a).expect("Invalid number");
 
                 self.stack.push(self.ip as u16);
                 self.ip = addr as usize;
-            },
-            Opcode::Ret => {
-                match self.stack.pop() {
-                    Some(addr) => self.ip = addr as usize,
-                    None => must_halt = true,
-                }
+            }
+            Opcode::Ret => match self.stack.pop() {
+                Some(addr) => self.ip = addr as usize,
+                None => must_halt = true,
             },
             Opcode::Out(a) => {
                 let c = self.get_value(a).expect("Invalid number");
 
                 self.output.push(c as u8 as char);
                 //print!("{}", c as u8 as char);
-            },
+            }
             Opcode::In(a) => {
                 let reg = self.get_register(a).expect("In: not a register");
 
@@ -521,19 +541,18 @@ impl VM {
                     Some(c) => {
                         // just feed the current input
                         self.registers[reg as usize] = c as u16;
-                    },
+                    }
                     None => {
                         // asking for new output
                         // first, flush current output
-                        let out = self.output.iter().collect::<String>();  //TODO: separate function
+                        let out = self.output.iter().collect::<String>(); //TODO: separate function
                         print!("{}", out);
                         self.output = Vec::new();
 
-
                         // read input
                         let mut buff = String::new();
-                        io::stdin().
-                            read_line(&mut buff)
+                        io::stdin()
+                            .read_line(&mut buff)
                             .expect("In: unable to read");
                         self.input = buff.chars().collect();
                         self.input.reverse();
@@ -543,7 +562,7 @@ impl VM {
                         self.registers[reg as usize] = c as u16;
                     }
                 }
-            },
+            }
             Opcode::Noop => (),
         }
 
@@ -567,10 +586,9 @@ impl VM {
     }
 }
 
-
 mod cli {
     use super::VM;
-    use clap::{App, Arg, SubCommand, AppSettings};
+    use clap::{App, AppSettings, Arg, SubCommand};
 
     pub struct Cli<'a, 'b> {
         pub app: App<'a, 'b>,
@@ -579,44 +597,27 @@ mod cli {
         pub snapshots: Vec<VM>,
     }
 
-    impl <'a, 'b> Cli<'a, 'b> {
+    impl<'a, 'b> Cli<'a, 'b> {
         pub fn new(vm: VM) -> Self {
             let app = App::new("cli")
                 .setting(AppSettings::NoBinaryName)
-                .subcommand(
-                    SubCommand::with_name("help")
-                    .alias("h")
-                )
-                .subcommand(
-                    SubCommand::with_name("vm")
-                )
+                .subcommand(SubCommand::with_name("help").alias("h"))
+                .subcommand(SubCommand::with_name("vm"))
                 .subcommand(
                     SubCommand::with_name("snapshot")
-                    .alias("snap")
-                    .subcommand(
-                        SubCommand::with_name("take")
-                        .alias("t")
-                    )
-                    .subcommand(
-                        SubCommand::with_name("revert")
-                        .alias("r")
-                        .arg(
-                            Arg::with_name("idx")
-                            .required(true)
+                        .alias("snap")
+                        .subcommand(SubCommand::with_name("take").alias("t"))
+                        .subcommand(
+                            SubCommand::with_name("revert")
+                                .alias("r")
+                                .arg(Arg::with_name("idx").required(true)),
                         )
-                    )
-                    .subcommand(
-                        SubCommand::with_name("list")
-                        .alias("l")
-                    )
+                        .subcommand(SubCommand::with_name("list").alias("l")),
                 )
                 .subcommand(
                     SubCommand::with_name("step")
-                    .alias("s")
-                    .arg(
-                        Arg::with_name("count")
-                        .default_value("1")
-                    )
+                        .alias("s")
+                        .arg(Arg::with_name("count").default_value("1")),
                 );
 
             Cli {
@@ -641,8 +642,7 @@ mod cli {
                 let snap = self.snapshots.remove(idx);
                 self.vm = snap;
                 println!("Reverted {}", idx);
-            }
-            else {
+            } else {
                 println!("Can revert snapshot {}", idx);
             }
         }
@@ -655,31 +655,33 @@ mod cli {
 
             let argv = raw.split_whitespace();
 
-            let args = self.app.clone().get_matches_from_safe(argv)
-                .map_err( |e| { println!("Unknown command"); () })?;
+            let args = self.app.clone().get_matches_from_safe(argv).map_err(|e| {
+                println!("Unknown command");
+                ()
+            })?;
             //println!("{:#?}", args);
 
             match args.subcommand() {
                 ("vm", Some(sub)) => {
                     println!("{:?}", self.vm);
-                },
-                ("snapshot", Some(sub)) => {
-                    match sub.subcommand() {
-                        ("take", _) => self.take_snapshot(),
-                        ("revert", Some(subsub)) => { self.revert_snapshot(subsub.value_of("idx").unwrap().parse().unwrap()) },
-                        ("list", _) => {
-                            println!("{} snapshots:", self.snapshots.len());
-                            println!("{:?}", self.snapshots);
-                        },
-                        _ => self.take_snapshot(),
+                }
+                ("snapshot", Some(sub)) => match sub.subcommand() {
+                    ("take", _) => self.take_snapshot(),
+                    ("revert", Some(subsub)) => {
+                        self.revert_snapshot(subsub.value_of("idx").unwrap().parse().unwrap())
                     }
+                    ("list", _) => {
+                        println!("{} snapshots:", self.snapshots.len());
+                        println!("{:?}", self.snapshots);
+                    }
+                    _ => self.take_snapshot(),
                 },
                 ("step", Some(sub)) => {
                     let count: usize = sub.value_of("count").unwrap().parse().unwrap();
                     for i in 0..count {
                         self.vm.step();
                     }
-                },
+                }
                 ("help", _) => {
                     self.app.print_long_help();
                 }
@@ -687,25 +689,23 @@ mod cli {
             }
 
             Ok(())
-
         } // end fn parse_command
     }
 }
 
-
 fn main() {
     let vm = VM::default();
 
-    let mut rl = Editor::<()>::new();
+    let mut rl = DefaultEditor::new().unwrap();
     let mut cli = cli::Cli::new(vm);
 
     loop {
         let readline = rl.readline(">> ");
         match readline {
             Ok(line) => {
-                rl.add_history_entry(line.as_ref());
+                rl.add_history_entry(&line);
                 let _ = cli.parse_command(&line);
-            },
+            }
             _ => break,
         }
     }

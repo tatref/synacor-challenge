@@ -7,5 +7,5 @@ edition = "2018"
 [dependencies]
 byteorder = "1"
 regex = "1"
-rustyline = "2.1"
-clap = "2"
+rustyline = "12"
+clap = "4"
