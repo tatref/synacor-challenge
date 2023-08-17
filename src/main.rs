@@ -2,6 +2,7 @@
 #![allow(unused_imports)]
 #![allow(dead_code)]
 
+use std::collections::VecDeque;
 use std::fmt;
 use std::fs::File;
 use std::io;
@@ -17,18 +18,18 @@ use rustyline::{DefaultEditor, Editor};
 mod tests {
     #[test]
     fn load_program_from_file() -> Result<(), ()> {
-        use super::VM;
+        use super::Vm;
 
         let f = "challenge.bin";
-        let mut vm = VM::new();
+        let mut vm = Vm::new();
         vm.load_program_from_file(f)
     }
 
     #[test]
     fn load_program_from_mem() -> Result<(), ()> {
-        use super::VM;
+        use super::Vm;
 
-        let mut vm = VM::new();
+        let mut vm = Vm::new();
         let program = [9, 32768, 32769, 4, 19, 32768];
         vm.load_program_from_mem(&program);
 
@@ -161,7 +162,7 @@ enum Opcode {
 const MEM_SIZE: usize = 32768;
 
 #[derive(Clone)]
-pub struct VM {
+pub struct Vm {
     memory: [u16; MEM_SIZE],
     registers: [u16; 8],
     stack: Vec<u16>,
@@ -170,11 +171,15 @@ pub struct VM {
     /// Program Counter
     pc: usize,
 
-    output: Vec<char>,
-    input: Vec<char>,
+    state: VmState,
+
+    output_buffer: Vec<char>,
+    input_buffer: VecDeque<char>,
+
+    out_messages: Vec<String>,
 }
 
-impl PartialEq for VM {
+impl PartialEq for Vm {
     fn eq(&self, other: &Self) -> bool {
         for (x, y) in self.memory.iter().zip(other.memory.iter()) {
             if x != y {
@@ -190,10 +195,10 @@ impl PartialEq for VM {
         if self.pc != other.pc {
             return false;
         }
-        if self.output != other.output {
+        if self.output_buffer != other.output_buffer {
             return false;
         }
-        if self.input != other.input {
+        if self.input_buffer != other.input_buffer {
             return false;
         }
 
@@ -201,34 +206,46 @@ impl PartialEq for VM {
     }
 }
 
-impl fmt::Debug for VM {
+impl fmt::Debug for Vm {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         writeln!(f, "VM {{")?;
         writeln!(f, "  registers: {:?}", self.registers)?;
         writeln!(f, "  stack: {:?}", self.stack)?;
         writeln!(f, "  ip: {:?}", self.ip)?;
         writeln!(f, "  pc: {:?}", self.pc)?;
+        writeln!(f, "  state: {:?}", self.state)?;
         writeln!(f, "  memory: [...]")?;
         write!(f, "}}")
     }
 }
 
-impl VM {
+#[derive(Copy, Clone, Debug)]
+enum VmState {
+    Running,
+    Halted,
+    WaitingForInput,
+}
+
+impl Vm {
     fn new() -> Self {
-        VM {
+        Vm {
             memory: [0u16; MEM_SIZE],
             registers: [0u16; 8],
             stack: Vec::new(),
             ip: 0,
             pc: 0,
 
-            output: Vec::new(),
-            input: Vec::new(),
+            state: VmState::Running,
+
+            output_buffer: Vec::new(),
+            input_buffer: VecDeque::new(),
+
+            out_messages: Vec::new(),
         }
     }
 
     fn default() -> Self {
-        let mut vm = VM::new();
+        let mut vm = Vm::new();
         vm.load_program_from_file("challenge.bin")
             .expect("Unable to load default 'challenge.bin'");
 
@@ -266,9 +283,17 @@ impl VM {
     }
 
     fn run_until_halt(&mut self) {
+        // TODO: run until input
         while !self.step() {}
 
-        print!("\n\nHalt: {}", self.output.iter().collect::<String>());
+        let message = self.output_buffer.iter().collect::<String>();
+        self.out_messages.push(message.clone());
+
+        print!("\n\nHalt");
+        for message in &self.out_messages {
+            println!("{}", message);
+        }
+        print!("\n\nHalt");
     }
 
     fn step(&mut self) -> bool {
@@ -530,34 +555,36 @@ impl VM {
             Opcode::Out(a) => {
                 let c = self.get_value(a).expect("Invalid number");
 
-                self.output.push(c as u8 as char);
+                self.output_buffer.push(c as u8 as char);
                 //print!("{}", c as u8 as char);
             }
             Opcode::In(a) => {
                 let reg = self.get_register(a).expect("In: not a register");
 
-                match self.input.pop() {
+                match self.input_buffer.pop_front() {
                     Some(c) => {
                         // just feed the current input
                         self.registers[reg as usize] = c as u16;
                     }
                     None => {
-                        // asking for new output
+                        // asking for new input
                         // first, flush current output
-                        let out = self.output.iter().collect::<String>(); //TODO: separate function
+                        let out = self.output_buffer.iter().collect::<String>(); //TODO: separate function
+                        self.out_messages.push(out.clone());
                         print!("{}", out);
-                        self.output = Vec::new();
+                        self.output_buffer = Vec::new();
 
+                        // TODO: waiting for input state
                         // read input
                         let mut buff = String::new();
                         io::stdin()
                             .read_line(&mut buff)
                             .expect("In: unable to read");
-                        self.input = buff.chars().collect();
-                        self.input.reverse();
+                        self.input_buffer = buff.trim().chars().collect();
+                        self.input_buffer.push_back('\n');
 
                         // then feed 1 char
-                        let c = self.input.pop().unwrap();
+                        let c = self.input_buffer.pop_front().unwrap();
                         self.registers[reg as usize] = c as u16;
                     }
                 }
@@ -586,24 +613,25 @@ impl VM {
 }
 
 mod cli {
-    use super::VM;
+    use super::Vm;
     //use clap::{App, AppSettings, Arg, SubCommand};
     use clap::{builder::RangedU64ValueParser, Arg, Command};
 
     pub struct Cli {
         pub cli: Command,
 
-        pub vm: VM,
-        pub snapshots: Vec<VM>,
+        pub vm: Vm,
+        pub snapshots: Vec<Vm>,
     }
 
     impl Cli {
-        pub fn new(vm: VM) -> Self {
+        pub fn new(vm: Vm) -> Self {
             let cli = Command::new("cli")
                 .subcommand_required(true)
                 .no_binary_name(true)
                 .subcommand(Command::new("help").alias("h"))
                 .subcommand(Command::new("vm"))
+                .subcommand(Command::new("run"))
                 .subcommand(
                     Command::new("snapshot")
                         .alias("snap")
@@ -663,6 +691,7 @@ mod cli {
             //dbg!(&args);
 
             match args.subcommand() {
+                Some(("run", sub)) => self.vm.run_until_halt(),
                 Some(("vm", sub)) => {
                     println!("{:?}", self.vm);
                 }
@@ -697,7 +726,7 @@ mod cli {
 }
 
 fn main() {
-    let vm = VM::default();
+    let vm = Vm::default();
 
     let mut rl = DefaultEditor::new().unwrap();
     let mut cli = cli::Cli::new(vm);
