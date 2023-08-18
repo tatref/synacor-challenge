@@ -261,40 +261,62 @@ impl Vm {
         let data: Vec<_> = buff
             .chunks(2)
             .map(|x| {
-                let pair = x.iter().map(|x| *x).collect::<Vec<u8>>();
-                LittleEndian::read_u16(&pair)
+                //let pair = x.to_vec();
+                LittleEndian::read_u16(x)
             })
             .collect();
 
-        if data.len() >= MEM_SIZE {
+        if data.len() > MEM_SIZE {
             panic!("File is too big");
         }
-        for i in 0..data.len() {
-            self.memory[i] = data[i];
-        }
+        self.memory[..data.len()].copy_from_slice(&data[..]);
 
         Ok(())
     }
 
     fn load_program_from_mem(&mut self, program: &[u16]) {
-        for i in 0..program.len() {
-            self.memory[i] = program[i];
-        }
+        self.memory[..program.len()].copy_from_slice(program);
     }
 
-    fn run_until_halt(&mut self) {
+    fn run(&mut self) {
+        self.state = VmState::Running;
+        let starting_pc = self.pc;
+
         while self.state == VmState::Running {
             self.step();
         }
+        let elapsed = self.pc - starting_pc;
 
-        let message = self.output_buffer.iter().collect::<String>();
-        self.out_messages.push(message.clone());
+        println!(
+            "\nStopped after {} instructions. State is now {:?}",
+            elapsed, self.state
+        );
 
-        print!("\n\nHalt");
-        for message in &self.out_messages {
-            println!("{}", message);
+        if self.state == VmState::Halted {
+            let message = self.output_buffer.iter().collect::<String>();
+            self.out_messages.push(message.clone());
+
+            println!("\n\nHalted. Messages:");
+            for message in &self.out_messages {
+                println!("{}", message);
+            }
+            println!("\n\nHalted");
         }
-        print!("\n\nHalt");
+    }
+
+    fn feed(&mut self, line: &str) -> Result<(), Box<dyn std::error::Error>> {
+        if self.state != VmState::WaitingForInput {
+            return Err(format!("State is {:?}, can't feed", self.state).into());
+        }
+        if !self.input_buffer.is_empty() {
+            return Err("Trying to feed but buffer is not empty".into());
+        }
+
+        self.input_buffer = line.chars().collect();
+        self.input_buffer.push_back('\n');
+        //self.state = VmState::Running;
+
+        Ok(())
     }
 
     fn step(&mut self) {
@@ -562,7 +584,7 @@ impl Vm {
                 match self.input_buffer.pop_front() {
                     Some(c) => {
                         // just feed the current input
-                        self.registers[reg as usize] = c as u16;
+                        self.registers[reg] = c as u16;
                     }
                     None => {
                         // asking for new input
@@ -572,18 +594,8 @@ impl Vm {
                         print!("{}", out);
                         self.output_buffer = Vec::new();
 
-                        // TODO: waiting for input state
-                        // read input
-                        let mut buff = String::new();
-                        io::stdin()
-                            .read_line(&mut buff)
-                            .expect("In: unable to read");
-                        self.input_buffer = buff.trim().chars().collect();
-                        self.input_buffer.push_back('\n');
-
-                        // then feed 1 char
-                        let c = self.input_buffer.pop_front().unwrap();
-                        self.registers[reg as usize] = c as u16;
+                        self.state = VmState::WaitingForInput;
+                        self.ip -= 2; // size of `In` instruction
                     }
                 }
             }
@@ -609,15 +621,23 @@ impl Vm {
 }
 
 mod cli {
+    use crate::VmState;
+
     use super::Vm;
     //use clap::{App, AppSettings, Arg, SubCommand};
     use clap::{builder::RangedU64ValueParser, Arg, Command};
+
+    #[derive(Debug)]
+    pub struct Snapshot {
+        name: String,
+        vm: Vm,
+    }
 
     pub struct Cli {
         pub cli: Command,
 
         pub vm: Vm,
-        pub snapshots: Vec<Vm>,
+        pub snapshots: Vec<Snapshot>,
     }
 
     impl Cli {
@@ -625,13 +645,18 @@ mod cli {
             let cli = Command::new("cli")
                 .subcommand_required(true)
                 .no_binary_name(true)
-                .subcommand(Command::new("help").alias("h"))
+                .subcommand(Command::new("helpme"))
                 .subcommand(Command::new("vm"))
-                .subcommand(Command::new("run"))
+                .subcommand(Command::new("run").alias("r"))
+                .subcommand(Command::new("input").alias("i").arg(Arg::new("line")))
                 .subcommand(
                     Command::new("snapshot")
                         .alias("snap")
-                        .subcommand(Command::new("take").alias("t"))
+                        .subcommand(
+                            Command::new("take")
+                                .alias("t")
+                                .arg(Arg::new("name").required(true)),
+                        )
                         .subcommand(
                             Command::new("revert")
                                 .alias("r")
@@ -660,59 +685,81 @@ mod cli {
             Ok(())
         }
 
-        fn take_snapshot(&mut self) {
-            self.snapshots.push(self.vm.clone());
+        fn take_snapshot(&mut self, name: &str) {
+            self.snapshots.push(Snapshot {
+                name: name.to_string(),
+                vm: self.vm.clone(),
+            });
         }
 
         fn revert_snapshot(&mut self, idx: usize) {
             if idx < self.snapshots.len() {
                 let snap = self.snapshots.remove(idx);
-                self.vm = snap;
+                self.vm = snap.vm;
                 println!("Reverted {}", idx);
             } else {
                 println!("Can revert snapshot {}", idx);
             }
         }
 
-        pub fn parse_command(&mut self, raw: &str) -> Result<(), Box<dyn std::error::Error>> {
-            if raw.split_whitespace().next().is_none() {
+        pub fn parse_command(
+            &mut self,
+            input_line: &str,
+        ) -> Result<(), Box<dyn std::error::Error>> {
+            if input_line.split_whitespace().next().is_none() {
                 // empy command
                 return Ok(());
             }
 
-            //dbg!(&raw);
-            let argv = raw.split_whitespace();
-
-            let args = self.cli.clone().try_get_matches_from(argv)?;
-            //dbg!(&args);
+            let argv = input_line.split_whitespace();
+            let args = match self.cli.clone().try_get_matches_from(argv.clone()) {
+                Ok(args) => args,
+                Err(_) => match self.vm.feed(input_line) {
+                    Ok(_) => {
+                        self.vm.run();
+                        return Ok(());
+                    }
+                    Err(e) => {
+                        println!("Invalid command, tried feeding, but didn't work either");
+                        return Err(e);
+                    }
+                },
+            };
 
             match args.subcommand() {
-                Some(("run", sub)) => self.vm.run_until_halt(),
+                Some(("run", sub)) => self.vm.run(),
+                Some(("input", sub)) => self.vm.feed(sub.get_one::<String>("line").unwrap())?,
                 Some(("vm", sub)) => {
                     println!("{:?}", self.vm);
                 }
                 Some(("snapshot", sub)) => match sub.subcommand() {
-                    Some(("take", _)) => self.take_snapshot(),
+                    Some(("take", subsub)) => {
+                        let name = subsub.get_one::<String>("name").unwrap();
+                        self.take_snapshot(name);
+                    }
                     Some(("revert", subsub)) => {
-                        let idx = *subsub.get_one("idx").ok_or_else(|| "Provide idx")?;
+                        let idx = *subsub.get_one("idx").unwrap();
                         self.revert_snapshot(idx);
                     }
                     Some(("list", _)) => {
                         println!("{} snapshots:", self.snapshots.len());
                         println!("{:?}", self.snapshots);
                     }
-                    _ => self.take_snapshot(),
+                    _ => {
+                        let name = format!("{:03}", self.snapshots.len());
+                        self.take_snapshot(&name);
+                    }
                 },
                 Some(("step", sub)) => {
-                    let count: u32 = *sub.get_one("count").ok_or_else(|| "Provide count")?;
+                    let count: u32 = *sub.get_one("count").unwrap();
                     for i in 0..count {
                         self.vm.step();
                     }
                 }
-                Some(("help", _)) => {
+                Some(("helpme", _)) => {
                     self.cli.print_long_help().unwrap();
                 }
-                Some((x, y)) => println!("Unknown command {x:?}"),
+                Some((x, y)) => unimplemented!("Unknown command {x:?}"),
                 None => (),
             }
 
@@ -732,7 +779,10 @@ fn main() {
         match readline {
             Ok(line) => {
                 rl.add_history_entry(&line).unwrap();
-                let _ = cli.parse_command(&line);
+                match cli.parse_command(&line) {
+                    Ok(_) => (),
+                    Err(x) => println!("{:?}", x),
+                }
             }
             _ => break,
         }
