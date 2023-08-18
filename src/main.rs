@@ -219,7 +219,7 @@ impl fmt::Debug for Vm {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 enum VmState {
     Running,
     Halted,
@@ -283,8 +283,9 @@ impl Vm {
     }
 
     fn run_until_halt(&mut self) {
-        // TODO: run until input
-        while !self.step() {}
+        while self.state == VmState::Running {
+            self.step();
+        }
 
         let message = self.output_buffer.iter().collect::<String>();
         self.out_messages.push(message.clone());
@@ -296,14 +297,12 @@ impl Vm {
         print!("\n\nHalt");
     }
 
-    fn step(&mut self) -> bool {
+    fn step(&mut self) {
         let (instruction, size) = self.fetch();
 
         let next_instruction_ptr = self.ip + size;
-        let must_exit = self.execute(&instruction, next_instruction_ptr);
+        self.execute(&instruction, next_instruction_ptr);
         self.pc += 1;
-
-        must_exit
     }
 
     fn fetch(&self) -> (Opcode, usize) {
@@ -427,14 +426,13 @@ impl Vm {
         }
     }
 
-    fn execute(&mut self, instruction: &Opcode, next_instruction_ptr: usize) -> bool {
+    fn execute(&mut self, instruction: &Opcode, next_instruction_ptr: usize) {
         //println!("{:?}", instruction);
 
         self.ip = next_instruction_ptr;
 
-        let mut must_halt = false;
         match instruction {
-            Opcode::Halt => must_halt = true,
+            Opcode::Halt => self.state = VmState::Halted,
             Opcode::Set(a, b) => {
                 let val = self.get_value(b).expect("Invalid number");
                 let reg = self.get_register(a).expect("Not a register");
@@ -550,7 +548,7 @@ impl Vm {
             }
             Opcode::Ret => match self.stack.pop() {
                 Some(addr) => self.ip = addr as usize,
-                None => must_halt = true,
+                None => self.state = VmState::Halted,
             },
             Opcode::Out(a) => {
                 let c = self.get_value(a).expect("Invalid number");
@@ -591,8 +589,6 @@ impl Vm {
             }
             Opcode::Noop => (),
         }
-
-        must_halt
     }
 
     fn get_value(&self, value: &Value) -> Option<u16> {
