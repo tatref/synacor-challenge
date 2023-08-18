@@ -20,7 +20,7 @@ mod tests;
 
 mod cli;
 mod emulator;
-mod game;
+mod solver;
 
 fn main() {
     let vm = Vm::default();
