@@ -1,8 +1,9 @@
 use std::{collections::VecDeque, fmt, fs::File, io::Read, path::Path};
 
 use byteorder::{ByteOrder, LittleEndian};
+use serde::{Deserialize, Serialize};
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Serialize, Deserialize)]
 enum Value {
     Number(u16),
     Register(usize),
@@ -18,7 +19,7 @@ impl Value {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Serialize, Deserialize)]
 enum Opcode {
     /* 0  */ Halt,
     /* 1  */ Set(Value, Value),
@@ -46,7 +47,7 @@ enum Opcode {
 
 const MEM_SIZE: usize = 32768;
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Vm {
     memory: [u16; MEM_SIZE],
     registers: [u16; 8],
@@ -61,7 +62,7 @@ pub struct Vm {
     output_buffer: Vec<char>,
     input_buffer: VecDeque<char>,
 
-    out_messages: Vec<String>,
+    messages: Vec<String>,
 }
 
 impl PartialEq for Vm {
@@ -104,7 +105,7 @@ impl fmt::Debug for Vm {
     }
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 enum VmState {
     Running,
     Halted,
@@ -125,7 +126,7 @@ impl Vm {
             output_buffer: Vec::new(),
             input_buffer: VecDeque::new(),
 
-            out_messages: Vec::new(),
+            messages: Vec::new(),
         }
     }
 
@@ -157,6 +158,10 @@ impl Vm {
         self.memory[..program.len()].copy_from_slice(program);
     }
 
+    pub fn get_messages(&self) -> &[String] {
+        &self.messages
+    }
+
     pub fn run(&mut self) {
         self.state = VmState::Running;
         let starting_pc = self.pc;
@@ -173,10 +178,10 @@ impl Vm {
 
         if self.state == VmState::Halted {
             let message = self.output_buffer.iter().collect::<String>();
-            self.out_messages.push(message.clone());
+            self.messages.push(message.clone());
 
             println!("\n\nHalted. Messages:");
-            for message in &self.out_messages {
+            for message in &self.messages {
                 println!("{}", message);
             }
             println!("\n\nHalted");
@@ -469,7 +474,7 @@ impl Vm {
                         // asking for new input
                         // first, flush current output
                         let out = self.output_buffer.iter().collect::<String>(); //TODO: separate function
-                        self.out_messages.push(out.clone());
+                        self.messages.push(out.clone());
                         print!("{}", out);
                         self.output_buffer = Vec::new();
 

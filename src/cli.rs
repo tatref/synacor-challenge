@@ -1,4 +1,4 @@
-use crate::emulator::*;
+use crate::{emulator::*, solver::GameSolver};
 //use clap::{App, AppSettings, Arg, SubCommand};
 use clap::{builder::RangedU64ValueParser, Arg, Command};
 
@@ -13,6 +13,8 @@ pub struct Cli {
 
     pub vm: Vm,
     pub snapshots: Vec<Snapshot>,
+
+    solver: GameSolver,
 }
 
 impl Cli {
@@ -24,6 +26,7 @@ impl Cli {
             .subcommand(Command::new("vm"))
             .subcommand(Command::new("run").alias("r"))
             .subcommand(Command::new("input").alias("i").arg(Arg::new("line")))
+            .subcommand(Command::new("solver").subcommand(Command::new("explore")))
             .subcommand(
                 Command::new("snapshot")
                     .alias("snap")
@@ -49,10 +52,14 @@ impl Cli {
                 ),
             );
 
+        let solver = GameSolver::new();
+
         Self {
             cli,
             vm,
             snapshots: Vec::new(),
+
+            solver,
         }
     }
 
@@ -109,6 +116,14 @@ impl Cli {
             Some(("vm", sub)) => {
                 println!("{:?}", self.vm);
             }
+            Some(("solver", sub)) => match sub.subcommand() {
+                Some(("solve_maze", subsub)) => {
+                    let solver = GameSolver::new();
+                    solver.explore_maze(&self.vm, "Twisty passages");
+                }
+                Some((_, _)) => return Err("unreachable?".into()),
+                None => (),
+            },
             Some(("snapshot", sub)) => match sub.subcommand() {
                 Some(("take", subsub)) => {
                     let name = subsub.get_one::<String>("name").unwrap();

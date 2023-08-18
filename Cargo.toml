@@ -9,3 +9,4 @@ byteorder = "1"
 regex = "1"
 rustyline = "12"
 clap = "4"
+serde = { version = "1.0", features = ["derive"] }
