@@ -10,23 +10,17 @@ use std::io::prelude::*;
 use std::path::Path;
 
 use byteorder::{BigEndian, ByteOrder, LittleEndian, ReadBytesExt, WriteBytesExt};
-
-use emulator::*;
 use rustyline::error::ReadlineError;
 use rustyline::{DefaultEditor, Editor};
 
-#[cfg(test)]
-mod tests;
-
-mod cli;
-mod emulator;
-mod solver;
+use synacor_challenge::cli::*;
+use synacor_challenge::emulator::*;
 
 fn main() {
     let vm = Vm::default();
 
     let mut rl = DefaultEditor::new().unwrap();
-    let mut cli = cli::Cli::new(vm);
+    let mut cli = Cli::new(vm);
 
     loop {
         let readline = rl.readline(">> ");

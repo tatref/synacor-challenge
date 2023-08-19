@@ -1,25 +1,21 @@
 use regex::Regex;
 
-use crate::emulator::{Vm, VmState};
+use crate::emulator::{Opcode, Value, Vm, VmState};
 use std::{
     collections::{hash_map::DefaultHasher, BTreeMap, HashMap, HashSet},
-    fmt::format,
     hash::{Hash, Hasher},
 };
 
-pub struct GameSolver {
-    //game: Game,
-    pub levels: Vec<Level>,
-}
+pub struct GameSolver {}
 
 impl GameSolver {
     pub fn new() -> Self {
-        Self { levels: Vec::new() }
+        Self {}
     }
 
-    pub fn explore_maze(&self, vm: &Vm, name: &str) {
+    pub fn explore_maze(&self, vm: &Vm) {
         let message = vm.get_messages().last().unwrap();
-        let level = Level::from(&message).unwrap();
+        let level = Level::from(message).unwrap();
 
         let mut explored: HashSet<Level> = Default::default();
         let mut queue: BTreeMap<Level, Vm> = Default::default();
@@ -46,7 +42,7 @@ impl GameSolver {
                 let message = vm.get_messages().last().unwrap();
                 let new_level = match Level::from(message) {
                     Ok(l) => l,
-                    Err(x) => Level {
+                    Err(_) => Level {
                         name: "custom level".into(),
                         description: message.to_string(),
                         exits: Vec::new(),
@@ -103,36 +99,43 @@ impl GameSolver {
     }
 
     pub fn bruteforce_teleporter(&self, vm: &Vm) {
-        'outer: for val in 0..32768 {
-            let mut vm = vm.clone();
+        let mut vm = vm.clone();
 
-            vm.set_register(7, val);
-            vm.feed("use teleporter");
+        let val = 1;
+        vm.set_register(7, val);
 
-            let mut steps = 1_000_000;
-            while vm.get_state() == VmState::Running {
-                vm.step().unwrap();
-                steps -= 1;
-                if steps == 0 {
-                    println!("early stop {}", val);
-                    continue 'outer;
-                }
+        let traced = Opcode::Jmp(Value::Invalid).discriminant()
+            | Opcode::Ret.discriminant()
+            | Opcode::Call(Value::Invalid).discriminant();
+        vm.set_traced_opcodes(traced);
+
+        let _ = vm.feed("use teleporter");
+
+        let mut steps = 10_000_000;
+        while vm.get_state() == VmState::Running {
+            vm.step().unwrap();
+            steps -= 1;
+            if steps == 0 {
+                println!("early stop {}", val);
+                break;
             }
-
-            println!("Found: {}, steps={}", val, steps);
         }
-    }
-}
 
-#[derive(Copy, Clone, Debug)]
-enum GameState {
-    Dead,
-    Playing,
-}
-#[derive(Clone, Debug)]
-struct Game {
-    state: GameState,
-    level: Level,
+        vm.set_traced_opcodes(0);
+
+        let mut map = HashMap::new();
+        for e in vm.get_trace_buffer() {
+            *map.entry(e).or_insert(0) += 1;
+        }
+
+        for x in map.iter() {
+            println!("{:?}", x);
+        }
+
+        //for traces in vm.get_trace_buffer() {
+        //    println!("{:?}", traces);
+        //}
+    }
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Hash, Ord, PartialOrd)]
@@ -147,7 +150,7 @@ impl Level {
     pub fn from(raw: &str) -> Result<Self, Box<dyn std::error::Error>> {
         let re_name = Regex::new(r"== (.+?) ==\n(.+?)\n").unwrap();
         let (name, description) = {
-            let caps = re_name.captures(raw).ok_or_else(|| "No level name")?;
+            let caps = re_name.captures(raw).ok_or("No level name")?;
 
             (
                 caps.get(1).unwrap().as_str().to_string(),

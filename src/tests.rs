@@ -1,6 +1,6 @@
 #[test]
-fn load_program_from_file() -> Result<(), ()> {
-    use super::Vm;
+fn load_program_from_file() -> Result<(), Box<dyn std::error::Error>> {
+    use crate::emulator::Vm;
 
     let f = "challenge.bin";
     let mut vm = Vm::default();
@@ -8,8 +8,8 @@ fn load_program_from_file() -> Result<(), ()> {
 }
 
 #[test]
-fn load_program_from_mem() -> Result<(), ()> {
-    use super::Vm;
+fn load_program_from_mem() -> Result<(), Box<dyn std::error::Error>> {
+    use crate::emulator::Vm;
 
     let mut vm = Vm::default();
     let program = [9, 32768, 32769, 4, 19, 32768];

@@ -16,8 +16,6 @@ pub struct Cli {
 
     pub vm: Vm,
     pub snapshots: Vec<Snapshot>,
-
-    solver: GameSolver,
 }
 
 impl Cli {
@@ -26,6 +24,19 @@ impl Cli {
             .subcommand_required(true)
             .no_binary_name(true)
             .subcommand(Command::new("helpme"))
+            .subcommand(
+                Command::new("dis")
+                    .arg(
+                        Arg::new("from")
+                            .required(true)
+                            .value_parser(RangedU64ValueParser::<usize>::new()),
+                    )
+                    .arg(
+                        Arg::new("count")
+                            .required(true)
+                            .value_parser(RangedU64ValueParser::<usize>::new()),
+                    ),
+            )
             .subcommand(
                 Command::new("vm").subcommand(
                     Command::new("register").subcommand(
@@ -48,7 +59,7 @@ impl Cli {
             .subcommand(
                 Command::new("solver")
                     .subcommand(Command::new("explore"))
-                    .subcommand(Command::new("bruteforce")),
+                    .subcommand(Command::new("teleporter")),
             )
             .subcommand(
                 Command::new("snap")
@@ -71,22 +82,15 @@ impl Cli {
                 ),
             );
 
-        let solver = GameSolver::new();
-
         Self {
             cli,
             vm,
             snapshots: Vec::new(),
-
-            solver,
         }
     }
 
     fn get_snap_by_name(&self, name: &str) -> Option<&Snapshot> {
-        self.snapshots
-            .iter()
-            .filter(|snap| snap.name == name)
-            .next()
+        self.snapshots.iter().find(|snap| snap.name == name)
     }
 
     fn dump_snapshot(&mut self, name: &str, dump_path: &str) {
@@ -166,7 +170,7 @@ impl Cli {
         };
 
         match args.subcommand() {
-            Some(("run", sub)) => {
+            Some(("run", _sub)) => {
                 self.vm.run();
                 println!("{}", self.vm.get_messages().last().unwrap());
             }
@@ -175,8 +179,17 @@ impl Cli {
                     .feed(sub.get_one::<String>("line").unwrap_or(&"".to_string()))?;
                 println!("{}", self.vm.get_messages().last().unwrap());
             }
+            Some(("dis", sub)) => {
+                let from = *sub.get_one::<usize>("from").unwrap();
+                let count = *sub.get_one::<usize>("count").unwrap();
+
+                let instructions = self.vm.disassemble(from, count);
+                for (ip, instr) in instructions.iter() {
+                    println!("{}: {:?}", ip, instr);
+                }
+            }
             Some(("vm", sub)) => match sub.subcommand() {
-                Some(("register", subsub)) => match subsub.subcommand() {
+                Some(("register", sub)) => match sub.subcommand() {
                     Some(("set", sub)) => {
                         let reg = *sub.get_one::<usize>("register").unwrap();
                         let value = *sub.get_one::<u16>("value").unwrap();
@@ -191,11 +204,11 @@ impl Cli {
             },
 
             Some(("solver", sub)) => match sub.subcommand() {
-                Some(("explore", subsub)) => {
+                Some(("explore", _sub)) => {
                     let solver = GameSolver::new();
-                    solver.explore_maze(&self.vm, "Twisty passages");
+                    solver.explore_maze(&self.vm);
                 }
-                Some(("bruteforce", subsub)) => {
+                Some(("teleporter", _sub)) => {
                     let solver = GameSolver::new();
                     solver.bruteforce_teleporter(&self.vm);
                 }
@@ -203,9 +216,9 @@ impl Cli {
                 None => (),
             },
             Some(("snap", sub)) => match sub.subcommand() {
-                Some(("dump", subsub)) => {
-                    let name = subsub.get_one::<String>("name").unwrap();
-                    let dump_path = subsub.get_one::<String>("dump_path").unwrap();
+                Some(("dump", sub)) => {
+                    let name = sub.get_one::<String>("name").unwrap();
+                    let dump_path = sub.get_one::<String>("dump_path").unwrap();
                     self.dump_snapshot(name, &format!("snaps/{}", dump_path));
                 }
                 Some(("load", subsub)) => {
@@ -216,16 +229,16 @@ impl Cli {
                         self.vm.get_messages().last().unwrap()
                     );
                 }
-                Some(("take", subsub)) => {
-                    let name = subsub.get_one::<String>("name").unwrap();
+                Some(("take", sub)) => {
+                    let name = sub.get_one::<String>("name").unwrap();
                     self.take_snapshot(name);
                 }
-                Some(("restore", subsub)) => {
-                    let name = subsub.get_one::<String>("name").unwrap();
+                Some(("restore", sub)) => {
+                    let name = sub.get_one::<String>("name").unwrap();
                     self.restore_snapshot(name);
                 }
-                Some(("remove", subsub)) => {
-                    let name = subsub.get_one::<String>("name").unwrap();
+                Some(("remove", sub)) => {
+                    let name = sub.get_one::<String>("name").unwrap();
                     self.remove_snapshot(name);
                 }
                 Some(("list", _)) => {
@@ -241,14 +254,14 @@ impl Cli {
             },
             Some(("step", sub)) => {
                 let count: u32 = *sub.get_one("count").unwrap();
-                for i in 0..count {
+                for _ in 0..count {
                     let _ = self.vm.step();
                 }
             }
             Some(("helpme", _)) => {
                 self.cli.print_long_help().unwrap();
             }
-            Some((x, y)) => unimplemented!("Unknown command {x:?}"),
+            Some((x, _sub)) => unimplemented!("Unknown command {x:?}"),
             None => (),
         }
 

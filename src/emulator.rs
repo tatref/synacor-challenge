@@ -4,8 +4,8 @@ use byteorder::{ByteOrder, LittleEndian};
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 
-#[derive(Copy, Clone, Debug, Serialize, Deserialize)]
-enum Value {
+#[derive(Copy, Clone, Serialize, Deserialize, Eq, PartialEq, PartialOrd, Ord, Hash)]
+pub enum Value {
     Number(u16),
     Register(usize),
     Invalid,
@@ -19,31 +19,47 @@ impl Value {
         }
     }
 }
+impl fmt::Debug for Value {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Number(arg0) => write!(f, "{}", arg0),
+            Self::Register(arg0) => f.debug_tuple("Reg").field(arg0).finish(),
+            Self::Invalid => write!(f, "Invalid"),
+        }
+    }
+}
 
-#[derive(Copy, Clone, Debug, Serialize, Deserialize)]
-enum Opcode {
-    /* 0  */ Halt,
-    /* 1  */ Set(Value, Value),
-    /* 2  */ Push(Value),
-    /* 3  */ Pop(Value),
-    /* 4  */ Eq(Value, Value, Value),
-    /* 5  */ Gt(Value, Value, Value),
-    /* 6  */ Jmp(Value, Value),
-    /* 7  */ Jt(Value, Value),
-    /* 8  */ Jf(Value, Value),
-    /* 9  */ Add(Value, Value, Value),
-    /* 10 */ Mult(Value, Value, Value),
-    /* 11 */ Mod(Value, Value, Value),
-    /* 12 */ And(Value, Value, Value),
-    /* 13 */ Or(Value, Value, Value),
-    /* 14 */ Not(Value, Value),
-    /* 15 */ Rmem(Value, Value),
-    /* 16 */ Wmem(Value, Value),
-    /* 17 */ Call(Value),
-    /* 18 */ Ret,
-    /* 19 */ Out(Value),
-    /* 20 */ In(Value),
-    /* 21 */ Noop,
+#[repr(u32)]
+#[derive(Copy, Clone, Debug, Serialize, Deserialize, Eq, PartialEq, PartialOrd, Ord, Hash)]
+pub enum Opcode {
+    Halt = 1 << 0,
+    Set(Value, Value) = 1 << 1,
+    Push(Value) = 1 << 2,
+    Pop(Value) = 1 << 3,
+    Eq(Value, Value, Value) = 1 << 4,
+    Gt(Value, Value, Value) = 1 << 5,
+    Jmp(Value) = 1 << 6,
+    Jt(Value, Value) = 1 << 7,
+    Jf(Value, Value) = 1 << 8,
+    Add(Value, Value, Value) = 1 << 9,
+    Mult(Value, Value, Value) = 1 << 10,
+    Mod(Value, Value, Value) = 1 << 11,
+    And(Value, Value, Value) = 1 << 12,
+    Or(Value, Value, Value) = 1 << 13,
+    Not(Value, Value) = 1 << 14,
+    Rmem(Value, Value) = 1 << 15,
+    Wmem(Value, Value) = 1 << 16,
+    Call(Value) = 1 << 17,
+    Ret = 1 << 18,
+    Out(Value) = 1 << 19,
+    In(Value) = 1 << 20,
+    Noop = 1 << 21,
+}
+
+impl Opcode {
+    pub fn discriminant(&self) -> u32 {
+        unsafe { *(self as *const Self as *const u32) }
+    }
 }
 
 const MEM_SIZE: usize = 32768;
@@ -66,6 +82,9 @@ pub struct Vm {
     input_buffer: VecDeque<char>,
 
     messages: Vec<String>,
+
+    traced_opcodes: u32,
+    trace_buffer: Vec<(usize, Opcode)>,
 }
 
 impl PartialEq for Vm {
@@ -130,6 +149,9 @@ impl Vm {
             input_buffer: VecDeque::new(),
 
             messages: Vec::new(),
+
+            traced_opcodes: 0,
+            trace_buffer: Vec::new(),
         }
     }
 
@@ -141,13 +163,16 @@ impl Vm {
         vm
     }
 
-    pub fn load_program_from_file<P: AsRef<Path>>(&mut self, path: P) -> Result<(), ()> {
-        let mut f = File::open(path).map_err(|_| ())?;
+    pub fn load_program_from_file<P: AsRef<Path>>(
+        &mut self,
+        path: P,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let mut f = File::open(path)?;
         let mut buff = Vec::new();
 
-        f.read_to_end(&mut buff).map_err(|_| ())?;
+        f.read_to_end(&mut buff)?;
 
-        let data: Vec<_> = buff.chunks(2).map(|x| LittleEndian::read_u16(x)).collect();
+        let data: Vec<_> = buff.chunks(2).map(LittleEndian::read_u16).collect();
 
         if data.len() > MEM_SIZE {
             panic!("File is too big");
@@ -173,28 +198,38 @@ impl Vm {
         self.registers[reg] = value;
     }
 
+    pub fn set_traced_opcodes(&mut self, traced: u32) {
+        self.traced_opcodes = traced;
+    }
+
+    pub fn get_trace_buffer(&self) -> &[(usize, Opcode)] {
+        &self.trace_buffer
+    }
+
+    pub fn disassemble(&self, mut from: usize, mut count: usize) -> Vec<(usize, Opcode)> {
+        let mut instructions = Vec::new();
+
+        while count > 0 {
+            let (instr, size) = self.fetch(from);
+            instructions.push((from, instr));
+
+            from += size;
+            count -= 1;
+        }
+
+        instructions
+    }
+
     pub fn run(&mut self) {
         self.state = VmState::Running;
-        let starting_pc = self.pc;
 
         while self.state == VmState::Running {
             self.step().unwrap();
         }
-        let elapsed = self.pc - starting_pc;
-
-        //println!(
-        //    "\nStopped after {} instructions. State is now {:?}",
-        //    elapsed, self.state
-        //);
 
         if self.state == VmState::Halted {
             let message = self.output_buffer.iter().collect::<String>();
             self.messages.push(message.clone());
-
-            //println!("\n\nHalted. Messages:");
-            //for message in &self.messages {
-            //    println!("{}", message);
-            //}
             println!("\n\nHalted");
         }
     }
@@ -219,7 +254,11 @@ impl Vm {
             return Err("Vm is not running".into());
         }
 
-        let (instruction, size) = self.fetch();
+        let (instruction, size) = self.fetch(self.ip);
+
+        if (instruction.discriminant() & self.traced_opcodes) != 0 {
+            self.trace_buffer.push((self.ip, instruction));
+        }
 
         let next_instruction_ptr = self.ip + size;
         self.execute(&instruction, next_instruction_ptr);
@@ -228,122 +267,116 @@ impl Vm {
         Ok(())
     }
 
-    fn fetch(&self) -> (Opcode, usize) {
-        let instr_type = self.memory[self.ip];
+    fn fetch(&self, ip: usize) -> (Opcode, usize) {
+        let instr_type = self.memory[ip];
 
         match instr_type {
             0 => (Opcode::Halt, 1),
             1 => (
                 Opcode::Set(
-                    Value::new(self.memory[self.ip + 1]),
-                    Value::new(self.memory[self.ip + 2]),
+                    Value::new(self.memory[ip + 1]),
+                    Value::new(self.memory[ip + 2]),
                 ),
                 3,
             ),
-            2 => (Opcode::Push(Value::new(self.memory[self.ip + 1])), 2),
-            3 => (Opcode::Pop(Value::new(self.memory[self.ip + 1])), 2),
+            2 => (Opcode::Push(Value::new(self.memory[ip + 1])), 2),
+            3 => (Opcode::Pop(Value::new(self.memory[ip + 1])), 2),
             4 => (
                 Opcode::Eq(
-                    Value::new(self.memory[self.ip + 1]),
-                    Value::new(self.memory[self.ip + 2]),
-                    Value::new(self.memory[self.ip + 3]),
+                    Value::new(self.memory[ip + 1]),
+                    Value::new(self.memory[ip + 2]),
+                    Value::new(self.memory[ip + 3]),
                 ),
                 4,
             ),
             5 => (
                 Opcode::Gt(
-                    Value::new(self.memory[self.ip + 1]),
-                    Value::new(self.memory[self.ip + 2]),
-                    Value::new(self.memory[self.ip + 3]),
+                    Value::new(self.memory[ip + 1]),
+                    Value::new(self.memory[ip + 2]),
+                    Value::new(self.memory[ip + 3]),
                 ),
                 4,
             ),
-            6 => (
-                Opcode::Jmp(
-                    Value::new(self.memory[self.ip + 1]),
-                    Value::new(self.memory[self.ip + 2]),
-                ),
-                3,
-            ),
+            6 => (Opcode::Jmp(Value::new(self.memory[ip + 1])), 3),
             7 => (
                 Opcode::Jt(
-                    Value::new(self.memory[self.ip + 1]),
-                    Value::new(self.memory[self.ip + 2]),
+                    Value::new(self.memory[ip + 1]),
+                    Value::new(self.memory[ip + 2]),
                 ),
                 3,
             ),
             8 => (
                 Opcode::Jf(
-                    Value::new(self.memory[self.ip + 1]),
-                    Value::new(self.memory[self.ip + 2]),
+                    Value::new(self.memory[ip + 1]),
+                    Value::new(self.memory[ip + 2]),
                 ),
                 3,
             ),
             9 => (
                 Opcode::Add(
-                    Value::new(self.memory[self.ip + 1]),
-                    Value::new(self.memory[self.ip + 2]),
-                    Value::new(self.memory[self.ip + 3]),
+                    Value::new(self.memory[ip + 1]),
+                    Value::new(self.memory[ip + 2]),
+                    Value::new(self.memory[ip + 3]),
                 ),
                 4,
             ),
             10 => (
                 Opcode::Mult(
-                    Value::new(self.memory[self.ip + 1]),
-                    Value::new(self.memory[self.ip + 2]),
-                    Value::new(self.memory[self.ip + 3]),
+                    Value::new(self.memory[ip + 1]),
+                    Value::new(self.memory[ip + 2]),
+                    Value::new(self.memory[ip + 3]),
                 ),
                 4,
             ),
             11 => (
                 Opcode::Mod(
-                    Value::new(self.memory[self.ip + 1]),
-                    Value::new(self.memory[self.ip + 2]),
-                    Value::new(self.memory[self.ip + 3]),
+                    Value::new(self.memory[ip + 1]),
+                    Value::new(self.memory[ip + 2]),
+                    Value::new(self.memory[ip + 3]),
                 ),
                 4,
             ),
             12 => (
                 Opcode::And(
-                    Value::new(self.memory[self.ip + 1]),
-                    Value::new(self.memory[self.ip + 2]),
-                    Value::new(self.memory[self.ip + 3]),
+                    Value::new(self.memory[ip + 1]),
+                    Value::new(self.memory[ip + 2]),
+                    Value::new(self.memory[ip + 3]),
                 ),
                 4,
             ),
             13 => (
                 Opcode::Or(
-                    Value::new(self.memory[self.ip + 1]),
-                    Value::new(self.memory[self.ip + 2]),
-                    Value::new(self.memory[self.ip + 3]),
+                    Value::new(self.memory[ip + 1]),
+                    Value::new(self.memory[ip + 2]),
+                    Value::new(self.memory[ip + 3]),
                 ),
                 4,
             ),
             14 => (
                 Opcode::Not(
-                    Value::new(self.memory[self.ip + 1]),
-                    Value::new(self.memory[self.ip + 2]),
+                    Value::new(self.memory[ip + 1]),
+                    Value::new(self.memory[ip + 2]),
                 ),
                 3,
             ),
             15 => (
                 Opcode::Rmem(
-                    Value::new(self.memory[self.ip + 1]),
-                    Value::new(self.memory[self.ip + 2]),
+                    Value::new(self.memory[ip + 1]),
+                    Value::new(self.memory[ip + 2]),
                 ),
                 3,
             ),
             16 => (
                 Opcode::Wmem(
-                    Value::new(self.memory[self.ip + 1]),
-                    Value::new(self.memory[self.ip + 2]),
+                    Value::new(self.memory[ip + 1]),
+                    Value::new(self.memory[ip + 2]),
                 ),
                 3,
             ),
-            17 => (Opcode::Call(Value::new(self.memory[self.ip + 1])), 2),
+            17 => (Opcode::Call(Value::new(self.memory[ip + 1])), 2),
             18 => (Opcode::Ret, 1),
-            19 => (Opcode::Out(Value::new(self.memory[self.ip + 1])), 2),
-            20 => (Opcode::In(Value::new(self.memory[self.ip + 1])), 2),
+            19 => (Opcode::Out(Value::new(self.memory[ip + 1])), 2),
+            20 => (Opcode::In(Value::new(self.memory[ip + 1])), 2),
             21 => (Opcode::Noop, 1),
             x => unreachable!("Fetch: unknown instr '{}'", x),
         }
@@ -391,7 +424,7 @@ impl Vm {
                 let reg = self.get_register(a).expect("Not a register");
                 self.registers[reg] = val_a;
             }
-            Opcode::Jmp(a, b) => {
+            Opcode::Jmp(a) => {
                 self.ip = self.get_value(a).expect("Invalid number") as usize;
             }
             Opcode::Jt(a, b) => {
@@ -512,7 +545,7 @@ impl Vm {
 
     fn get_register(&self, value: &Value) -> Option<usize> {
         match value {
-            Value::Number(x) => None,
+            Value::Number(_) => None,
             Value::Register(x) => Some(*x),
             Value::Invalid => None,
         }
