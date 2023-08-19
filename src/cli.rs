@@ -2,7 +2,10 @@ use crate::{emulator::*, solver::GameSolver};
 //use clap::{App, AppSettings, Arg, SubCommand};
 use clap::{builder::RangedU64ValueParser, Arg, Command};
 
-#[derive(Debug)]
+use serde::Deserialize;
+use serde::Serialize;
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Snapshot {
     name: String,
     vm: Vm,
@@ -28,21 +31,17 @@ impl Cli {
             .subcommand(Command::new("input").alias("i").arg(Arg::new("line")))
             .subcommand(Command::new("solver").subcommand(Command::new("explore")))
             .subcommand(
-                Command::new("snapshot")
-                    .alias("snap")
+                Command::new("snap")
+                    .subcommand(Command::new("load").arg(Arg::new("dump_path").required(true)))
                     .subcommand(
-                        Command::new("take")
-                            .alias("t")
-                            .arg(Arg::new("name").required(true)),
+                        Command::new("dump")
+                            .arg(Arg::new("name").required(true))
+                            .arg(Arg::new("dump_path").required(true)),
                     )
-                    .subcommand(
-                        Command::new("restore").alias("r").arg(
-                            Arg::new("idx")
-                                .required(true)
-                                .value_parser(RangedU64ValueParser::<usize>::new()),
-                        ),
-                    )
-                    .subcommand(Command::new("list").alias("l")),
+                    .subcommand(Command::new("take").arg(Arg::new("name").required(true)))
+                    .subcommand(Command::new("remove").arg(Arg::new("name").required(true)))
+                    .subcommand(Command::new("restore").arg(Arg::new("name").required(true)))
+                    .subcommand(Command::new("list")),
             )
             .subcommand(
                 Command::new("step").alias("s").arg(
@@ -63,6 +62,37 @@ impl Cli {
         }
     }
 
+    fn get_snap_by_name(&self, name: &str) -> Option<&Snapshot> {
+        self.snapshots
+            .iter()
+            .filter(|snap| snap.name == name)
+            .next()
+    }
+
+    fn dump_snapshot(&mut self, name: &str, dump_path: &str) {
+        match self.get_snap_by_name(name) {
+            Some(snap) => {
+                let mut f = std::fs::File::create(dump_path).unwrap();
+                serde_json::to_writer(&mut f, &snap).unwrap();
+            }
+            None => println!("Snap not found"),
+        }
+    }
+
+    fn load_snapshot(&mut self, dump_path: &str) -> Result<(), Box<dyn std::error::Error>> {
+        let f = std::fs::File::open(dump_path)?;
+        let vm: Vm = serde_json::from_reader(f)?;
+        let name = format!("{:03}", self.snapshots.len());
+
+        self.snapshots.push(Snapshot {
+            name: name.clone(),
+            vm,
+        });
+        self.restore_snapshot(&name);
+
+        Ok(())
+    }
+
     fn take_snapshot(&mut self, name: &str) {
         self.snapshots.push(Snapshot {
             name: name.to_string(),
@@ -70,22 +100,29 @@ impl Cli {
         });
     }
 
-    fn remove_snapshot(&mut self, idx: usize) {
-        if idx < self.snapshots.len() {
-            self.snapshots.remove(idx);
-            println!("Removed {}", idx);
-        } else {
-            println!("Can remove snapshot {}", idx);
+    fn remove_snapshot(&mut self, name: &str) {
+        let mut idx = None;
+        for (i, snap) in self.snapshots.iter().enumerate() {
+            if snap.name == name {
+                idx = Some(i);
+                break;
+            }
+        }
+
+        match idx {
+            Some(idx) => {
+                self.snapshots.remove(idx);
+            }
+            None => println!("Not found"),
         }
     }
 
-    fn restore_snapshot(&mut self, idx: usize) {
-        if idx < self.snapshots.len() {
-            let snap = &self.snapshots[idx];
-            self.vm = snap.vm.clone();
-            println!("Restored {}", idx);
-        } else {
-            println!("Can revert snapshot {}", idx);
+    fn restore_snapshot(&mut self, name: &str) {
+        match self.get_snap_by_name(name) {
+            Some(snap) => {
+                self.vm = snap.vm.clone();
+            }
+            None => println!("Snap not found"),
         }
     }
 
@@ -117,21 +154,31 @@ impl Cli {
                 println!("{:?}", self.vm);
             }
             Some(("solver", sub)) => match sub.subcommand() {
-                Some(("solve_maze", subsub)) => {
+                Some(("explore", subsub)) => {
                     let solver = GameSolver::new();
                     solver.explore_maze(&self.vm, "Twisty passages");
                 }
                 Some((_, _)) => return Err("unreachable?".into()),
                 None => (),
             },
-            Some(("snapshot", sub)) => match sub.subcommand() {
+            Some(("snap", sub)) => match sub.subcommand() {
+                Some(("dump", subsub)) => {
+                    let name = subsub.get_one::<String>("name").unwrap();
+                    let dump_path = subsub.get_one::<String>("dump_path").unwrap();
+                    self.dump_snapshot(name, dump_path);
+                }
+                Some(("load", subsub)) => {
+                    let dump_path = subsub.get_one::<String>("dump_path").unwrap();
+                    self.load_snapshot(dump_path)?;
+                    println!("{:?}", self.vm.get_messages().last());
+                }
                 Some(("take", subsub)) => {
                     let name = subsub.get_one::<String>("name").unwrap();
                     self.take_snapshot(name);
                 }
                 Some(("restore", subsub)) => {
-                    let idx = *subsub.get_one::<usize>("idx").unwrap();
-                    self.restore_snapshot(idx);
+                    let name = subsub.get_one::<String>("name").unwrap();
+                    self.restore_snapshot(name);
                 }
                 Some(("remove", subsub)) => {
                     let idx = *subsub.get_one("idx").unwrap();

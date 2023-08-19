@@ -2,6 +2,7 @@ use std::{collections::VecDeque, fmt, fs::File, io::Read, path::Path};
 
 use byteorder::{ByteOrder, LittleEndian};
 use serde::{Deserialize, Serialize};
+use serde_with::serde_as;
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize)]
 enum Value {
@@ -47,8 +48,10 @@ enum Opcode {
 
 const MEM_SIZE: usize = 32768;
 
+#[serde_as]
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Vm {
+    #[serde_as(as = "[_; MEM_SIZE]")]
     memory: [u16; MEM_SIZE],
     registers: [u16; 8],
     stack: Vec<u16>,

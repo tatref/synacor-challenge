@@ -1,6 +1,7 @@
 use regex::Regex;
 
 use crate::emulator::Vm;
+use std::collections::HashSet;
 
 pub struct GameSolver {
     //game: Game,
@@ -42,7 +43,7 @@ pub struct Level {
 
 impl Level {
     pub fn from(raw: &str) -> Result<Self, Box<dyn std::error::Error>> {
-        let re_name = Regex::new(r"^== (\w+) ==\n(.+?)\n").unwrap();
+        let re_name = Regex::new(r"== (.+?) ==\n(.+?)\n").unwrap();
         let (name, description) = {
             let caps = re_name.captures(raw).ok_or_else(|| "No level name")?;
 
@@ -53,7 +54,7 @@ impl Level {
         };
 
         fn get_things(raw: &str) -> Vec<String> {
-            let re_things = Regex::new(r"(?s)There are \d+ things:\n([^\n]+\n)+").unwrap();
+            let re_things = Regex::new(r"Things of interest here:\n([^\n]+\n)+").unwrap();
             let things_str = match re_things.captures(raw) {
                 Some(x) => x.get(0).unwrap().as_str().to_string(),
                 None => return Vec::new(),
