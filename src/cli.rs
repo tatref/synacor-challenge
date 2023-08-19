@@ -26,10 +26,30 @@ impl Cli {
             .subcommand_required(true)
             .no_binary_name(true)
             .subcommand(Command::new("helpme"))
-            .subcommand(Command::new("vm"))
+            .subcommand(
+                Command::new("vm").subcommand(
+                    Command::new("register").subcommand(
+                        Command::new("set")
+                            .arg(
+                                Arg::new("register")
+                                    .required(true)
+                                    .value_parser(RangedU64ValueParser::<usize>::new()),
+                            )
+                            .arg(
+                                Arg::new("value")
+                                    .required(true)
+                                    .value_parser(RangedU64ValueParser::<u16>::new()),
+                            ),
+                    ),
+                ),
+            )
             .subcommand(Command::new("run").alias("r"))
             .subcommand(Command::new("input").alias("i").arg(Arg::new("line")))
-            .subcommand(Command::new("solver").subcommand(Command::new("explore")))
+            .subcommand(
+                Command::new("solver")
+                    .subcommand(Command::new("explore"))
+                    .subcommand(Command::new("bruteforce")),
+            )
             .subcommand(
                 Command::new("snap")
                     .subcommand(Command::new("load").arg(Arg::new("dump_path").required(true)))
@@ -81,13 +101,10 @@ impl Cli {
 
     fn load_snapshot(&mut self, dump_path: &str) -> Result<(), Box<dyn std::error::Error>> {
         let f = std::fs::File::open(dump_path)?;
-        let vm: Vm = serde_json::from_reader(f)?;
-        let name = format!("{:03}", self.snapshots.len());
+        let snap: Snapshot = serde_json::from_reader(f)?;
+        let name = snap.name.clone();
 
-        self.snapshots.push(Snapshot {
-            name: name.clone(),
-            vm,
-        });
+        self.snapshots.push(snap);
         self.restore_snapshot(&name);
 
         Ok(())
@@ -138,6 +155,7 @@ impl Cli {
             Err(_) => match self.vm.feed(input_line) {
                 Ok(_) => {
                     self.vm.run();
+                    println!("{}", self.vm.get_messages().last().unwrap());
                     return Ok(());
                 }
                 Err(e) => {
@@ -148,15 +166,38 @@ impl Cli {
         };
 
         match args.subcommand() {
-            Some(("run", sub)) => self.vm.run(),
-            Some(("input", sub)) => self.vm.feed(sub.get_one::<String>("line").unwrap())?,
-            Some(("vm", sub)) => {
-                println!("{:?}", self.vm);
+            Some(("run", sub)) => {
+                self.vm.run();
+                println!("{}", self.vm.get_messages().last().unwrap());
             }
+            Some(("input", sub)) => {
+                self.vm
+                    .feed(sub.get_one::<String>("line").unwrap_or(&"".to_string()))?;
+                println!("{}", self.vm.get_messages().last().unwrap());
+            }
+            Some(("vm", sub)) => match sub.subcommand() {
+                Some(("register", subsub)) => match subsub.subcommand() {
+                    Some(("set", sub)) => {
+                        let reg = *sub.get_one::<usize>("register").unwrap();
+                        let value = *sub.get_one::<u16>("value").unwrap();
+
+                        self.vm.set_register(reg, value);
+                    }
+                    Some(_) => (),
+                    None => (),
+                },
+                Some((_, _)) => return Err("unreachable?".into()),
+                None => println!("{:?}", self.vm),
+            },
+
             Some(("solver", sub)) => match sub.subcommand() {
                 Some(("explore", subsub)) => {
                     let solver = GameSolver::new();
                     solver.explore_maze(&self.vm, "Twisty passages");
+                }
+                Some(("bruteforce", subsub)) => {
+                    let solver = GameSolver::new();
+                    solver.bruteforce_teleporter(&self.vm);
                 }
                 Some((_, _)) => return Err("unreachable?".into()),
                 None => (),
@@ -165,12 +206,15 @@ impl Cli {
                 Some(("dump", subsub)) => {
                     let name = subsub.get_one::<String>("name").unwrap();
                     let dump_path = subsub.get_one::<String>("dump_path").unwrap();
-                    self.dump_snapshot(name, dump_path);
+                    self.dump_snapshot(name, &format!("snaps/{}", dump_path));
                 }
                 Some(("load", subsub)) => {
                     let dump_path = subsub.get_one::<String>("dump_path").unwrap();
-                    self.load_snapshot(dump_path)?;
-                    println!("{:?}", self.vm.get_messages().last());
+                    self.load_snapshot(&format!("snaps/{}", dump_path))?;
+                    println!(
+                        "Last message was:\n{}",
+                        self.vm.get_messages().last().unwrap()
+                    );
                 }
                 Some(("take", subsub)) => {
                     let name = subsub.get_one::<String>("name").unwrap();
@@ -181,8 +225,8 @@ impl Cli {
                     self.restore_snapshot(name);
                 }
                 Some(("remove", subsub)) => {
-                    let idx = *subsub.get_one("idx").unwrap();
-                    self.remove_snapshot(idx);
+                    let name = subsub.get_one::<String>("name").unwrap();
+                    self.remove_snapshot(name);
                 }
                 Some(("list", _)) => {
                     println!("{} snapshots:", self.snapshots.len());
@@ -198,7 +242,7 @@ impl Cli {
             Some(("step", sub)) => {
                 let count: u32 = *sub.get_one("count").unwrap();
                 for i in 0..count {
-                    self.vm.step();
+                    let _ = self.vm.step();
                 }
             }
             Some(("helpme", _)) => {

@@ -51,8 +51,8 @@ const MEM_SIZE: usize = 32768;
 #[serde_as]
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Vm {
-    #[serde_as(as = "[_; MEM_SIZE]")]
-    memory: [u16; MEM_SIZE],
+    //#[serde_as(as = "[_; MEM_SIZE]")]
+    memory: Vec<u16>,
     registers: [u16; 8],
     stack: Vec<u16>,
     /// Instruction Pointer (next instruction)
@@ -109,7 +109,7 @@ impl fmt::Debug for Vm {
 }
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
-enum VmState {
+pub enum VmState {
     Running,
     Halted,
     WaitingForInput,
@@ -118,7 +118,7 @@ enum VmState {
 impl Vm {
     fn new() -> Self {
         Vm {
-            memory: [0u16; MEM_SIZE],
+            memory: vec![0u16; MEM_SIZE],
             registers: [0u16; 8],
             stack: Vec::new(),
             ip: 0,
@@ -165,28 +165,36 @@ impl Vm {
         &self.messages
     }
 
+    pub fn get_state(&self) -> VmState {
+        self.state
+    }
+
+    pub fn set_register(&mut self, reg: usize, value: u16) {
+        self.registers[reg] = value;
+    }
+
     pub fn run(&mut self) {
         self.state = VmState::Running;
         let starting_pc = self.pc;
 
         while self.state == VmState::Running {
-            self.step();
+            self.step().unwrap();
         }
         let elapsed = self.pc - starting_pc;
 
-        println!(
-            "\nStopped after {} instructions. State is now {:?}",
-            elapsed, self.state
-        );
+        //println!(
+        //    "\nStopped after {} instructions. State is now {:?}",
+        //    elapsed, self.state
+        //);
 
         if self.state == VmState::Halted {
             let message = self.output_buffer.iter().collect::<String>();
             self.messages.push(message.clone());
 
-            println!("\n\nHalted. Messages:");
-            for message in &self.messages {
-                println!("{}", message);
-            }
+            //println!("\n\nHalted. Messages:");
+            //for message in &self.messages {
+            //    println!("{}", message);
+            //}
             println!("\n\nHalted");
         }
     }
@@ -201,17 +209,23 @@ impl Vm {
 
         self.input_buffer = line.chars().collect();
         self.input_buffer.push_back('\n');
-        //self.state = VmState::Running;
+        self.state = VmState::Running;
 
         Ok(())
     }
 
-    pub fn step(&mut self) {
+    pub fn step(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        if self.state != VmState::Running {
+            return Err("Vm is not running".into());
+        }
+
         let (instruction, size) = self.fetch();
 
         let next_instruction_ptr = self.ip + size;
         self.execute(&instruction, next_instruction_ptr);
         self.pc += 1;
+
+        Ok(())
     }
 
     fn fetch(&self) -> (Opcode, usize) {
@@ -463,7 +477,6 @@ impl Vm {
                 let c = self.get_value(a).expect("Invalid number");
 
                 self.output_buffer.push(c as u8 as char);
-                //print!("{}", c as u8 as char);
             }
             Opcode::In(a) => {
                 let reg = self.get_register(a).expect("In: not a register");
@@ -478,7 +491,6 @@ impl Vm {
                         // first, flush current output
                         let out = self.output_buffer.iter().collect::<String>(); //TODO: separate function
                         self.messages.push(out.clone());
-                        print!("{}", out);
                         self.output_buffer = Vec::new();
 
                         self.state = VmState::WaitingForInput;
