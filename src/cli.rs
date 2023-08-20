@@ -238,12 +238,10 @@ impl Cli {
 
             Some(("solver", sub)) => match sub.subcommand() {
                 Some(("explore", _sub)) => {
-                    let solver = GameSolver::new();
-                    solver.explore_maze(&self.vm);
+                    GameSolver::explore_maze(&self.vm);
                 }
                 Some(("teleporter", _sub)) => {
-                    let solver = GameSolver::new();
-                    solver.trace_teleporter(&self.vm);
+                    GameSolver::trace_teleporter(&self.vm);
                 }
                 Some((_, _)) => return Err("unreachable?".into()),
                 None => (),

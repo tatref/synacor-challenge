@@ -114,7 +114,7 @@ fn patching_3() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-#[test]
+//#[test]
 //fn run_until_ret_3() -> Result<(), Box<dyn std::error::Error>> {
 //    let prog = vec![
 //        Opcode::Call(Val::Num(3)),
@@ -149,6 +149,7 @@ fn patching_3() -> Result<(), Box<dyn std::error::Error>> {
 //
 //    Ok(())
 //}
+
 #[test]
 fn parse_opcode() {
     let s = "Set(Reg(1), 1531)
@@ -158,6 +159,6 @@ Ret
 Add(Reg(2), 10666, 956)";
 
     for line in s.lines() {
-        let opcode: Opcode = line.parse().unwrap();
+        let _opcode: Opcode = line.parse().unwrap();
     }
 }

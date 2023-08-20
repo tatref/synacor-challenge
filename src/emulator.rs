@@ -1,12 +1,4 @@
-use std::{
-    collections::{BTreeSet, VecDeque},
-    fmt,
-    fs::File,
-    hash::Hash,
-    io::Read,
-    path::Path,
-    time::Instant,
-};
+use std::{collections::VecDeque, fmt, fs::File, hash::Hash, io::Read, path::Path};
 
 use byteorder::{ByteOrder, LittleEndian};
 use serde::{Deserialize, Serialize};
@@ -47,7 +39,7 @@ impl Val {
         }
     }
 
-    fn to_binary(&self) -> u16 {
+    fn as_binary(&self) -> u16 {
         match self {
             Val::Num(v) => *v,
             Val::Reg(r) => *r as u16 + 32768,
@@ -469,15 +461,15 @@ impl Opcode {
     pub fn machine_code(&self) -> Vec<u16> {
         match self {
             Opcode::Halt => vec![0],
-            Opcode::Set(a, b) => vec![1, a.to_binary(), b.to_binary()],
+            Opcode::Set(a, b) => vec![1, a.as_binary(), b.as_binary()],
             Opcode::Push(_) => todo!(),
             Opcode::Pop(_) => todo!(),
-            Opcode::Eq(a, b, c) => vec![4, a.to_binary(), b.to_binary(), c.to_binary()],
+            Opcode::Eq(a, b, c) => vec![4, a.as_binary(), b.as_binary(), c.as_binary()],
             Opcode::Gt(_, _, _) => todo!(),
-            Opcode::Jmp(a) => vec![6, a.to_binary()],
-            Opcode::Jt(a, b) => vec![7, a.to_binary(), b.to_binary()],
-            Opcode::Jf(a, b) => vec![8, a.to_binary(), b.to_binary()],
-            Opcode::Add(a, b, c) => vec![9, a.to_binary(), b.to_binary(), c.to_binary()],
+            Opcode::Jmp(a) => vec![6, a.as_binary()],
+            Opcode::Jt(a, b) => vec![7, a.as_binary(), b.as_binary()],
+            Opcode::Jf(a, b) => vec![8, a.as_binary(), b.as_binary()],
+            Opcode::Add(a, b, c) => vec![9, a.as_binary(), b.as_binary(), c.as_binary()],
             Opcode::Mult(_, _, _) => todo!(),
             Opcode::Mod(_, _, _) => todo!(),
             Opcode::And(_, _, _) => todo!(),
@@ -485,7 +477,7 @@ impl Opcode {
             Opcode::Not(_, _) => todo!(),
             Opcode::Rmem(_, _) => todo!(),
             Opcode::Wmem(_, _) => todo!(),
-            Opcode::Call(a) => vec![17, a.to_binary()],
+            Opcode::Call(a) => vec![17, a.as_binary()],
             Opcode::Ret => vec![18],
             Opcode::Out(_) => todo!(),
             Opcode::In(_) => todo!(),
@@ -581,6 +573,15 @@ pub enum VmState {
     Halted,
     WaitingForInput,
 }
+impl Default for Vm {
+    fn default() -> Self {
+        let mut vm = Vm::new();
+        vm.load_program_from_file("challenge.bin")
+            .expect("Unable to load default 'challenge.bin'");
+
+        vm
+    }
+}
 
 impl Vm {
     pub fn new() -> Self {
@@ -604,14 +605,6 @@ impl Vm {
             enable_patching: false,
             called_patched_fn: false,
         }
-    }
-
-    pub fn default() -> Self {
-        let mut vm = Vm::new();
-        vm.load_program_from_file("challenge.bin")
-            .expect("Unable to load default 'challenge.bin'");
-
-        vm
     }
 
     pub fn load_program_from_file<P: AsRef<Path>>(
@@ -692,8 +685,8 @@ impl Vm {
         fn op(mut reg0: u16, reg1: u16) -> u16 {
             let mut reg2 = reg0 & reg1;
             reg2 = !reg2;
-            reg0 = reg0 | reg1;
-            reg0 = reg0 & reg2;
+            reg0 |= reg1;
+            reg0 &= reg2;
 
             reg0
         }
@@ -743,6 +736,7 @@ impl Vm {
     /// 5507: Set(Reg(1), 1531)
     /// 5510: Add(Reg(2), 21718, 1807)
     /// 5514: Call(1458)
+    #[allow(dead_code)]
     fn patched_6027(&mut self) {}
 
     pub fn disassemble(
@@ -975,7 +969,7 @@ impl Vm {
             19 => Opcode::Out(Val::new(self.memory[ip + 1])),
             20 => Opcode::In(Val::new(self.memory[ip + 1])),
             21 => Opcode::Noop,
-            x => return Err("Can't decode opcode".into()),
+            x => return Err(format!("Can't decode opcode {}", x).into()),
         };
 
         Ok(opcode)
