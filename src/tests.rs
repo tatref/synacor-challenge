@@ -49,7 +49,7 @@ fn disassemble_function() -> Result<(), Box<dyn std::error::Error>> {
     let mut vm = Vm::new();
     vm.load_program_from_mem(&prog);
 
-    let starting_ip = 0;
+    let starting_ip = 15;
     let instructions = vm.disassemble_function(starting_ip);
     let mut last: Option<(usize, Opcode)> = None;
     for &(offset, opcode) in instructions.iter() {
