@@ -1,6 +1,6 @@
 use regex::Regex;
 
-use crate::emulator::{Opcode, Value, Vm, VmState};
+use crate::emulator::{Opcode, Val, Vm, VmState};
 use std::{
     collections::{hash_map::DefaultHasher, BTreeMap, HashMap, HashSet},
     hash::{Hash, Hasher},
@@ -98,20 +98,105 @@ impl GameSolver {
         println!("{}", graphviz);
     }
 
-    pub fn bruteforce_teleporter(&self, vm: &Vm) {
+    pub fn build_call_graph(&self, vm: &Vm, calls: &[(usize, Opcode)]) {
+        // https://graphviz.org/Gallery/directed/datastruct.html
+        let mut graph = r#"
+        digraph g {
+        fontname="Helvetica,Arial,sans-serif"
+        node [fontname="Helvetica,Arial,sans-serif"]
+        edge [fontname="Helvetica,Arial,sans-serif"]
+        graph [
+        rankdir = "LR"
+        ];
+        node [
+        fontsize = "16"
+        shape = "ellipse"
+        ];
+        edge [
+        ];
+        "#
+        .to_string();
+
+        #[derive(Clone)]
+        struct Function {
+            start: u16,
+            end: Option<u16>,
+            callers: HashMap<u16, usize>,
+        }
+
+        let mut functions: HashMap<u16, Function> = HashMap::new();
+        let mut current_function: Option<u16> = None;
+
+        for (ip, opcode) in calls {
+            match opcode {
+                Opcode::Call(a) => match a {
+                    Val::Invalid => (),
+                    Val::Reg(_) => (),
+                    Val::Num(a) => {
+                        *functions
+                            .entry(*a)
+                            .or_insert(Function {
+                                start: *a,
+                                end: None,
+                                callers: HashMap::new(),
+                            })
+                            .callers
+                            .entry(*ip as u16)
+                            .or_insert(0) += 1;
+
+                        current_function = Some(*a);
+                    }
+                },
+                Opcode::Ret => {
+                    functions
+                        .entry(current_function.unwrap())
+                        .and_modify(|f| f.end = Some(*ip as u16));
+                }
+                Opcode::Jmp(_a) => (),
+                Opcode::Jf(_a, _b) => (),
+                Opcode::Jt(_a, _b) => (),
+                _ => (),
+            }
+        }
+
+        for f in &functions {}
+        //"node0" [
+        //label = "<f0> 0x10ba8| <f1>"
+        //shape = "record"
+        //];
+        //"node1" [
+        //label = "<f0> 0xf7fc4380| <f1> abcd | <f2> |-1"
+        //shape = "record"
+        //];
+        //"node2" [
+        //label = "<f0> 0xf7fc44b8| | |2"
+        //shape = "record"
+        //];
+        //
+        //"node0":f0 -> "node1":f0 [
+        //id = 0
+        //];
+        //"node0":f1 -> "node2":f0 [
+        //id = 1
+        //];
+
+        graph.push_str("}\n");
+    }
+
+    pub fn solve_teleporter(&self, vm: &Vm) {
         let mut vm = vm.clone();
 
         let val = 1;
         vm.set_register(7, val);
 
-        let traced = Opcode::Jmp(Value::Invalid).discriminant()
+        let traced = Opcode::Jmp(Val::Invalid).discriminant()
             | Opcode::Ret.discriminant()
-            | Opcode::Call(Value::Invalid).discriminant();
+            | Opcode::Call(Val::Invalid).discriminant();
         vm.set_traced_opcodes(traced);
 
         let _ = vm.feed("use teleporter");
 
-        let mut steps = 10_000_000;
+        let mut steps = 100;
         while vm.get_state() == VmState::Running {
             vm.step().unwrap();
             steps -= 1;
@@ -132,9 +217,11 @@ impl GameSolver {
             println!("{:?}", x);
         }
 
-        //for traces in vm.get_trace_buffer() {
-        //    println!("{:?}", traces);
-        //}
+        for traces in vm.get_trace_buffer() {
+            println!("{:?}", traces);
+        }
+
+        self.build_call_graph(&vm, vm.get_trace_buffer());
     }
 }
 

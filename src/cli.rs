@@ -210,7 +210,7 @@ impl Cli {
                 }
                 Some(("teleporter", _sub)) => {
                     let solver = GameSolver::new();
-                    solver.bruteforce_teleporter(&self.vm);
+                    solver.solve_teleporter(&self.vm);
                 }
                 Some((_, _)) => return Err("unreachable?".into()),
                 None => (),

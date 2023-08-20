@@ -1,29 +1,43 @@
-use std::{collections::VecDeque, fmt, fs::File, io::Read, path::Path};
+use std::{
+    collections::{BTreeSet, VecDeque},
+    fmt,
+    fs::File,
+    io::Read,
+    path::Path,
+};
 
 use byteorder::{ByteOrder, LittleEndian};
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 
 #[derive(Copy, Clone, Serialize, Deserialize, Eq, PartialEq, PartialOrd, Ord, Hash)]
-pub enum Value {
-    Number(u16),
-    Register(usize),
+pub enum Val {
+    Num(u16),
+    Reg(usize),
     Invalid,
 }
-impl Value {
+impl Val {
     fn new(v: u16) -> Self {
         match v {
-            0..=32767 => Value::Number(v),
-            32768..=32775 => Value::Register((v - 32768) as usize),
-            32776..=65535 => Value::Invalid,
+            0..=32767 => Val::Num(v),
+            32768..=32775 => Val::Reg((v - 32768) as usize),
+            32776..=65535 => Val::Invalid,
+        }
+    }
+
+    fn to_binary(&self) -> u16 {
+        match self {
+            Val::Num(v) => *v,
+            Val::Reg(r) => *r as u16 + 32768,
+            Val::Invalid => 32776,
         }
     }
 }
-impl fmt::Debug for Value {
+impl fmt::Debug for Val {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Number(arg0) => write!(f, "{}", arg0),
-            Self::Register(arg0) => f.debug_tuple("Reg").field(arg0).finish(),
+            Self::Num(arg0) => write!(f, "{}", arg0),
+            Self::Reg(arg0) => f.debug_tuple("Reg").field(arg0).finish(),
             Self::Invalid => write!(f, "Invalid"),
         }
     }
@@ -33,32 +47,129 @@ impl fmt::Debug for Value {
 #[derive(Copy, Clone, Debug, Serialize, Deserialize, Eq, PartialEq, PartialOrd, Ord, Hash)]
 pub enum Opcode {
     Halt = 1 << 0,
-    Set(Value, Value) = 1 << 1,
-    Push(Value) = 1 << 2,
-    Pop(Value) = 1 << 3,
-    Eq(Value, Value, Value) = 1 << 4,
-    Gt(Value, Value, Value) = 1 << 5,
-    Jmp(Value) = 1 << 6,
-    Jt(Value, Value) = 1 << 7,
-    Jf(Value, Value) = 1 << 8,
-    Add(Value, Value, Value) = 1 << 9,
-    Mult(Value, Value, Value) = 1 << 10,
-    Mod(Value, Value, Value) = 1 << 11,
-    And(Value, Value, Value) = 1 << 12,
-    Or(Value, Value, Value) = 1 << 13,
-    Not(Value, Value) = 1 << 14,
-    Rmem(Value, Value) = 1 << 15,
-    Wmem(Value, Value) = 1 << 16,
-    Call(Value) = 1 << 17,
+    Set(Val, Val) = 1 << 1,
+    Push(Val) = 1 << 2,
+    Pop(Val) = 1 << 3,
+    Eq(Val, Val, Val) = 1 << 4,
+    Gt(Val, Val, Val) = 1 << 5,
+    /// jump to `a`
+    Jmp(Val) = 1 << 6,
+    /// if `a` is nonzero, jump to `b`
+    Jt(Val, Val) = 1 << 7,
+    /// if `a`  is zero, jump to `b`
+    Jf(Val, Val) = 1 << 8,
+    Add(Val, Val, Val) = 1 << 9,
+    Mult(Val, Val, Val) = 1 << 10,
+    Mod(Val, Val, Val) = 1 << 11,
+    And(Val, Val, Val) = 1 << 12,
+    Or(Val, Val, Val) = 1 << 13,
+    Not(Val, Val) = 1 << 14,
+    Rmem(Val, Val) = 1 << 15,
+    Wmem(Val, Val) = 1 << 16,
+    /// write the address of the next instruction to the stack and jump to `a`
+    Call(Val) = 1 << 17,
+    /// remove the top element from the stack and jump to it; empty stack = halt
     Ret = 1 << 18,
-    Out(Value) = 1 << 19,
-    In(Value) = 1 << 20,
+    Out(Val) = 1 << 19,
+    In(Val) = 1 << 20,
     Noop = 1 << 21,
 }
 
 impl Opcode {
     pub fn discriminant(&self) -> u32 {
         unsafe { *(self as *const Self as *const u32) }
+    }
+
+    pub fn size(&self) -> usize {
+        match self {
+            Opcode::Halt => 1,
+            Opcode::Set(_, _) => 3,
+            Opcode::Push(_) => 2,
+            Opcode::Pop(_) => 2,
+            Opcode::Eq(_, _, _) => 4,
+            Opcode::Gt(_, _, _) => 4,
+            Opcode::Jmp(_) => 2,
+            Opcode::Jt(_, _) => 3,
+            Opcode::Jf(_, _) => 3,
+            Opcode::Add(_, _, _) => 4,
+            Opcode::Mult(_, _, _) => 4,
+            Opcode::Mod(_, _, _) => 4,
+            Opcode::And(_, _, _) => 4,
+            Opcode::Or(_, _, _) => 4,
+            Opcode::Not(_, _) => 3,
+            Opcode::Rmem(_, _) => 3,
+            Opcode::Wmem(_, _) => 3,
+            Opcode::Call(_) => 2,
+            Opcode::Ret => 1,
+            Opcode::Out(_) => 2,
+            Opcode::In(_) => 2,
+            Opcode::Noop => 1,
+        }
+    }
+
+    /// Next pointer for branchings instructions
+    pub fn next_possible_ip(&self) -> Vec<Val> {
+        match self {
+            Opcode::Halt => vec![],
+            Opcode::Set(_, _) => vec![],
+            Opcode::Push(_) => vec![],
+            Opcode::Pop(_) => vec![],
+            Opcode::Eq(_, _, _) => vec![],
+            Opcode::Gt(_, _, _) => vec![],
+            Opcode::Jmp(a) => vec![*a],
+            Opcode::Jt(_, b) => vec![*b],
+            Opcode::Jf(_, b) => vec![*b],
+            Opcode::Add(_, _, _) => vec![],
+            Opcode::Mult(_, _, _) => vec![],
+            Opcode::Mod(_, _, _) => vec![],
+            Opcode::And(_, _, _) => vec![],
+            Opcode::Or(_, _, _) => vec![],
+            Opcode::Not(_, _) => vec![],
+            Opcode::Rmem(_, _) => vec![],
+            Opcode::Wmem(_, _) => vec![],
+            Opcode::Call(a) => vec![*a],
+            Opcode::Ret => vec![],
+            Opcode::Out(_) => vec![],
+            Opcode::In(_) => vec![],
+            Opcode::Noop => vec![],
+        }
+    }
+
+    pub fn machine_code(&self) -> Vec<u16> {
+        match self {
+            Opcode::Halt => vec![0],
+            Opcode::Set(a, b) => vec![1, a.to_binary(), b.to_binary()],
+            Opcode::Push(_) => todo!(),
+            Opcode::Pop(_) => todo!(),
+            Opcode::Eq(a, b, c) => vec![4, a.to_binary(), b.to_binary(), c.to_binary()],
+            Opcode::Gt(_, _, _) => todo!(),
+            Opcode::Jmp(a) => vec![6, a.to_binary()],
+            Opcode::Jt(a, b) => vec![7, a.to_binary(), b.to_binary()],
+            Opcode::Jf(a, b) => vec![8, a.to_binary(), b.to_binary()],
+            Opcode::Add(a, b, c) => vec![9, a.to_binary(), b.to_binary(), c.to_binary()],
+            Opcode::Mult(_, _, _) => todo!(),
+            Opcode::Mod(_, _, _) => todo!(),
+            Opcode::And(_, _, _) => todo!(),
+            Opcode::Or(_, _, _) => todo!(),
+            Opcode::Not(_, _) => todo!(),
+            Opcode::Rmem(_, _) => todo!(),
+            Opcode::Wmem(_, _) => todo!(),
+            Opcode::Call(_) => todo!(),
+            Opcode::Ret => vec![18],
+            Opcode::Out(_) => todo!(),
+            Opcode::In(_) => todo!(),
+            Opcode::Noop => vec![21],
+        }
+    }
+
+    pub fn vec_to_machine_code(v: &[Opcode]) -> Vec<u16> {
+        let mut machine_code = Vec::new();
+
+        for opcode in v {
+            machine_code.extend(&opcode.machine_code());
+        }
+
+        machine_code
     }
 }
 
@@ -135,7 +246,7 @@ pub enum VmState {
 }
 
 impl Vm {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Vm {
             memory: vec![0u16; MEM_SIZE],
             registers: [0u16; 8],
@@ -206,17 +317,65 @@ impl Vm {
         &self.trace_buffer
     }
 
-    pub fn disassemble(&self, mut from: usize, mut count: usize) -> Vec<(usize, Opcode)> {
+    pub fn disassemble(&self, mut start: usize, mut count: usize) -> Vec<(usize, Opcode)> {
         let mut instructions = Vec::new();
 
         while count > 0 {
-            let (instr, size) = self.fetch(from);
-            instructions.push((from, instr));
+            let instr = self.fetch(start);
+            let size = instr.size();
+            instructions.push((start, instr));
 
-            from += size;
+            start += size;
             count -= 1;
         }
 
+        instructions
+    }
+
+    /// Disassemble from starting `Call` of function to all `Ret`
+    /// we don't expecte self modifying code
+    pub fn disassemble_function(&self, starting_ip: usize) -> Vec<(usize, Opcode)> {
+        let mut instructions = Vec::new();
+
+        let mut explored: Vec<usize> = Vec::new();
+        let mut queue = VecDeque::new();
+        let instr = self.fetch(starting_ip);
+        let size = instr.size();
+        queue.push_back((starting_ip, instr, size));
+
+        while let Some((ip, instr, size)) = queue.pop_front() {
+            if explored.contains(&ip) {
+                continue;
+            }
+
+            let mut next = instr.next_possible_ip(); // possible branches
+            match instr {
+                Opcode::Halt => (),
+                Opcode::Ret => (),
+                _ => next.push(Val::Num(ip as u16 + size as u16)), // default next instruction
+            }
+
+            for n in &next {
+                let ip = match n {
+                    Val::Invalid => continue,
+                    Val::Reg(_r) => continue,
+                    Val::Num(x) => *x as usize,
+                };
+
+                if explored.contains(&ip) {
+                    continue;
+                }
+
+                let opcode = self.fetch(ip);
+                let size = opcode.size();
+                queue.push_back((ip, opcode, size));
+            }
+
+            explored.push(ip);
+            instructions.push((ip, instr));
+        }
+
+        instructions.sort_by_key(|a| a.0);
         instructions
     }
 
@@ -254,7 +413,8 @@ impl Vm {
             return Err("Vm is not running".into());
         }
 
-        let (instruction, size) = self.fetch(self.ip);
+        let instruction = self.fetch(self.ip);
+        let size = instruction.size();
 
         if (instruction.discriminant() & self.traced_opcodes) != 0 {
             self.trace_buffer.push((self.ip, instruction));
@@ -267,117 +427,61 @@ impl Vm {
         Ok(())
     }
 
-    fn fetch(&self, ip: usize) -> (Opcode, usize) {
+    /// Return `Opcode)` decoded at `ip`
+    fn fetch(&self, ip: usize) -> Opcode {
         let instr_type = self.memory[ip];
 
         match instr_type {
-            0 => (Opcode::Halt, 1),
-            1 => (
-                Opcode::Set(
-                    Value::new(self.memory[ip + 1]),
-                    Value::new(self.memory[ip + 2]),
-                ),
-                3,
+            0 => Opcode::Halt,
+            1 => Opcode::Set(Val::new(self.memory[ip + 1]), Val::new(self.memory[ip + 2])),
+            2 => Opcode::Push(Val::new(self.memory[ip + 1])),
+            3 => Opcode::Pop(Val::new(self.memory[ip + 1])),
+            4 => Opcode::Eq(
+                Val::new(self.memory[ip + 1]),
+                Val::new(self.memory[ip + 2]),
+                Val::new(self.memory[ip + 3]),
             ),
-            2 => (Opcode::Push(Value::new(self.memory[ip + 1])), 2),
-            3 => (Opcode::Pop(Value::new(self.memory[ip + 1])), 2),
-            4 => (
-                Opcode::Eq(
-                    Value::new(self.memory[ip + 1]),
-                    Value::new(self.memory[ip + 2]),
-                    Value::new(self.memory[ip + 3]),
-                ),
-                4,
+            5 => Opcode::Gt(
+                Val::new(self.memory[ip + 1]),
+                Val::new(self.memory[ip + 2]),
+                Val::new(self.memory[ip + 3]),
             ),
-            5 => (
-                Opcode::Gt(
-                    Value::new(self.memory[ip + 1]),
-                    Value::new(self.memory[ip + 2]),
-                    Value::new(self.memory[ip + 3]),
-                ),
-                4,
+            6 => Opcode::Jmp(Val::new(self.memory[ip + 1])),
+            7 => Opcode::Jt(Val::new(self.memory[ip + 1]), Val::new(self.memory[ip + 2])),
+            8 => Opcode::Jf(Val::new(self.memory[ip + 1]), Val::new(self.memory[ip + 2])),
+            9 => Opcode::Add(
+                Val::new(self.memory[ip + 1]),
+                Val::new(self.memory[ip + 2]),
+                Val::new(self.memory[ip + 3]),
             ),
-            6 => (Opcode::Jmp(Value::new(self.memory[ip + 1])), 3),
-            7 => (
-                Opcode::Jt(
-                    Value::new(self.memory[ip + 1]),
-                    Value::new(self.memory[ip + 2]),
-                ),
-                3,
+            10 => Opcode::Mult(
+                Val::new(self.memory[ip + 1]),
+                Val::new(self.memory[ip + 2]),
+                Val::new(self.memory[ip + 3]),
             ),
-            8 => (
-                Opcode::Jf(
-                    Value::new(self.memory[ip + 1]),
-                    Value::new(self.memory[ip + 2]),
-                ),
-                3,
+            11 => Opcode::Mod(
+                Val::new(self.memory[ip + 1]),
+                Val::new(self.memory[ip + 2]),
+                Val::new(self.memory[ip + 3]),
             ),
-            9 => (
-                Opcode::Add(
-                    Value::new(self.memory[ip + 1]),
-                    Value::new(self.memory[ip + 2]),
-                    Value::new(self.memory[ip + 3]),
-                ),
-                4,
+            12 => Opcode::And(
+                Val::new(self.memory[ip + 1]),
+                Val::new(self.memory[ip + 2]),
+                Val::new(self.memory[ip + 3]),
             ),
-            10 => (
-                Opcode::Mult(
-                    Value::new(self.memory[ip + 1]),
-                    Value::new(self.memory[ip + 2]),
-                    Value::new(self.memory[ip + 3]),
-                ),
-                4,
+            13 => Opcode::Or(
+                Val::new(self.memory[ip + 1]),
+                Val::new(self.memory[ip + 2]),
+                Val::new(self.memory[ip + 3]),
             ),
-            11 => (
-                Opcode::Mod(
-                    Value::new(self.memory[ip + 1]),
-                    Value::new(self.memory[ip + 2]),
-                    Value::new(self.memory[ip + 3]),
-                ),
-                4,
-            ),
-            12 => (
-                Opcode::And(
-                    Value::new(self.memory[ip + 1]),
-                    Value::new(self.memory[ip + 2]),
-                    Value::new(self.memory[ip + 3]),
-                ),
-                4,
-            ),
-            13 => (
-                Opcode::Or(
-                    Value::new(self.memory[ip + 1]),
-                    Value::new(self.memory[ip + 2]),
-                    Value::new(self.memory[ip + 3]),
-                ),
-                4,
-            ),
-            14 => (
-                Opcode::Not(
-                    Value::new(self.memory[ip + 1]),
-                    Value::new(self.memory[ip + 2]),
-                ),
-                3,
-            ),
-            15 => (
-                Opcode::Rmem(
-                    Value::new(self.memory[ip + 1]),
-                    Value::new(self.memory[ip + 2]),
-                ),
-                3,
-            ),
-            16 => (
-                Opcode::Wmem(
-                    Value::new(self.memory[ip + 1]),
-                    Value::new(self.memory[ip + 2]),
-                ),
-                3,
-            ),
-            17 => (Opcode::Call(Value::new(self.memory[ip + 1])), 2),
-            18 => (Opcode::Ret, 1),
-            19 => (Opcode::Out(Value::new(self.memory[ip + 1])), 2),
-            20 => (Opcode::In(Value::new(self.memory[ip + 1])), 2),
-            21 => (Opcode::Noop, 1),
+            14 => Opcode::Not(Val::new(self.memory[ip + 1]), Val::new(self.memory[ip + 2])),
+            15 => Opcode::Rmem(Val::new(self.memory[ip + 1]), Val::new(self.memory[ip + 2])),
+            16 => Opcode::Wmem(Val::new(self.memory[ip + 1]), Val::new(self.memory[ip + 2])),
+            17 => Opcode::Call(Val::new(self.memory[ip + 1])),
+            18 => Opcode::Ret,
+            19 => Opcode::Out(Val::new(self.memory[ip + 1])),
+            20 => Opcode::In(Val::new(self.memory[ip + 1])),
+            21 => Opcode::Noop,
             x => unreachable!("Fetch: unknown instr '{}'", x),
         }
     }
@@ -535,19 +639,19 @@ impl Vm {
         }
     }
 
-    fn get_value(&self, value: &Value) -> Option<u16> {
+    fn get_value(&self, value: &Val) -> Option<u16> {
         match value {
-            Value::Number(x) => Some(*x),
-            Value::Register(x) => Some(self.registers[*x]),
-            Value::Invalid => None,
+            Val::Num(x) => Some(*x),
+            Val::Reg(x) => Some(self.registers[*x]),
+            Val::Invalid => None,
         }
     }
 
-    fn get_register(&self, value: &Value) -> Option<usize> {
+    fn get_register(&self, value: &Val) -> Option<usize> {
         match value {
-            Value::Number(_) => None,
-            Value::Register(x) => Some(*x),
-            Value::Invalid => None,
+            Val::Num(_) => None,
+            Val::Reg(x) => Some(*x),
+            Val::Invalid => None,
         }
     }
 }
