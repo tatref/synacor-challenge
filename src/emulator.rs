@@ -2,8 +2,10 @@ use std::{
     collections::{BTreeSet, VecDeque},
     fmt,
     fs::File,
+    hash::Hash,
     io::Read,
     path::Path,
+    time::Instant,
 };
 
 use byteorder::{ByteOrder, LittleEndian};
@@ -16,6 +18,26 @@ pub enum Val {
     Reg(usize),
     Invalid,
 }
+
+impl std::str::FromStr for Val {
+    type Err = Box<dyn std::error::Error>;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s.chars().all(|c| c.is_numeric()) {
+            Ok(Val::Num(s.parse()?))
+        } else {
+            let l_par = s.find('(');
+            dbg!(l_par);
+            let size = s.chars().count();
+            let inner = &s[1 + l_par.ok_or("Missing left par")?..(size - 1)];
+
+            let reg = inner.parse()?;
+
+            Ok(Val::Reg(reg))
+        }
+    }
+}
+
 impl Val {
     fn new(v: u16) -> Self {
         match v {
@@ -73,6 +95,315 @@ pub enum Opcode {
     Out(Val) = 1 << 19,
     In(Val) = 1 << 20,
     Noop = 1 << 21,
+}
+
+impl std::str::FromStr for Opcode {
+    type Err = Box<dyn std::error::Error>;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        use Opcode::*;
+
+        let l_par = s.find('(');
+        let size = s.chars().count();
+        let opcode = match s.to_lowercase().split('(').next().unwrap() {
+            "halt" => Halt,
+            "set" => {
+                let inner = &s[1 + l_par.ok_or("Missing left par")?..(size - 1)];
+                let mut split = inner.split(',');
+                let a = split
+                    .next()
+                    .ok_or("missing first operand")?
+                    .trim()
+                    .parse()?;
+                let b = split
+                    .next()
+                    .ok_or("missing first operand")?
+                    .trim()
+                    .parse()?;
+                Set(a, b)
+            }
+            "push" => {
+                let inner = &s[1 + l_par.ok_or("Missing left par")?..(size - 1)];
+                let mut split = inner.split(',');
+                let a = split
+                    .next()
+                    .ok_or("missing first operand")?
+                    .trim()
+                    .parse()?;
+                Push(a)
+            }
+            "pop" => {
+                let inner = &s[1 + l_par.ok_or("Missing left par")?..(size - 1)];
+                let mut split = inner.split(',');
+                let a = split
+                    .next()
+                    .ok_or("missing first operand")?
+                    .trim()
+                    .parse()?;
+                Pop(a)
+            }
+            "eq" => {
+                let inner = &s[1 + l_par.ok_or("Missing left par")?..(size - 1)];
+                let mut split = inner.split(',');
+                let a = split
+                    .next()
+                    .ok_or("missing first operand")?
+                    .trim()
+                    .parse()?;
+                let b = split
+                    .next()
+                    .ok_or("missing first operand")?
+                    .trim()
+                    .parse()?;
+                let c = split
+                    .next()
+                    .ok_or("missing first operand")?
+                    .trim()
+                    .parse()?;
+                Eq(a, b, c)
+            }
+            "gt" => {
+                let inner = &s[1 + l_par.ok_or("Missing left par")?..(size - 1)];
+                let mut split = inner.split(',');
+                let a = split
+                    .next()
+                    .ok_or("missing first operand")?
+                    .trim()
+                    .parse()?;
+                let b = split
+                    .next()
+                    .ok_or("missing first operand")?
+                    .trim()
+                    .parse()?;
+                let c = split
+                    .next()
+                    .ok_or("missing first operand")?
+                    .trim()
+                    .parse()?;
+                Gt(a, b, c)
+            }
+            "jmp" => {
+                let inner = &s[1 + l_par.ok_or("Missing left par")?..(size - 1)];
+                let mut split = inner.split(',');
+                let a = split
+                    .next()
+                    .ok_or("missing first operand")?
+                    .trim()
+                    .parse()?;
+                Jmp(a)
+            }
+            "jt" => {
+                let inner = &s[1 + l_par.ok_or("Missing left par")?..(size - 1)];
+                let mut split = inner.split(',');
+                let a = split
+                    .next()
+                    .ok_or("missing first operand")?
+                    .trim()
+                    .parse()?;
+                let b = split
+                    .next()
+                    .ok_or("missing first operand")?
+                    .trim()
+                    .parse()?;
+                Jt(a, b)
+            }
+            "jf" => {
+                let inner = &s[1 + l_par.ok_or("Missing left par")?..(size - 1)];
+                let mut split = inner.split(',');
+                let a = split
+                    .next()
+                    .ok_or("missing first operand")?
+                    .trim()
+                    .parse()?;
+                let b = split
+                    .next()
+                    .ok_or("missing first operand")?
+                    .trim()
+                    .parse()?;
+                Jf(a, b)
+            }
+            "add" => {
+                let inner = &s[1 + l_par.ok_or("Missing left par")?..(size - 1)];
+                let mut split = inner.split(',');
+                let a = split
+                    .next()
+                    .ok_or("missing first operand")?
+                    .trim()
+                    .parse()?;
+                let b = split
+                    .next()
+                    .ok_or("missing first operand")?
+                    .trim()
+                    .parse()?;
+                let c = split
+                    .next()
+                    .ok_or("missing first operand")?
+                    .trim()
+                    .parse()?;
+                Add(a, b, c)
+            }
+            "mult" => {
+                let inner = &s[1 + l_par.ok_or("Missing left par")?..(size - 1)];
+                let mut split = inner.split(',');
+                let a = split
+                    .next()
+                    .ok_or("missing first operand")?
+                    .trim()
+                    .parse()?;
+                let b = split
+                    .next()
+                    .ok_or("missing first operand")?
+                    .trim()
+                    .parse()?;
+                let c = split
+                    .next()
+                    .ok_or("missing first operand")?
+                    .trim()
+                    .parse()?;
+                Mult(a, b, c)
+            }
+            "mod" => {
+                let inner = &s[1 + l_par.ok_or("Missing left par")?..(size - 1)];
+                let mut split = inner.split(',');
+                let a = split
+                    .next()
+                    .ok_or("missing first operand")?
+                    .trim()
+                    .parse()?;
+                let b = split
+                    .next()
+                    .ok_or("missing first operand")?
+                    .trim()
+                    .parse()?;
+                let c = split
+                    .next()
+                    .ok_or("missing first operand")?
+                    .trim()
+                    .parse()?;
+                Mod(a, b, c)
+            }
+            "and" => {
+                let inner = &s[1 + l_par.ok_or("Missing left par")?..(size - 1)];
+                let mut split = inner.split(',');
+                let a = split
+                    .next()
+                    .ok_or("missing first operand")?
+                    .trim()
+                    .parse()?;
+                let b = split
+                    .next()
+                    .ok_or("missing first operand")?
+                    .trim()
+                    .parse()?;
+                let c = split
+                    .next()
+                    .ok_or("missing first operand")?
+                    .trim()
+                    .parse()?;
+                And(a, b, c)
+            }
+            "or" => {
+                let inner = &s[1 + l_par.ok_or("Missing left par")?..(size - 1)];
+                let mut split = inner.split(',');
+                let a = split
+                    .next()
+                    .ok_or("missing first operand")?
+                    .trim()
+                    .parse()?;
+                let b = split
+                    .next()
+                    .ok_or("missing first operand")?
+                    .trim()
+                    .parse()?;
+                let c = split
+                    .next()
+                    .ok_or("missing first operand")?
+                    .trim()
+                    .parse()?;
+                Or(a, b, c)
+            }
+            "not" => {
+                let inner = &s[1 + l_par.ok_or("Missing left par")?..(size - 1)];
+                let mut split = inner.split(',');
+                let a = split
+                    .next()
+                    .ok_or("missing first operand")?
+                    .trim()
+                    .parse()?;
+                let b = split
+                    .next()
+                    .ok_or("missing first operand")?
+                    .trim()
+                    .parse()?;
+                Not(a, b)
+            }
+            "rmem" => {
+                let inner = &s[1 + l_par.ok_or("Missing left par")?..(size - 1)];
+                let mut split = inner.split(',');
+                let a = split
+                    .next()
+                    .ok_or("missing first operand")?
+                    .trim()
+                    .parse()?;
+                let b = split
+                    .next()
+                    .ok_or("missing first operand")?
+                    .trim()
+                    .parse()?;
+                Rmem(a, b)
+            }
+            "wmem" => {
+                let inner = &s[1 + l_par.ok_or("Missing left par")?..(size - 1)];
+                let mut split = inner.split(',');
+                let a = split
+                    .next()
+                    .ok_or("missing first operand")?
+                    .trim()
+                    .parse()?;
+                let b = split
+                    .next()
+                    .ok_or("missing first operand")?
+                    .trim()
+                    .parse()?;
+                Wmem(a, b)
+            }
+            "call" => {
+                let inner = &s[1 + l_par.ok_or("Missing left par")?..(size - 1)];
+                let mut split = inner.split(',');
+                let a = split
+                    .next()
+                    .ok_or("missing first operand")?
+                    .trim()
+                    .parse()?;
+                Call(a)
+            }
+            "ret" => Opcode::Ret,
+            "out" => {
+                let inner = &s[1 + l_par.ok_or("Missing left par")?..(size - 1)];
+                let mut split = inner.split(',');
+                let a = split
+                    .next()
+                    .ok_or("missing first operand")?
+                    .trim()
+                    .parse()?;
+                Out(a)
+            }
+            "in" => {
+                let inner = &s[1 + l_par.ok_or("Missing left par")?..(size - 1)];
+                let mut split = inner.split(',');
+                let a = split
+                    .next()
+                    .ok_or("missing first operand")?
+                    .trim()
+                    .parse()?;
+                In(a)
+            }
+            "noop" => Opcode::Noop,
+            _ => return Err("Unknown opcode".into()),
+        };
+
+        Ok(opcode)
+    }
 }
 
 impl Opcode {
@@ -195,7 +526,13 @@ pub struct Vm {
     messages: Vec<String>,
 
     traced_opcodes: u32,
+    #[serde(skip)]
     trace_buffer: Vec<(usize, Opcode)>,
+
+    #[serde(skip)]
+    called_patched_fn: bool,
+    #[serde(skip)]
+    enable_patching: bool,
 }
 
 impl PartialEq for Vm {
@@ -263,6 +600,9 @@ impl Vm {
 
             traced_opcodes: 0,
             trace_buffer: Vec::new(),
+
+            enable_patching: false,
+            called_patched_fn: false,
         }
     }
 
@@ -317,11 +657,103 @@ impl Vm {
         &self.trace_buffer
     }
 
-    pub fn disassemble(&self, mut start: usize, mut count: usize) -> Vec<(usize, Opcode)> {
+    pub fn set_patching(&mut self, val: bool) {
+        self.enable_patching = val;
+    }
+
+    pub fn patch(&mut self, opcode: Opcode, offset: usize) {
+        let bin = opcode.machine_code();
+        let size = bin.len();
+
+        match self.disassemble(offset, 1) {
+            Ok(x) => {
+                let old_size = x.len();
+                if old_size != size {
+                    println!("WARNING: patched opcode of different size");
+                }
+            }
+            Err(e) => println!("Can't disassemble {:?}", e),
+        }
+
+        self.memory[offset..(offset + size)].copy_from_slice(&bin);
+    }
+
+    /// >> dis fn 2125
+    /// 2125: Push(Reg(1))
+    /// 2127: Push(Reg(2))
+    /// 2129: And(Reg(2), Reg(0), Reg(1))
+    /// 2133: Not(Reg(2), Reg(2))        
+    /// 2136: Or(Reg(0), Reg(0), Reg(1))
+    /// 2140: And(Reg(0), Reg(0), Reg(2))
+    /// 2144: Pop(Reg(2))
+    /// 2146: Pop(Reg(1))
+    /// 2148: Ret
+    fn patched_2125(&mut self) {
+        fn op(mut reg0: u16, reg1: u16) -> u16 {
+            let mut reg2 = reg0 & reg1;
+            reg2 = !reg2;
+            reg0 = reg0 | reg1;
+            reg0 = reg0 & reg2;
+
+            reg0
+        }
+
+        let reg0 = self.registers[0];
+        let reg1 = self.registers[1];
+
+        self.registers[0] = op(reg0, reg1);
+        self.pc += 9;
+    }
+
+    /// >> dis fn 6027
+    /// 6027: Jt(Reg(0), 6035)
+    /// 6030: Add(Reg(0), Reg(1), 1)
+    /// 6034: Ret
+    /// 6035: Jt(Reg(1), 6048)
+    /// 6038: Add(Reg(0), Reg(0), 32767)
+    /// 6042: Set(Reg(1), Reg(7))
+    /// 6045: Call(6027)
+    /// 6047: Ret
+    /// 6048: Push(Reg(0))
+    /// 6050: Add(Reg(1), Reg(1), 32767)
+    /// 6054: Call(6027)
+    /// 6056: Set(Reg(1), Reg(0))
+    /// 6059: Pop(Reg(0))
+    /// 6061: Add(Reg(0), Reg(0), 32767)
+    /// 6065: Call(6027)
+    /// 6067: Ret
+    ///
+    /// [src\emulator.rs:727] self = VM {
+    /// registers: [4, 1, 3, 10, 101, 0, 0, 1]
+    /// stack: [6080, 16, 6124, 1, 2952, 25978, 3568, 3599, 2708, 5445, 3]
+    /// ip: 5491
+    /// pc: 1012532
+    /// state: Running
+    /// memory: [...]
+    /// }
+    ///
+    /// Called at
+    /// 5489: Call(6027)
+    /// 5491: Eq(Reg(1), Reg(0), 6)
+    /// 5495: Jf(Reg(1), 5579)
+    /// 5498: Push(Reg(0))
+    /// 5500: Push(Reg(1))
+    /// 5502: Push(Reg(2))
+    /// 5504: Set(Reg(0), 29014)
+    /// 5507: Set(Reg(1), 1531)
+    /// 5510: Add(Reg(2), 21718, 1807)
+    /// 5514: Call(1458)
+    fn patched_6027(&mut self) {}
+
+    pub fn disassemble(
+        &self,
+        mut start: usize,
+        mut count: usize,
+    ) -> Result<Vec<(usize, Opcode)>, Box<dyn std::error::Error>> {
         let mut instructions = Vec::new();
 
         while count > 0 {
-            let instr = self.fetch(start);
+            let instr = self.fetch(start)?;
             let size = instr.size();
             instructions.push((start, instr));
 
@@ -329,17 +761,20 @@ impl Vm {
             count -= 1;
         }
 
-        instructions
+        Ok(instructions)
     }
 
     /// Disassemble from starting `Call` of function to all `Ret`
     /// we don't expecte self modifying code
-    pub fn disassemble_function(&self, starting_ip: usize) -> Vec<(usize, Opcode)> {
+    pub fn disassemble_function(
+        &self,
+        starting_ip: usize,
+    ) -> Result<Vec<(usize, Opcode)>, Box<dyn std::error::Error>> {
         let mut instructions = Vec::new();
 
         let mut explored: Vec<usize> = Vec::new();
         let mut queue = VecDeque::new();
-        let instr = self.fetch(starting_ip);
+        let instr = self.fetch(starting_ip)?;
         let size = instr.size();
         queue.push_back((starting_ip, instr, size));
 
@@ -371,7 +806,7 @@ impl Vm {
                     continue;
                 }
 
-                let opcode = self.fetch(ip);
+                let opcode = self.fetch(ip)?;
                 let size = opcode.size();
                 queue.push_back((ip, opcode, size));
             }
@@ -381,7 +816,60 @@ impl Vm {
         }
 
         instructions.sort_by_key(|a| a.0);
-        instructions
+        Ok(instructions)
+    }
+
+    pub fn pretty_print_dis(instructions: &[(usize, Opcode)]) {
+        let mut last: Option<(usize, Opcode)> = None;
+        for &(offset, opcode) in instructions.iter() {
+            if let Some((previous_offset, previous_opcode)) = last {
+                if previous_opcode.size() + previous_offset < offset {
+                    println!("[...]");
+                }
+            }
+
+            println!("{}: {:?}", offset, opcode);
+            last = Some((offset, opcode));
+        }
+    }
+
+    pub fn run_until_ret(&mut self) -> Result<Vec<(usize, Opcode)>, Box<dyn std::error::Error>> {
+        let mut executed = Vec::new();
+
+        let mut i = 0;
+        let mut counter = 0;
+        loop {
+            i += 1;
+            if i > 20 {
+                return Ok(executed);
+            }
+
+            let opcode = if self.called_patched_fn {
+                self.called_patched_fn = false;
+                Opcode::Ret
+            } else {
+                self.fetch(self.ip)?
+            };
+            println!("{}: {:?}", self.ip, opcode);
+            match opcode {
+                Opcode::Ret => {
+                    counter -= 1;
+                    if counter == 0 {
+                        break;
+                    }
+                }
+                Opcode::Call(_) => counter += 1,
+                _ => (),
+            }
+
+            self.step().unwrap();
+            executed.push((self.ip, opcode));
+        }
+        let opcode = self.fetch(self.ip)?;
+        self.step().unwrap();
+        executed.push((self.ip, opcode));
+
+        Ok(executed)
     }
 
     pub fn run(&mut self) {
@@ -415,10 +903,10 @@ impl Vm {
 
     pub fn step(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         if self.state != VmState::Running {
-            return Err("Vm is not running".into());
+            return Err(format!("Vm is not running: {:?}", self.state).into());
         }
 
-        let instruction = self.fetch(self.ip);
+        let instruction = self.fetch(self.ip)?;
         let size = instruction.size();
 
         if (instruction.discriminant() & self.traced_opcodes) != 0 {
@@ -433,10 +921,10 @@ impl Vm {
     }
 
     /// Return `Opcode)` decoded at `ip`
-    fn fetch(&self, ip: usize) -> Opcode {
+    fn fetch(&self, ip: usize) -> Result<Opcode, Box<dyn std::error::Error>> {
         let instr_type = self.memory[ip];
 
-        match instr_type {
+        let opcode = match instr_type {
             0 => Opcode::Halt,
             1 => Opcode::Set(Val::new(self.memory[ip + 1]), Val::new(self.memory[ip + 2])),
             2 => Opcode::Push(Val::new(self.memory[ip + 1])),
@@ -487,8 +975,10 @@ impl Vm {
             19 => Opcode::Out(Val::new(self.memory[ip + 1])),
             20 => Opcode::In(Val::new(self.memory[ip + 1])),
             21 => Opcode::Noop,
-            x => unreachable!("Fetch: unknown instr '{}'", x),
-        }
+            x => return Err("Can't decode opcode".into()),
+        };
+
+        Ok(opcode)
     }
 
     fn execute(&mut self, instruction: &Opcode, next_instruction_ptr: usize) {
@@ -607,6 +1097,38 @@ impl Vm {
             }
             Opcode::Call(a) => {
                 let addr = self.get_value(a).expect("Invalid number");
+
+                if addr == 6027 {
+                    panic!("{:?}", self);
+                }
+
+                if self.enable_patching {
+                    match addr {
+                        3 => {
+                            self.registers[0] = 20;
+                            self.pc += 2;
+                            self.called_patched_fn = true;
+                            return;
+                        }
+                        2125 => {
+                            //let mut test = self.clone();
+                            //test.run_until_ret();
+
+                            self.patched_2125();
+                            //self.ip += 1;
+                            self.called_patched_fn = true;
+
+                            //assert_eq!(&test, self);
+                            return;
+                        }
+                        6027 => {
+                            //self.patched_6027();
+                            //self.called_patched_fn = true;
+                            //return;
+                        }
+                        _ => (),
+                    }
+                }
 
                 self.stack.push(self.ip as u16);
                 self.ip = addr as usize;

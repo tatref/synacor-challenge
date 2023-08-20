@@ -25,16 +25,31 @@ impl Cli {
             .no_binary_name(true)
             .subcommand(Command::new("helpme"))
             .subcommand(
+                Command::new("patch")
+                    .arg(Arg::new("opcode"))
+                    .arg(Arg::new("offset").value_parser(RangedU64ValueParser::<usize>::new())),
+            )
+            .subcommand(
                 Command::new("dis")
-                    .arg(
-                        Arg::new("from")
-                            .required(true)
-                            .value_parser(RangedU64ValueParser::<usize>::new()),
+                    .subcommand(
+                        Command::new("at")
+                            .arg(
+                                Arg::new("from")
+                                    .required(true)
+                                    .value_parser(RangedU64ValueParser::<usize>::new()),
+                            )
+                            .arg(
+                                Arg::new("count")
+                                    .required(true)
+                                    .value_parser(RangedU64ValueParser::<usize>::new()),
+                            ),
                     )
-                    .arg(
-                        Arg::new("count")
-                            .required(true)
-                            .value_parser(RangedU64ValueParser::<usize>::new()),
+                    .subcommand(
+                        Command::new("fn").arg(
+                            Arg::new("from")
+                                .required(true)
+                                .value_parser(RangedU64ValueParser::<usize>::new()),
+                        ),
                     ),
             )
             .subcommand(
@@ -179,15 +194,33 @@ impl Cli {
                     .feed(sub.get_one::<String>("line").unwrap_or(&"".to_string()))?;
                 println!("{}", self.vm.get_messages().last().unwrap());
             }
-            Some(("dis", sub)) => {
-                let from = *sub.get_one::<usize>("from").unwrap();
-                let count = *sub.get_one::<usize>("count").unwrap();
+            Some(("patch", sub)) => {
+                let opcode = sub.get_one::<String>("opcode").unwrap();
+                let opcode: Opcode = opcode.parse()?;
+                let offset = *sub.get_one::<usize>("offset").unwrap();
 
-                let instructions = self.vm.disassemble(from, count);
-                for (ip, instr) in instructions.iter() {
-                    println!("{}: {:?}", ip, instr);
-                }
+                self.vm.patch(opcode, offset);
             }
+            Some(("dis", sub)) => match sub.subcommand() {
+                Some(("at", sub)) => {
+                    let from = *sub.get_one::<usize>("from").unwrap();
+                    let count = *sub.get_one::<usize>("count").unwrap();
+
+                    let instructions = self.vm.disassemble(from, count)?;
+                    for (ip, instr) in instructions.iter() {
+                        println!("{}: {:?}", ip, instr);
+                    }
+                }
+                Some(("fn", sub)) => {
+                    let from = *sub.get_one::<usize>("from").unwrap();
+                    let instructions = self.vm.disassemble_function(from)?;
+
+                    Vm::pretty_print_dis(&instructions);
+                }
+                Some(_) => (),
+
+                None => (),
+            },
             Some(("vm", sub)) => match sub.subcommand() {
                 Some(("register", sub)) => match sub.subcommand() {
                     Some(("set", sub)) => {
@@ -210,7 +243,7 @@ impl Cli {
                 }
                 Some(("teleporter", _sub)) => {
                     let solver = GameSolver::new();
-                    solver.solve_teleporter(&self.vm);
+                    solver.trace_teleporter(&self.vm);
                 }
                 Some((_, _)) => return Err("unreachable?".into()),
                 None => (),

@@ -4,6 +4,7 @@ use crate::emulator::{Opcode, Val, Vm, VmState};
 use std::{
     collections::{hash_map::DefaultHasher, BTreeMap, HashMap, HashSet},
     hash::{Hash, Hasher},
+    time::Instant,
 };
 
 pub struct GameSolver {}
@@ -183,8 +184,9 @@ impl GameSolver {
         graph.push_str("}\n");
     }
 
-    pub fn solve_teleporter(&self, vm: &Vm) {
+    pub fn trace_teleporter(&self, vm: &Vm) {
         let mut vm = vm.clone();
+        vm.set_patching(false);
 
         let val = 1;
         vm.set_register(7, val);
@@ -196,32 +198,47 @@ impl GameSolver {
 
         let _ = vm.feed("use teleporter");
 
-        let mut steps = 100;
+        let mut steps = 10000;
         while vm.get_state() == VmState::Running {
             vm.step().unwrap();
             steps -= 1;
             if steps == 0 {
-                println!("early stop {}", val);
+                //println!("early stop {}", val);
                 break;
             }
+        }
+        if vm.get_state() != VmState::Running {
+            dbg!(&vm.get_messages().last());
         }
 
         vm.set_traced_opcodes(0);
 
-        let mut map = HashMap::new();
-        for e in vm.get_trace_buffer() {
-            *map.entry(e).or_insert(0) += 1;
+        fn count_occurrences<T: Eq + std::hash::Hash + Copy>(input: &[T]) -> Vec<(T, usize)> {
+            let mut counts = HashMap::new();
+
+            for &item in input {
+                let count = counts.entry(item).or_insert(0);
+                *count += 1;
+            }
+
+            let mut occurrences: Vec<(T, usize)> = counts.into_iter().collect();
+            occurrences.sort_by(|a, b| b.1.cmp(&a.1));
+            occurrences
+        }
+        fn top_n_occurrences<T: Eq + std::hash::Hash + Copy>(
+            input: &[T],
+            n: usize,
+        ) -> Vec<(T, usize)> {
+            let occurrences = count_occurrences(input);
+            occurrences.into_iter().take(n).collect()
         }
 
-        for x in map.iter() {
-            println!("{:?}", x);
+        let top_occurrences = top_n_occurrences(vm.get_trace_buffer(), 10);
+        for (opcode, count) in top_occurrences {
+            println!("opcode: {:?}, Occurrences: {}", opcode, count);
         }
 
-        for traces in vm.get_trace_buffer() {
-            println!("{:?}", traces);
-        }
-
-        self.build_call_graph(&vm, vm.get_trace_buffer());
+        //self.build_call_graph(&vm, vm.get_trace_buffer());
     }
 }
 
