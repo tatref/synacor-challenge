@@ -154,7 +154,7 @@ impl Opcode {
             Opcode::Not(_, _) => todo!(),
             Opcode::Rmem(_, _) => todo!(),
             Opcode::Wmem(_, _) => todo!(),
-            Opcode::Call(_) => todo!(),
+            Opcode::Call(a) => vec![17, a.to_binary()],
             Opcode::Ret => vec![18],
             Opcode::Out(_) => todo!(),
             Opcode::In(_) => todo!(),
@@ -348,12 +348,17 @@ impl Vm {
                 continue;
             }
 
-            let mut next = instr.next_possible_ip(); // possible branches
-            match instr {
-                Opcode::Halt => (),
-                Opcode::Ret => (),
-                _ => next.push(Val::Num(ip as u16 + size as u16)), // default next instruction
-            }
+            //let mut next = instr.next_possible_ip(); // possible branches
+            let next: Vec<Val> = match instr {
+                Opcode::Halt => vec![],
+                Opcode::Ret => vec![],
+                Opcode::Call(_) => vec![Val::Num(ip as u16 + size as u16)], // don't follow calls
+                _ => {
+                    let mut next = instr.next_possible_ip();
+                    next.push(Val::Num(ip as u16 + size as u16));
+                    next
+                }
+            };
 
             for n in &next {
                 let ip = match n {

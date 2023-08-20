@@ -38,6 +38,10 @@ fn disassemble_function() -> Result<(), Box<dyn std::error::Error>> {
         Opcode::Jt(Val::Num(0), Val::Num(15)),
         Opcode::Ret,
         Opcode::Add(Val::Reg(2), Val::Num(1), Val::Num(2)),
+        Opcode::Call(Val::Num(2)),
+        Opcode::Call(Val::Num(2)),
+        Opcode::Call(Val::Num(2)),
+        Opcode::Call(Val::Num(2)),
         Opcode::Ret,
     ];
     let prog = Opcode::vec_to_machine_code(&prog);
@@ -58,6 +62,8 @@ fn disassemble_function() -> Result<(), Box<dyn std::error::Error>> {
         println!("{}: {:?}", starting_ip + offset, opcode);
         last = Some((offset, opcode));
     }
+
+    panic!();
 
     Ok(())
 }
