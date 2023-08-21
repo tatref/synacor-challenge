@@ -74,8 +74,13 @@ impl GameSolver {
 
                 #[allow(clippy::format_in_format_args)]
                 graphviz.push_str(&format!(
-                    "{} [label=\"{}: {}\", color = {}, shape = {}];\n",
-                    from, current_level.name, things, color, shape
+                    "{} [label=\"{} - {}: {}\", color = {}, shape = {}];\n",
+                    from,
+                    current_level.name,
+                    current_level.description.replace("\"", ""),
+                    things,
+                    color,
+                    shape
                 ));
 
                 if explored.contains(&new_level) {
@@ -97,7 +102,12 @@ impl GameSolver {
         }
 
         graphviz.push_str("}\n\n");
-        println!("{}", graphviz);
+
+        match std::fs::write("graphviz.dot", graphviz) {
+            Ok(_) => (),
+            Err(x) => println!("{:?}", x),
+        }
+        println!("./graphviz.dot");
     }
 
     pub fn trace_teleporter(vm: &Vm) {
@@ -169,7 +179,7 @@ pub struct Level {
 impl Level {
     pub fn from(raw: &str) -> Result<Self, Box<dyn std::error::Error>> {
         let re_name = Regex::new(r"== (.+?) ==\n(.+?)\n").unwrap();
-        let (name, description) = {
+        let (name, mut description) = {
             let caps = re_name.captures(raw).ok_or("No level name")?;
 
             (
@@ -177,6 +187,11 @@ impl Level {
                 caps.get(2).unwrap().as_str().to_string(),
             )
         };
+
+        if description.contains("You are in a grid of rooms that control the door to the vault.") {
+            description.push_str(&raw.lines().nth(5).unwrap());
+            description = description.replace("\n", " ");
+        }
 
         fn get_things(raw: &str) -> Vec<String> {
             let re_things = Regex::new(r"Things of interest here:\n([^\n]+\n)+").unwrap();
