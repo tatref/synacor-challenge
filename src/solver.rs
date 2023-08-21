@@ -12,6 +12,7 @@ impl GameSolver {
     pub fn explore_maze(vm: &Vm) {
         let message = vm.get_messages().last().unwrap();
         let level = Level::from(message).unwrap();
+        let first_level = level.clone();
 
         let mut explored: HashSet<Level> = Default::default();
         let mut queue: BTreeMap<Level, Vm> = Default::default();
@@ -64,13 +65,17 @@ impl GameSolver {
                     "red"
                 };
 
+                let shape = if current_level == first_level {
+                    "Mdiamond"
+                } else {
+                    "ellipse"
+                };
                 graphviz.push_str(&format!("{} -> {} [label =\"{}\"];\n", from, to, exit));
+
                 #[allow(clippy::format_in_format_args)]
                 graphviz.push_str(&format!(
-                    "{} [label=\"{}\", color = {}];\n",
-                    from,
-                    format!("{}: {}", current_level.name, things,),
-                    color
+                    "{} [label=\"{}: {}\", color = {}, shape = {}];\n",
+                    from, current_level.name, things, color, shape
                 ));
 
                 if explored.contains(&new_level) {
@@ -91,7 +96,7 @@ impl GameSolver {
             }
         }
 
-        graphviz.push_str("\n}\n");
+        graphviz.push_str("}\n\n");
         println!("{}", graphviz);
     }
 
