@@ -1,3 +1,5 @@
+use itertools::iproduct;
+
 use crate::emulator::{Opcode, Val, Vm};
 
 #[test]
@@ -80,6 +82,32 @@ fn patching_2125() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
+#[test]
+fn run_until_ret_2125() -> Result<(), Box<dyn std::error::Error>> {
+    let prog = vec![Opcode::Call(Val::Num(2125))];
+    let prog = Opcode::vec_to_machine_code(&prog);
+
+    for (reg0, reg1) in iproduct!(0..100, 0..100) {
+        let mut vm = Vm::default();
+        vm.load_program_from_mem(&prog);
+        vm.set_register(0, reg0);
+        vm.set_register(1, reg1);
+
+        let mut vm1 = vm.clone();
+        let mut vm2 = vm.clone();
+
+        println!("vm1");
+        let instr = vm1.run_until_ret()?;
+
+        println!("vm2");
+        vm2.set_patching(true);
+        let instr = vm2.run_until_ret()?;
+
+        assert_eq!(vm1, vm2);
+    }
+
+    Ok(())
+}
 
 #[test]
 fn patching_3() -> Result<(), Box<dyn std::error::Error>> {
@@ -114,41 +142,41 @@ fn patching_3() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-//#[test]
-//fn run_until_ret_3() -> Result<(), Box<dyn std::error::Error>> {
-//    let prog = vec![
-//        Opcode::Call(Val::Num(3)),
-//        Opcode::Halt,
-//        Opcode::Set(Val::Reg(0), Val::Num(20)),
-//        Opcode::Ret,
-//    ];
-//    let prog = Opcode::vec_to_machine_code(&prog);
-//
-//    let mut vm = Vm::new();
-//    vm.load_program_from_mem(&prog);
-//
-//    let x = vm.disassemble(0, 5)?;
-//    Vm::pretty_print_dis(&x);
-//    println!();
-//
-//    let mut vm1 = vm.clone();
-//    let mut vm2 = vm.clone();
-//
-//    println!("vm1");
-//    vm1.run_until_ret();
-//    //vm1.step().unwrap();
-//    //vm1.step().unwrap();
-//    //vm1.step().unwrap();
-//
-//    println!("vm2");
-//    vm2.set_patching(true);
-//    vm2.run_until_ret();
-//    //vm2.step().unwrap();
-//
-//    assert_eq!(vm1, vm2);
-//
-//    Ok(())
-//}
+#[test]
+fn run_until_ret_3() -> Result<(), Box<dyn std::error::Error>> {
+    let prog = vec![
+        Opcode::Call(Val::Num(3)),
+        Opcode::Halt,
+        Opcode::Set(Val::Reg(0), Val::Num(20)),
+        Opcode::Ret,
+    ];
+    let prog = Opcode::vec_to_machine_code(&prog);
+
+    let mut vm = Vm::new();
+    vm.load_program_from_mem(&prog);
+
+    let x = vm.disassemble(0, 5)?;
+    Vm::pretty_print_dis(&x);
+    println!();
+
+    let mut vm1 = vm.clone();
+    let mut vm2 = vm.clone();
+
+    println!("vm1");
+    vm1.run_until_ret();
+    //vm1.step().unwrap();
+    //vm1.step().unwrap();
+    //vm1.step().unwrap();
+
+    println!("vm2");
+    vm2.set_patching(true);
+    vm2.run_until_ret();
+    //vm2.step().unwrap();
+
+    assert_eq!(vm1, vm2);
+
+    Ok(())
+}
 
 #[test]
 fn parse_opcode() {

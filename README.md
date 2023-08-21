@@ -6,3 +6,8 @@ Can validate codes via https://github.com/Aneurysm9/vm_challenge
 ```
 .\tools\Graphviz\bin\dot.exe -T png .\graphviz.dot -o graph.png
 ```
+
+TODO:
+breakpoints
+check codes
+memoize 6027?

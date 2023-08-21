@@ -525,6 +525,9 @@ pub struct Vm {
     called_patched_fn: bool,
     #[serde(skip)]
     enable_patching: bool,
+
+    #[serde(skip)]
+    breakpoints: Vec<usize>,
 }
 
 impl PartialEq for Vm {
@@ -538,9 +541,6 @@ impl PartialEq for Vm {
             return false;
         }
         if self.ip != other.ip {
-            return false;
-        }
-        if self.pc != other.pc {
             return false;
         }
         if self.output_buffer != other.output_buffer {
@@ -572,6 +572,7 @@ pub enum VmState {
     Running,
     Halted,
     WaitingForInput,
+    HitBreakPoint,
 }
 impl Default for Vm {
     fn default() -> Self {
@@ -604,6 +605,8 @@ impl Vm {
 
             enable_patching: false,
             called_patched_fn: false,
+
+            breakpoints: Vec::new(),
         }
     }
 
@@ -652,6 +655,20 @@ impl Vm {
 
     pub fn set_patching(&mut self, val: bool) {
         self.enable_patching = val;
+    }
+
+    pub fn get_breakpoints(&self) -> &[usize] {
+        &self.breakpoints
+    }
+
+    pub fn set_breakpoint(&mut self, offset: usize) {
+        if !self.breakpoints.contains(&offset) {
+            self.breakpoints.push(offset);
+        }
+    }
+
+    pub fn unset_breakpoint(&mut self, offset: usize) {
+        self.breakpoints.retain(|bp| *bp != offset);
     }
 
     pub fn patch(&mut self, opcode: Opcode, offset: usize) {
@@ -830,21 +847,14 @@ impl Vm {
     pub fn run_until_ret(&mut self) -> Result<Vec<(usize, Opcode)>, Box<dyn std::error::Error>> {
         let mut executed = Vec::new();
 
-        let mut i = 0;
         let mut counter = 0;
         loop {
-            i += 1;
-            if i > 20 {
-                return Ok(executed);
-            }
-
             let opcode = if self.called_patched_fn {
                 self.called_patched_fn = false;
                 Opcode::Ret
             } else {
                 self.fetch(self.ip)?
             };
-            println!("{}: {:?}", self.ip, opcode);
             match opcode {
                 Opcode::Ret => {
                     counter -= 1;
@@ -856,11 +866,16 @@ impl Vm {
                 _ => (),
             }
 
-            self.step().unwrap();
+            let next_instruction_ptr = self.ip + opcode.size();
+            self.execute(&opcode, next_instruction_ptr);
             executed.push((self.ip, opcode));
         }
-        let opcode = self.fetch(self.ip)?;
-        self.step().unwrap();
+
+        // execute last Ret
+        let opcode = Opcode::Ret;
+        let next_instruction_ptr = self.ip + opcode.size();
+        self.execute(&opcode, next_instruction_ptr);
+
         executed.push((self.ip, opcode));
 
         Ok(executed)
@@ -1099,8 +1114,11 @@ impl Vm {
                 if self.enable_patching {
                     match addr {
                         3 => {
-                            self.registers[0] = 20;
-                            self.pc += 2;
+                            self.stack.push(self.ip as u16);
+                            {
+                                // function code
+                                self.registers[0] = 20;
+                            }
                             self.called_patched_fn = true;
                             return;
                         }
@@ -1108,17 +1126,18 @@ impl Vm {
                             //let mut test = self.clone();
                             //test.run_until_ret();
 
+                            self.stack.push(self.ip as u16);
                             self.patched_2125();
-                            //self.ip += 1;
                             self.called_patched_fn = true;
 
                             //assert_eq!(&test, self);
                             return;
                         }
                         6027 => {
-                            //self.patched_6027();
-                            //self.called_patched_fn = true;
-                            //return;
+                            self.stack.push(self.ip as u16);
+                            self.patched_6027();
+                            self.called_patched_fn = true;
+                            return;
                         }
                         _ => (),
                     }

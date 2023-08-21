@@ -20,82 +20,93 @@ pub struct Cli {
 
 impl Cli {
     pub fn new(vm: Vm) -> Self {
-        let cli = Command::new("cli")
-            .subcommand_required(true)
-            .no_binary_name(true)
-            .subcommand(Command::new("helpme"))
-            .subcommand(
-                Command::new("patch")
-                    .arg(Arg::new("opcode"))
-                    .arg(Arg::new("offset").value_parser(RangedU64ValueParser::<usize>::new())),
-            )
-            .subcommand(
-                Command::new("dis")
-                    .subcommand(
-                        Command::new("at")
-                            .arg(
+        let cli =
+            Command::new("cli")
+                .subcommand_required(true)
+                .no_binary_name(true)
+                .subcommand(Command::new("helpme"))
+                .subcommand(
+                    Command::new("bp")
+                        .subcommand(Command::new("list"))
+                        .subcommand(Command::new("set").arg(
+                            Arg::new("offset").value_parser(RangedU64ValueParser::<usize>::new()),
+                        ))
+                        .subcommand(Command::new("unset").arg(
+                            Arg::new("offset").value_parser(RangedU64ValueParser::<usize>::new()),
+                        )),
+                )
+                .subcommand(
+                    Command::new("patch")
+                        .arg(Arg::new("opcode"))
+                        .arg(Arg::new("offset").value_parser(RangedU64ValueParser::<usize>::new())),
+                )
+                .subcommand(
+                    Command::new("dis")
+                        .subcommand(
+                            Command::new("at")
+                                .arg(
+                                    Arg::new("from")
+                                        .required(true)
+                                        .value_parser(RangedU64ValueParser::<usize>::new()),
+                                )
+                                .arg(
+                                    Arg::new("count")
+                                        .required(true)
+                                        .value_parser(RangedU64ValueParser::<usize>::new()),
+                                ),
+                        )
+                        .subcommand(
+                            Command::new("fn").arg(
                                 Arg::new("from")
                                     .required(true)
                                     .value_parser(RangedU64ValueParser::<usize>::new()),
-                            )
-                            .arg(
-                                Arg::new("count")
-                                    .required(true)
-                                    .value_parser(RangedU64ValueParser::<usize>::new()),
                             ),
-                    )
-                    .subcommand(
-                        Command::new("fn").arg(
-                            Arg::new("from")
-                                .required(true)
-                                .value_parser(RangedU64ValueParser::<usize>::new()),
+                        ),
+                )
+                .subcommand(
+                    Command::new("vm").subcommand(
+                        Command::new("register").subcommand(
+                            Command::new("set")
+                                .arg(
+                                    Arg::new("register")
+                                        .required(true)
+                                        .value_parser(RangedU64ValueParser::<usize>::new()),
+                                )
+                                .arg(
+                                    Arg::new("value")
+                                        .required(true)
+                                        .value_parser(RangedU64ValueParser::<u16>::new()),
+                                ),
                         ),
                     ),
-            )
-            .subcommand(
-                Command::new("vm").subcommand(
-                    Command::new("register").subcommand(
-                        Command::new("set")
-                            .arg(
-                                Arg::new("register")
-                                    .required(true)
-                                    .value_parser(RangedU64ValueParser::<usize>::new()),
-                            )
-                            .arg(
-                                Arg::new("value")
-                                    .required(true)
-                                    .value_parser(RangedU64ValueParser::<u16>::new()),
-                            ),
+                )
+                .subcommand(Command::new("run").alias("r"))
+                .subcommand(Command::new("input").alias("i").arg(Arg::new("line")))
+                .subcommand(
+                    Command::new("solver")
+                        .subcommand(Command::new("explore"))
+                        .subcommand(Command::new("teleporter")),
+                )
+                .subcommand(
+                    Command::new("snap")
+                        .subcommand(Command::new("load").arg(Arg::new("dump_path").required(true)))
+                        .subcommand(
+                            Command::new("dump")
+                                .arg(Arg::new("name").required(true))
+                                .arg(Arg::new("dump_path").required(true)),
+                        )
+                        .subcommand(Command::new("take").arg(Arg::new("name").required(true)))
+                        .subcommand(Command::new("remove").arg(Arg::new("name").required(true)))
+                        .subcommand(Command::new("restore").arg(Arg::new("name").required(true)))
+                        .subcommand(Command::new("list")),
+                )
+                .subcommand(
+                    Command::new("step").alias("s").arg(
+                        Arg::new("count")
+                            .value_parser(RangedU64ValueParser::<u32>::new())
+                            .default_value("1"),
                     ),
-                ),
-            )
-            .subcommand(Command::new("run").alias("r"))
-            .subcommand(Command::new("input").alias("i").arg(Arg::new("line")))
-            .subcommand(
-                Command::new("solver")
-                    .subcommand(Command::new("explore"))
-                    .subcommand(Command::new("teleporter")),
-            )
-            .subcommand(
-                Command::new("snap")
-                    .subcommand(Command::new("load").arg(Arg::new("dump_path").required(true)))
-                    .subcommand(
-                        Command::new("dump")
-                            .arg(Arg::new("name").required(true))
-                            .arg(Arg::new("dump_path").required(true)),
-                    )
-                    .subcommand(Command::new("take").arg(Arg::new("name").required(true)))
-                    .subcommand(Command::new("remove").arg(Arg::new("name").required(true)))
-                    .subcommand(Command::new("restore").arg(Arg::new("name").required(true)))
-                    .subcommand(Command::new("list")),
-            )
-            .subcommand(
-                Command::new("step").alias("s").arg(
-                    Arg::new("count")
-                        .value_parser(RangedU64ValueParser::<u32>::new())
-                        .default_value("1"),
-                ),
-            );
+                );
 
         Self {
             cli,
@@ -201,6 +212,27 @@ impl Cli {
 
                 self.vm.patch(opcode, offset);
             }
+            Some(("bp", sub)) => match sub.subcommand() {
+                Some(("list", _sub)) => {
+                    for &bp in self.vm.get_breakpoints() {
+                        match self.vm.disassemble(bp, 1) {
+                            Ok(x) => Vm::pretty_print_dis(&x),
+                            Err(e) => println!("{}: {}", bp, e),
+                        }
+                    }
+                }
+                Some(("set", sub)) => {
+                    let offset = *sub.get_one::<usize>("offset").unwrap();
+                    self.vm.set_breakpoint(offset);
+                }
+                Some(("unset", sub)) => {
+                    let offset = *sub.get_one::<usize>("offset").unwrap();
+                    self.vm.unset_breakpoint(offset);
+                }
+                Some(_) => (),
+
+                None => (),
+            },
             Some(("dis", sub)) => match sub.subcommand() {
                 Some(("at", sub)) => {
                     let from = *sub.get_one::<usize>("from").unwrap();
