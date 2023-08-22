@@ -20,6 +20,7 @@ fn main() {
     let vm = Vm::default();
 
     let mut rl = DefaultEditor::new().unwrap();
+    let _ = rl.load_history("history.txt");
     let mut cli = Cli::new(vm);
 
     loop {
@@ -27,6 +28,9 @@ fn main() {
         match readline {
             Ok(line) => {
                 rl.add_history_entry(&line).unwrap();
+                if let Err(e) = rl.save_history("history.txt") {
+                    println!("Can't save history {:?}", e);
+                }
                 match cli.parse_command(&line) {
                     Ok(_) => (),
                     Err(x) => println!("{:?}", x),
