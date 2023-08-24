@@ -1,4 +1,5 @@
 use crate::{emulator::*, solver::GameSolver};
+use clap::builder::BoolishValueParser;
 //use clap::{App, AppSettings, Arg, SubCommand};
 use clap::{builder::RangedU64ValueParser, Arg, Command};
 
@@ -20,51 +21,60 @@ pub struct Cli {
 
 impl Cli {
     pub fn new(vm: Vm) -> Self {
-        let cli =
-            Command::new("cli")
-                .subcommand_required(true)
-                .no_binary_name(true)
-                .subcommand(Command::new("helpme"))
-                .subcommand(
-                    Command::new("bp")
-                        .subcommand(Command::new("list"))
-                        .subcommand(Command::new("set").arg(
+        let cli = Command::new("cli")
+            .subcommand_required(true)
+            .no_binary_name(true)
+            .subcommand(Command::new("helpme"))
+            .subcommand(
+                Command::new("bp")
+                    .subcommand(Command::new("list"))
+                    .subcommand(
+                        Command::new("set").arg(
                             Arg::new("offset").value_parser(RangedU64ValueParser::<usize>::new()),
-                        ))
-                        .subcommand(Command::new("unset").arg(
-                            Arg::new("offset").value_parser(RangedU64ValueParser::<usize>::new()),
-                        )),
-                )
-                .subcommand(
-                    Command::new("patch")
-                        .arg(Arg::new("opcode"))
-                        .arg(Arg::new("offset").value_parser(RangedU64ValueParser::<usize>::new())),
-                )
-                .subcommand(
-                    Command::new("dis")
-                        .subcommand(
-                            Command::new("at")
-                                .arg(
-                                    Arg::new("from")
-                                        .required(true)
-                                        .value_parser(RangedU64ValueParser::<usize>::new()),
-                                )
-                                .arg(
-                                    Arg::new("count")
-                                        .required(true)
-                                        .value_parser(RangedU64ValueParser::<usize>::new()),
-                                ),
-                        )
-                        .subcommand(
-                            Command::new("fn").arg(
+                        ),
+                    )
+                    .subcommand(Command::new("unset").arg(
+                        Arg::new("offset").value_parser(RangedU64ValueParser::<usize>::new()),
+                    )),
+            )
+            .subcommand(
+                Command::new("patch")
+                    .arg(Arg::new("opcode"))
+                    .arg(Arg::new("offset").value_parser(RangedU64ValueParser::<usize>::new())),
+            )
+            .subcommand(
+                Command::new("dis")
+                    .subcommand(
+                        Command::new("at")
+                            .arg(
                                 Arg::new("from")
                                     .required(true)
                                     .value_parser(RangedU64ValueParser::<usize>::new()),
+                            )
+                            .arg(
+                                Arg::new("count")
+                                    .required(true)
+                                    .value_parser(RangedU64ValueParser::<usize>::new()),
                             ),
+                    )
+                    .subcommand(
+                        Command::new("fn").arg(
+                            Arg::new("from")
+                                .required(true)
+                                .value_parser(RangedU64ValueParser::<usize>::new()),
                         ),
-                )
-                .subcommand(
-                    Command::new("vm").subcommand(
+                    ),
+            )
+            .subcommand(
+                Command::new("vm")
+                    .subcommand(
+                        Command::new("patch").arg(
+                            Arg::new("patch")
+                                .required(true)
+                                .value_parser(BoolishValueParser::new()),
+                        ),
+                    )
+                    .subcommand(
                         Command::new("register").subcommand(
                             Command::new("set")
                                 .arg(
@@ -79,34 +89,76 @@ impl Cli {
                                 ),
                         ),
                     ),
-                )
-                .subcommand(Command::new("run").alias("r"))
-                .subcommand(Command::new("input").alias("i").arg(Arg::new("line")))
-                .subcommand(
-                    Command::new("solver")
-                        .subcommand(Command::new("explore"))
-                        .subcommand(Command::new("teleporter")),
-                )
-                .subcommand(
-                    Command::new("snap")
-                        .subcommand(Command::new("load").arg(Arg::new("dump_path").required(true)))
-                        .subcommand(
-                            Command::new("dump")
-                                .arg(Arg::new("name").required(true))
-                                .arg(Arg::new("dump_path").required(true)),
-                        )
-                        .subcommand(Command::new("take").arg(Arg::new("name").required(true)))
-                        .subcommand(Command::new("remove").arg(Arg::new("name").required(true)))
-                        .subcommand(Command::new("restore").arg(Arg::new("name").required(true)))
-                        .subcommand(Command::new("list")),
-                )
-                .subcommand(
-                    Command::new("step").alias("s").arg(
-                        Arg::new("count")
-                            .value_parser(RangedU64ValueParser::<u32>::new())
-                            .default_value("1"),
+            )
+            .subcommand(
+                Command::new("mem")
+                    .subcommand(Command::new("init"))
+                    .subcommand(Command::new("list"))
+                    .subcommand(
+                        Command::new("get").arg(
+                            Arg::new("offset").value_parser(RangedU64ValueParser::<usize>::new()),
+                        ),
+                    )
+                    .subcommand(
+                        Command::new("set")
+                            .arg(
+                                Arg::new("offset")
+                                    .value_parser(RangedU64ValueParser::<usize>::new()),
+                            )
+                            .arg(
+                                Arg::new("value").value_parser(RangedU64ValueParser::<u16>::new()),
+                            ),
+                    )
+                    .subcommand(
+                        Command::new("filter")
+                            .alias("f")
+                            .subcommand(Command::new("=").arg(
+                                Arg::new("value").value_parser(RangedU64ValueParser::<u16>::new()),
+                            ))
+                            .subcommand(Command::new("!=").arg(
+                                Arg::new("value").value_parser(RangedU64ValueParser::<u16>::new()),
+                            ))
+                            .subcommand(Command::new(">").arg(
+                                Arg::new("value").value_parser(RangedU64ValueParser::<u16>::new()),
+                            ))
+                            .subcommand(Command::new(">=").arg(
+                                Arg::new("value").value_parser(RangedU64ValueParser::<u16>::new()),
+                            ))
+                            .subcommand(Command::new("<").arg(
+                                Arg::new("value").value_parser(RangedU64ValueParser::<u16>::new()),
+                            ))
+                            .subcommand(Command::new("<=").arg(
+                                Arg::new("value").value_parser(RangedU64ValueParser::<u16>::new()),
+                            )),
                     ),
-                );
+            )
+            .subcommand(Command::new("run").alias("r"))
+            .subcommand(Command::new("input").alias("i").arg(Arg::new("line")))
+            .subcommand(
+                Command::new("solver")
+                    .subcommand(Command::new("explore"))
+                    .subcommand(Command::new("teleporter")),
+            )
+            .subcommand(
+                Command::new("snap")
+                    .subcommand(Command::new("load").arg(Arg::new("dump_path").required(true)))
+                    .subcommand(
+                        Command::new("dump")
+                            .arg(Arg::new("name").required(true))
+                            .arg(Arg::new("dump_path").required(true)),
+                    )
+                    .subcommand(Command::new("take").arg(Arg::new("name").required(true)))
+                    .subcommand(Command::new("remove").arg(Arg::new("name").required(true)))
+                    .subcommand(Command::new("restore").arg(Arg::new("name").required(true)))
+                    .subcommand(Command::new("list")),
+            )
+            .subcommand(
+                Command::new("step").alias("s").arg(
+                    Arg::new("count")
+                        .value_parser(RangedU64ValueParser::<u32>::new())
+                        .default_value("1"),
+                ),
+            );
 
         Self {
             cli,
@@ -134,7 +186,10 @@ impl Cli {
         let snap: Snapshot = serde_json::from_reader(f)?;
         let name = snap.name.clone();
 
-        self.snapshots.push(snap);
+        match self.snapshots.iter().find(|s| s.name == name) {
+            Some(_) => (),
+            None => self.snapshots.push(snap),
+        };
         self.restore_snapshot(&name);
 
         Ok(())
@@ -198,7 +253,9 @@ impl Cli {
         match args.subcommand() {
             Some(("run", _sub)) => {
                 self.vm.run();
-                println!("{}", self.vm.get_messages().last().unwrap());
+                if let VmState::WaitingForInput = self.vm.get_state() {
+                    println!("{}", self.vm.get_messages().last().unwrap());
+                }
             }
             Some(("input", sub)) => {
                 self.vm
@@ -212,6 +269,32 @@ impl Cli {
 
                 self.vm.patch(opcode, offset);
             }
+            Some(("mem", sub)) => match sub.subcommand() {
+                Some(("init", _sub)) => {
+                    self.vm.scanmem_init();
+                }
+                Some(("list", _sub)) => {
+                    self.vm.scanmem_list();
+                }
+                Some(("get", sub)) => {
+                    let offset = *sub.get_one::<usize>("offset").unwrap();
+                    self.vm.mem_get(offset);
+                }
+                Some(("set", sub)) => {
+                    let offset = *sub.get_one::<usize>("offset").unwrap();
+                    let value = *sub.get_one::<u16>("value").unwrap();
+                    self.vm.mem_set(offset, value);
+                }
+                Some(("filter", sub)) => match sub.subcommand() {
+                    Some((filter, _sub)) => {
+                        let value = sub.get_one::<u16>("value").copied();
+                        self.vm.scanmem_filter(&filter, value);
+                    }
+                    None => (),
+                },
+                Some(_) => println!("Unknown command"),
+                None => (),
+            },
             Some(("bp", sub)) => match sub.subcommand() {
                 Some(("list", _sub)) => {
                     for &bp in self.vm.get_breakpoints() {
@@ -254,6 +337,10 @@ impl Cli {
                 None => (),
             },
             Some(("vm", sub)) => match sub.subcommand() {
+                Some(("patch", sub)) => {
+                    let patching = *sub.get_one::<bool>("patch").unwrap();
+                    self.vm.set_patching(patching);
+                }
                 Some(("register", sub)) => match sub.subcommand() {
                     Some(("set", sub)) => {
                         let reg = *sub.get_one::<usize>("register").unwrap();
@@ -318,7 +405,10 @@ impl Cli {
             Some(("step", sub)) => {
                 let count: u32 = *sub.get_one("count").unwrap();
                 for _ in 0..count {
-                    let _ = self.vm.step();
+                    match self.vm.step() {
+                        Ok(_) => (),
+                        Err(e) => println!("{}", e),
+                    }
                 }
             }
             Some(("helpme", _)) => {

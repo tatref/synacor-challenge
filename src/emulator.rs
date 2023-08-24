@@ -1,4 +1,11 @@
-use std::{collections::VecDeque, fmt, fs::File, hash::Hash, io::Read, path::Path};
+use std::{
+    collections::{HashMap, VecDeque},
+    fmt,
+    fs::File,
+    hash::Hash,
+    io::Read,
+    path::Path,
+};
 
 use byteorder::{ByteOrder, LittleEndian};
 use serde::{Deserialize, Serialize};
@@ -524,10 +531,16 @@ pub struct Vm {
     #[serde(skip)]
     called_patched_fn: bool,
     #[serde(skip)]
-    enable_patching: bool,
+    fn_patching: bool,
 
     #[serde(skip)]
     breakpoints: Vec<usize>,
+
+    #[serde(skip)]
+    __6027_cache: HashMap<(u16, u16, u16), (u16, u16)>,
+
+    #[serde(skip)]
+    scanmem: Vec<Option<u16>>,
 }
 
 impl PartialEq for Vm {
@@ -562,6 +575,7 @@ impl fmt::Debug for Vm {
         writeln!(f, "  ip: {:?}", self.ip)?;
         writeln!(f, "  pc: {:?}", self.pc)?;
         writeln!(f, "  state: {:?}", self.state)?;
+        writeln!(f, "  patching: {:?}", self.fn_patching)?;
         writeln!(f, "  memory: [...]")?;
         write!(f, "}}")
     }
@@ -603,10 +617,14 @@ impl Vm {
             traced_opcodes: 0,
             trace_buffer: Vec::new(),
 
-            enable_patching: false,
+            fn_patching: false,
             called_patched_fn: false,
 
             breakpoints: Vec::new(),
+
+            __6027_cache: HashMap::new(),
+
+            scanmem: vec![None; MEM_SIZE],
         }
     }
 
@@ -654,7 +672,7 @@ impl Vm {
     }
 
     pub fn set_patching(&mut self, val: bool) {
-        self.enable_patching = val;
+        self.fn_patching = val;
     }
 
     pub fn get_breakpoints(&self) -> &[usize] {
@@ -669,6 +687,114 @@ impl Vm {
 
     pub fn unset_breakpoint(&mut self, offset: usize) {
         self.breakpoints.retain(|bp| *bp != offset);
+    }
+
+    pub fn scanmem_init(&mut self) {
+        self.scanmem = vec![None; MEM_SIZE];
+        for (a, b) in self.memory.iter().zip(self.scanmem.iter_mut()) {
+            *b = Some(*a);
+        }
+    }
+
+    pub fn mem_set(&mut self, offset: usize, value: u16) {
+        self.memory[offset] = value;
+    }
+
+    pub fn mem_get(&mut self, offset: usize) {
+        println!("{}: {}", offset, self.memory[offset]);
+    }
+
+    pub fn scanmem_list(&self) {
+        for (idx, (mem, scanmem)) in self.memory.iter().zip(self.scanmem.iter()).enumerate() {
+            if let Some(scanmem) = scanmem {
+                println!("{}: {} -> {}", idx, scanmem, mem);
+            }
+        }
+
+        let count = self.scanmem.iter().filter(|x| x.is_some()).count();
+        println!("Listed {} values", count);
+    }
+
+    pub fn scanmem_filter(&mut self, op: &str, val: Option<u16>) {
+        match op {
+            "=" => {
+                for (a, b) in self.memory.iter().zip(self.scanmem.iter_mut()) {
+                    let cmp = if let Some(val) = val { val } else { *a };
+                    match b {
+                        Some(b) if *b == cmp => continue,
+                        Some(b) if *b != cmp => (),
+                        Some(_) => unreachable!(),
+                        None => (),
+                    }
+                    *b = None;
+                }
+            }
+            "!=" => {
+                for (a, b) in self.memory.iter().zip(self.scanmem.iter_mut()) {
+                    let cmp = if let Some(val) = val { val } else { *a };
+                    match b {
+                        Some(b) if *b != cmp => continue,
+                        Some(b) if *b == cmp => (),
+                        Some(_) => unreachable!(),
+                        None => (),
+                    }
+                    *b = None;
+                }
+            }
+            ">" => {
+                for (a, b) in self.memory.iter().zip(self.scanmem.iter_mut()) {
+                    let cmp = if let Some(val) = val { val } else { *a };
+                    match b {
+                        Some(b) if *b > cmp => continue,
+                        Some(b) if *b <= cmp => (),
+                        Some(_) => unreachable!(),
+                        None => (),
+                    }
+                    *b = None;
+                }
+            }
+            ">=" => {
+                for (a, b) in self.memory.iter().zip(self.scanmem.iter_mut()) {
+                    let cmp = if let Some(val) = val { val } else { *a };
+                    match b {
+                        Some(b) if *b >= cmp => continue,
+                        Some(b) if *b < cmp => (),
+                        Some(_) => unreachable!(),
+                        None => (),
+                    }
+                    *b = None;
+                }
+            }
+            "<" => {
+                for (a, b) in self.memory.iter().zip(self.scanmem.iter_mut()) {
+                    let cmp = if let Some(val) = val { val } else { *a };
+                    match b {
+                        Some(b) if *b < cmp => continue,
+                        Some(b) if *b >= cmp => (),
+                        Some(_) => unreachable!(),
+                        None => (),
+                    }
+                    *b = None;
+                }
+            }
+            "<=" => {
+                for (a, b) in self.memory.iter().zip(self.scanmem.iter_mut()) {
+                    let cmp = if let Some(val) = val { val } else { *a };
+                    match b {
+                        Some(b) if *b <= cmp => continue,
+                        Some(b) if *b > cmp => (),
+                        Some(_) => unreachable!(),
+                        None => (),
+                    }
+                    *b = None;
+                }
+            }
+
+            x => println!("unknown op {:?}", x),
+        }
+
+        let count = self.scanmem.iter().filter(|x| x.is_some()).count();
+        println!("Selected {} values", count);
     }
 
     pub fn patch(&mut self, opcode: Opcode, offset: usize) {
@@ -698,6 +824,7 @@ impl Vm {
     /// 2144: Pop(Reg(2))
     /// 2146: Pop(Reg(1))
     /// 2148: Ret
+    #[allow(dead_code)]
     fn patched_2125(&mut self) {
         fn op(mut reg0: u16, reg1: u16) -> u16 {
             let mut reg2 = reg0 & reg1;
@@ -753,8 +880,40 @@ impl Vm {
     /// 5507: Set(Reg(1), 1531)
     /// 5510: Add(Reg(2), 21718, 1807)
     /// 5514: Call(1458)
-    #[allow(dead_code)]
-    fn patched_6027(&mut self) {}
+    #[allow(unused_assignments)]
+    fn patched_6027(&mut self, mut r0: u16, mut r1: u16, r7: u16) -> (u16, u16) {
+        let init_r0 = r0;
+        let init_r1 = r1;
+        let init_r7 = r7;
+        if let Some(x) = self.__6027_cache.get(&(r0, r1, r7)) {
+            return *x;
+        }
+
+        if r0 != 0 {
+            if r1 != 0 {
+                let old_r0 = r0;
+                r1 -= 1;
+                (r0, r1) = self.patched_6027(r0, r1, r7);
+                r1 = r0;
+                r0 = old_r0;
+                r0 -= 1;
+                let (r0, r1) = self.patched_6027(r0, r1, r7);
+                self.__6027_cache
+                    .insert((init_r0, init_r1, init_r7), (r0, r1));
+                (r0, r1)
+            } else {
+                r0 -= 1;
+                r1 = r7;
+                let (r0, r1) = self.patched_6027(r0, r1, r7);
+                self.__6027_cache
+                    .insert((init_r0, init_r1, init_r7), (r0, r1));
+                (r0, r1)
+            }
+        } else {
+            r0 = r1 + 1;
+            (r0, r1)
+        }
+    }
 
     pub fn disassemble(
         &self,
@@ -893,6 +1052,10 @@ impl Vm {
             self.messages.push(message.clone());
             println!("\n\nHalted");
         }
+
+        if self.state == VmState::HitBreakPoint {
+            println!("Hit breakpoint at {}", self.ip);
+        }
     }
 
     pub fn feed(&mut self, line: &str) -> Result<(), Box<dyn std::error::Error>> {
@@ -913,6 +1076,11 @@ impl Vm {
     pub fn step(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         if self.state != VmState::Running {
             return Err(format!("Vm is not running: {:?}", self.state).into());
+        }
+
+        if self.breakpoints.contains(&self.ip) {
+            self.state = VmState::HitBreakPoint;
+            return Ok(());
         }
 
         let instruction = self.fetch(self.ip)?;
@@ -1107,11 +1275,8 @@ impl Vm {
             Opcode::Call(a) => {
                 let addr = self.get_value(a).expect("Invalid number");
 
-                if addr == 6027 {
-                    panic!("{:?}", self);
-                }
-
-                if self.enable_patching {
+                //dbg!(addr);
+                if self.fn_patching {
                     match addr {
                         3 => {
                             self.stack.push(self.ip as u16);
@@ -1126,16 +1291,22 @@ impl Vm {
                             //let mut test = self.clone();
                             //test.run_until_ret();
 
-                            self.stack.push(self.ip as u16);
-                            self.patched_2125();
-                            self.called_patched_fn = true;
+                            //self.stack.push(self.ip as u16);
+                            //self.patched_2125();
+                            //self.called_patched_fn = true;
 
                             //assert_eq!(&test, self);
-                            return;
+                            //return;
                         }
                         6027 => {
                             self.stack.push(self.ip as u16);
-                            self.patched_6027();
+                            let (r0, r1) = self.patched_6027(
+                                self.registers[0],
+                                self.registers[1],
+                                self.registers[7],
+                            );
+                            self.registers[0] = r0;
+                            self.registers[1] = r1;
                             self.called_patched_fn = true;
                             return;
                         }
@@ -1147,8 +1318,15 @@ impl Vm {
                 self.ip = addr as usize;
             }
             Opcode::Ret => match self.stack.pop() {
-                Some(addr) => self.ip = addr as usize,
-                None => self.state = VmState::Halted,
+                Some(addr) => {
+                    self.ip = addr as usize;
+                }
+                None => {
+                    self.state = {
+                        println!("poped empty stack!");
+                        VmState::Halted
+                    }
+                }
             },
             Opcode::Out(a) => {
                 let c = self.get_value(a).expect("Invalid number");

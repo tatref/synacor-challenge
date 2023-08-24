@@ -1,8 +1,8 @@
 use regex::Regex;
 
-use crate::emulator::{Opcode, Val, Vm, VmState};
+use crate::emulator::{Vm, VmState};
 use std::{
-    collections::{hash_map::DefaultHasher, BTreeMap, HashMap, HashSet},
+    collections::{hash_map::DefaultHasher, BTreeMap, HashSet},
     hash::{Hash, Hasher},
 };
 
@@ -77,7 +77,7 @@ impl GameSolver {
                     "{} [label=\"{} - {}: {}\", color = {}, shape = {}];\n",
                     from,
                     current_level.name,
-                    current_level.description.replace("\"", ""),
+                    current_level.description.replace('\"', ""),
                     things,
                     color,
                     shape
@@ -111,60 +111,34 @@ impl GameSolver {
     }
 
     pub fn trace_teleporter(vm: &Vm) {
-        let mut vm = vm.clone();
-        vm.set_patching(false);
+        for val in 43000..u16::MAX {
+            dbg!(val);
+            let mut vm = vm.clone();
+            //vm.set_traced_opcodes(Opcode::Call(Val::Invalid).discriminant());
 
-        let val = 1;
-        vm.set_register(7, val);
+            vm.set_patching(true);
+            vm.set_register(7, val);
 
-        let traced = Opcode::Jmp(Val::Invalid).discriminant()
-            | Opcode::Ret.discriminant()
-            | Opcode::Call(Val::Invalid).discriminant();
-        vm.set_traced_opcodes(traced);
+            let _ = vm.feed("use teleporter");
 
-        let _ = vm.feed("use teleporter");
-
-        let mut steps = 10000;
-        while vm.get_state() == VmState::Running {
-            vm.step().unwrap();
-            steps -= 1;
-            if steps == 0 {
-                //println!("early stop {}", val);
-                break;
+            let mut steps = 10000000;
+            while vm.get_state() == VmState::Running {
+                match vm.step() {
+                    Ok(()) => (),
+                    Err(_e) => break,
+                }
+                steps -= 1;
+                if steps == 0 {
+                    println!("early stop {}", val);
+                    break;
+                }
+            }
+            //Vm::pretty_print_dis(&vm.get_trace_buffer());
+            if vm.get_state() == VmState::WaitingForInput {
+                dbg!(&vm.get_messages().last());
+                panic!("{}", val);
             }
         }
-        if vm.get_state() != VmState::Running {
-            dbg!(&vm.get_messages().last());
-        }
-
-        vm.set_traced_opcodes(0);
-
-        fn count_occurrences<T: Eq + std::hash::Hash + Copy>(input: &[T]) -> Vec<(T, usize)> {
-            let mut counts = HashMap::new();
-
-            for &item in input {
-                let count = counts.entry(item).or_insert(0);
-                *count += 1;
-            }
-
-            let mut occurrences: Vec<(T, usize)> = counts.into_iter().collect();
-            occurrences.sort_by(|a, b| b.1.cmp(&a.1));
-            occurrences
-        }
-        fn top_n_occurrences<T: Eq + std::hash::Hash + Copy>(
-            input: &[T],
-            n: usize,
-        ) -> Vec<(T, usize)> {
-            let occurrences = count_occurrences(input);
-            occurrences.into_iter().take(n).collect()
-        }
-
-        let top_occurrences = top_n_occurrences(vm.get_trace_buffer(), 10);
-        for (opcode, count) in top_occurrences {
-            println!("opcode: {:?}, Occurrences: {}", opcode, count);
-        }
-
-        //self.build_call_graph(&vm, vm.get_trace_buffer());
     }
 }
 
@@ -189,8 +163,8 @@ impl Level {
         };
 
         if description.contains("You are in a grid of rooms that control the door to the vault.") {
-            description.push_str(&raw.lines().nth(5).unwrap());
-            description = description.replace("\n", " ");
+            description.push_str(raw.lines().nth(5).unwrap());
+            description = description.replace('\n', " ");
         }
 
         fn get_things(raw: &str) -> Vec<String> {
