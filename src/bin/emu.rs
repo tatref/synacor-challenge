@@ -24,7 +24,7 @@ fn main() {
     let mut cli = Cli::new(vm);
 
     loop {
-        let readline = rl.readline(">> ");
+        let readline = rl.readline("$ ");
         match readline {
             Ok(line) => {
                 rl.add_history_entry(&line).unwrap();

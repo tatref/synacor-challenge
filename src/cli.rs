@@ -1,3 +1,4 @@
+use crate::assembly::Opcode;
 use crate::{emulator::*, solver::GameSolver};
 use clap::builder::BoolishValueParser;
 //use clap::{App, AppSettings, Arg, SubCommand};
@@ -285,13 +286,12 @@ impl Cli {
                     let value = *sub.get_one::<u16>("value").unwrap();
                     self.vm.mem_set(offset, value);
                 }
-                Some(("filter", sub)) => match sub.subcommand() {
-                    Some((filter, _sub)) => {
+                Some(("filter", sub)) => {
+                    if let Some((filter, sub)) = sub.subcommand() {
                         let value = sub.get_one::<u16>("value").copied();
-                        self.vm.scanmem_filter(&filter, value);
+                        self.vm.scanmem_filter(filter, value);
                     }
-                    None => (),
-                },
+                }
                 Some(_) => println!("Unknown command"),
                 None => (),
             },
