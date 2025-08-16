@@ -5,6 +5,10 @@ The VM specs are [here](./arch-specs)
 
 The program is [here](./challenge.bin)
 
+The official site is down (https://challenge.synacor.com/)
+
+But you can validate codes via https://github.com/Aneurysm9/vm_challenge
+
 # Simple instructions
 
 Implementing the first instructions `Noop`, `Out` and `Halt` will display the welcome message
