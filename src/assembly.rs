@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
+use crate::emulator::Vm;
+
 #[derive(Copy, Clone, Serialize, Deserialize, Eq, PartialEq, PartialOrd, Ord, Hash)]
 pub enum Val {
     Num(u16),
@@ -400,6 +402,18 @@ impl Opcode {
         unsafe { *(self as *const Self as *const u32) }
     }
 
+    pub fn resolve_opcode(&self, vm: &Vm) -> Option<Opcode> {
+        use Opcode::*;
+        use Val::*;
+
+        match self {
+            Call(Num(_)) => None,
+            Call(Reg(reg)) => Some(Call(Num(vm.get_registers()[*reg] as u16))),
+            Call(Invalid) => unimplemented!(),
+            _ => unimplemented!(),
+        }
+    }
+
     pub fn size(&self) -> usize {
         use Opcode::*;
 
@@ -426,7 +440,7 @@ impl Opcode {
             Out(_) => 2,
             In(_) => 2,
             Noop => 1,
-            __Invalid => 0,
+            __Invalid => 1,
         }
     }
 
@@ -461,7 +475,89 @@ impl Opcode {
         }
     }
 
-    pub fn to_machine_code(&self) -> Vec<u16> {
+    /// Return `Opcode)` decoded at `ip`
+    pub fn fetch(memory: &[u16], ip: usize) -> Result<Opcode, Box<dyn std::error::Error>> {
+        let instr_type = memory[ip];
+
+        let opcode = match instr_type {
+            0 => Opcode::Halt,
+            1 => Opcode::Set(Val::new(memory[ip + 1]), Val::new(memory[ip + 2])),
+            2 => Opcode::Push(Val::new(memory[ip + 1])),
+            3 => Opcode::Pop(Val::new(memory[ip + 1])),
+            4 => Opcode::Eq(
+                Val::new(memory[ip + 1]),
+                Val::new(memory[ip + 2]),
+                Val::new(memory[ip + 3]),
+            ),
+            5 => Opcode::Gt(
+                Val::new(memory[ip + 1]),
+                Val::new(memory[ip + 2]),
+                Val::new(memory[ip + 3]),
+            ),
+            6 => Opcode::Jmp(Val::new(memory[ip + 1])),
+            7 => Opcode::Jt(Val::new(memory[ip + 1]), Val::new(memory[ip + 2])),
+            8 => Opcode::Jf(Val::new(memory[ip + 1]), Val::new(memory[ip + 2])),
+            9 => Opcode::Add(
+                Val::new(memory[ip + 1]),
+                Val::new(memory[ip + 2]),
+                Val::new(memory[ip + 3]),
+            ),
+            10 => Opcode::Mult(
+                Val::new(memory[ip + 1]),
+                Val::new(memory[ip + 2]),
+                Val::new(memory[ip + 3]),
+            ),
+            11 => Opcode::Mod(
+                Val::new(memory[ip + 1]),
+                Val::new(memory[ip + 2]),
+                Val::new(memory[ip + 3]),
+            ),
+            12 => Opcode::And(
+                Val::new(memory[ip + 1]),
+                Val::new(memory[ip + 2]),
+                Val::new(memory[ip + 3]),
+            ),
+            13 => Opcode::Or(
+                Val::new(memory[ip + 1]),
+                Val::new(memory[ip + 2]),
+                Val::new(memory[ip + 3]),
+            ),
+            14 => Opcode::Not(Val::new(memory[ip + 1]), Val::new(memory[ip + 2])),
+            15 => Opcode::Rmem(Val::new(memory[ip + 1]), Val::new(memory[ip + 2])),
+            16 => Opcode::Wmem(Val::new(memory[ip + 1]), Val::new(memory[ip + 2])),
+            17 => Opcode::Call(Val::new(memory[ip + 1])),
+            18 => Opcode::Ret,
+            19 => Opcode::Out(Val::new(memory[ip + 1])),
+            20 => Opcode::In(Val::new(memory[ip + 1])),
+            21 => Opcode::Noop,
+            std::u16::MAX => Opcode::__Invalid,
+            x => return Err(format!("Can't decode opcode {}", x).into()),
+        };
+
+        Ok(opcode)
+    }
+
+    pub fn disassemble(
+        machine_code: &[u16],
+        mut start: usize,
+    ) -> Result<Vec<(usize, Opcode)>, Box<dyn std::error::Error>> {
+        let mut instructions = Vec::new();
+
+        let mut ptr = 0;
+        while ptr < machine_code.len() {
+            let instr = Opcode::fetch(&machine_code, ptr)?;
+
+            let size = instr.size();
+            instructions.push((start, instr));
+
+            start += size;
+            ptr += size;
+        }
+
+        Ok(instructions)
+    }
+
+    pub fn assemble(&self) -> Vec<u16> {
         use Opcode::*;
 
         match self {
@@ -470,32 +566,32 @@ impl Opcode {
             Push(a) => vec![2, a.as_binary()],
             Pop(a) => vec![3, a.as_binary()],
             Eq(a, b, c) => vec![4, a.as_binary(), b.as_binary(), c.as_binary()],
-            Gt(_, _, _) => todo!(),
+            Gt(a, b, c) => vec![5, a.as_binary(), b.as_binary(), c.as_binary()],
             Jmp(a) => vec![6, a.as_binary()],
             Jt(a, b) => vec![7, a.as_binary(), b.as_binary()],
             Jf(a, b) => vec![8, a.as_binary(), b.as_binary()],
             Add(a, b, c) => vec![9, a.as_binary(), b.as_binary(), c.as_binary()],
-            Mult(_, _, _) => todo!(),
-            Mod(_, _, _) => todo!(),
+            Mult(a, b, c) => vec![10, a.as_binary(), b.as_binary(), c.as_binary()],
+            Mod(a, b, c) => vec![11, a.as_binary(), b.as_binary(), c.as_binary()],
             And(a, b, c) => vec![12, a.as_binary(), b.as_binary(), c.as_binary()],
             Or(a, b, c) => vec![13, a.as_binary(), b.as_binary(), c.as_binary()],
             Not(a, b) => vec![14, a.as_binary(), b.as_binary()],
-            Rmem(_, _) => todo!(),
-            Wmem(_, _) => todo!(),
+            Rmem(a, b) => vec![15, a.as_binary(), b.as_binary()],
+            Wmem(a, b) => vec![16, a.as_binary(), b.as_binary()],
             Call(a) => vec![17, a.as_binary()],
             Ret => vec![18],
-            Out(_) => todo!(),
-            In(_) => todo!(),
+            Out(a) => vec![19, a.as_binary()],
+            In(a) => vec![20, a.as_binary()],
             Noop => vec![21],
             __Invalid => vec![std::u16::MAX],
         }
     }
 
-    pub fn vec_to_machine_code(v: &[Opcode]) -> Vec<u16> {
+    pub fn assemble_vec(v: &[Opcode]) -> Vec<u16> {
         let mut machine_code = Vec::new();
 
         for opcode in v {
-            machine_code.extend(&opcode.to_machine_code());
+            machine_code.extend(&opcode.assemble());
         }
 
         machine_code

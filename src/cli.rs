@@ -342,9 +342,8 @@ impl Cli {
                 }
                 Some(("fn", sub)) => {
                     let from = *sub.get_one::<usize>("from").unwrap();
-                    let instructions = self.vm.disassemble_function(from)?;
-
-                    Vm::pretty_print_dis(&instructions);
+                    let function = self.vm.disassemble_function(from)?;
+                    function.pretty_print();
                 }
                 Some(_) => (),
 

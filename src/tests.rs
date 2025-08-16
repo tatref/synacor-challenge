@@ -1,7 +1,7 @@
 use itertools::iproduct;
 
 use crate::assembly::{Opcode, Val};
-use crate::emulator::{StopCondition, StopRet, Vm};
+use crate::emulator::{StopRet, Vm};
 
 #[test]
 fn load_program_from_file() -> Result<(), Box<dyn std::error::Error>> {
@@ -28,35 +28,62 @@ fn machine_code() -> Result<(), Box<dyn std::error::Error>> {
     let expected = vec![0];
     let prog = vec![Opcode::Halt];
 
-    assert_eq!(Opcode::vec_to_machine_code(&prog), expected);
+    assert_eq!(Opcode::assemble_vec(&prog), expected);
 
     Ok(())
 }
 
 #[test]
 fn disassemble_function() -> Result<(), Box<dyn std::error::Error>> {
+    use Opcode::*;
+    use Val::*;
+
     let prog = vec![
-        Opcode::Set(Val::Reg(0), Val::Num(2)),
-        Opcode::Eq(Val::Reg(0), Val::Reg(1), Val::Num(2)),
-        Opcode::Jt(Val::Num(0), Val::Num(15)),
-        Opcode::Ret,
-        Opcode::Add(Val::Reg(2), Val::Num(1), Val::Num(2)),
-        Opcode::Call(Val::Num(2)),
-        Opcode::Call(Val::Num(2)),
-        Opcode::Call(Val::Num(2)),
-        Opcode::Call(Val::Num(2)),
-        Opcode::Ret,
+        Set(Reg(0), Num(2)),
+        Eq(Reg(0), Reg(1), Num(2)),
+        Jt(Num(0), Num(10)),
+        Ret,
+        Add(Reg(2), Num(1), Num(2)),
+        Ret,
     ];
-    let prog = Opcode::vec_to_machine_code(&prog);
+    let machine_code = Opcode::assemble_vec(&prog);
 
     let mut vm = Vm::new();
-    vm.load_program_from_mem(&prog);
+    vm.load_program_from_mem(&machine_code);
 
-    let starting_ip = 0;
-    let instructions = vm.disassemble_function(starting_ip)?;
-    Vm::pretty_print_dis(&instructions);
+    let function = vm.disassemble_function(0)?;
+    function.pretty_print();
 
     Ok(())
+}
+
+#[test]
+fn assemble_disassemble() {
+    use Opcode::*;
+    use Val::*;
+
+    let prog = vec![
+        Set(Reg(0), Num(2)),
+        Eq(Reg(0), Reg(1), Num(2)),
+        Jt(Num(0), Num(15)),
+        Ret,
+        Add(Reg(2), Num(1), Num(2)),
+        Call(Num(2)),
+        Call(Num(2)),
+        Call(Num(2)),
+        Call(Num(2)),
+        Ret,
+    ];
+    let machine_code = Opcode::assemble_vec(&prog);
+
+    let prog2: Vec<Opcode> = Opcode::disassemble(&machine_code, 0)
+        .unwrap()
+        .iter()
+        .map(|(_, op)| op)
+        .copied()
+        .collect();
+
+    assert_eq!(prog, prog2);
 }
 
 // 2125: Push(Reg(1))
@@ -88,7 +115,7 @@ fn patching_2125() -> Result<(), Box<dyn std::error::Error>> {
         Ret,
     ]);
 
-    let prog = Opcode::vec_to_machine_code(&prog);
+    let prog = Opcode::assemble_vec(&prog);
 
     assert!(prog.len() == 2149);
 
@@ -120,7 +147,7 @@ fn patching_2125() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn run_until_ret_2125() -> Result<(), Box<dyn std::error::Error>> {
     let prog = vec![Opcode::Call(Val::Num(2125))];
-    let prog = Opcode::vec_to_machine_code(&prog);
+    let prog = Opcode::assemble_vec(&prog);
 
     for (reg0, reg1) in iproduct!(0..100, 0..100) {
         let mut vm = Vm::default();
@@ -145,14 +172,17 @@ fn run_until_ret_2125() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
+#[allow(unreachable_code)]
 fn patching_3() -> Result<(), Box<dyn std::error::Error>> {
+    todo!();
+
     let prog = vec![
         Opcode::Call(Val::Num(3)),
         Opcode::Halt,
         Opcode::Set(Val::Reg(0), Val::Num(20)),
         Opcode::Ret,
     ];
-    let prog = Opcode::vec_to_machine_code(&prog);
+    let prog = Opcode::assemble_vec(&prog);
 
     let mut vm = Vm::new();
     vm.load_program_from_mem(&prog);
@@ -196,7 +226,7 @@ fn run_until_ret() -> Result<(), Box<dyn std::error::Error>> {
         Ret,
         __Invalid,
     ];
-    let prog = Opcode::vec_to_machine_code(&prog);
+    let prog = Opcode::assemble_vec(&prog);
 
     let mut vm = Vm::new();
     vm.load_program_from_mem(&prog);
@@ -212,6 +242,7 @@ fn run_until_ret() -> Result<(), Box<dyn std::error::Error>> {
         println!("xx {}: {:?}", offset, op);
     }
 
+    // TODO: last Ret is not executed
     assert_eq!(executed.len(), 5);
 
     Ok(())

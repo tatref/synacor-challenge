@@ -1,6 +1,8 @@
 use itertools::Itertools;
 use regex::Regex;
 
+use std::fmt::Debug;
+
 use crate::{
     assembly::{Opcode, Val},
     emulator::{StopVmState, Vm, VmState},
@@ -163,29 +165,32 @@ impl GameSolver {
         let counters = vm.get_trace_buffer().iter().counts();
         let v: Vec<_> = counters
             .iter()
-            .map(|((offset, op), count)| (count, offset, op))
+            .map(|((offset, op, resolved_op), count)| (count, offset, op, resolved_op))
             .sorted()
             .collect();
 
         dbg!(&v);
 
-        for (count, caller, op) in &v {
-            if let Opcode::Call(ref f) = op {
-                match f {
-                    Val::Invalid => println!("invalid value"),
-                    Val::Num(ip) => {
-                        let machine_code = vm.disassemble_function(*ip as usize).unwrap();
+        for (count, caller, call_op, resolved_op) in &v {
+            let addr = match call_op {
+                Call(Val::Invalid) => unreachable!("invalid value"),
+                Call(Val::Num(addr)) => *addr,
+                Call(Val::Reg(_reg)) => {
+                    let addr = match resolved_op.unwrap() {
+                        Call(Num(addr)) => addr,
+                        _ => unreachable!(),
+                    };
 
-                        for (offset, op) in &machine_code {
-                            println!("{}: {:?}", offset, op);
-                        }
-
-                        println!();
-                    }
-
-                    Val::Reg(_) => println!("Can't disassemble func from register"),
+                    addr
                 }
-            }
+                _ => unreachable!(),
+            };
+
+            let function = vm.disassemble_function(addr as usize).unwrap();
+
+            function.pretty_print();
+
+            println!();
         }
 
         panic!();

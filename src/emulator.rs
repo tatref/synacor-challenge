@@ -6,6 +6,8 @@ use std::{
     path::Path,
 };
 
+use std::fmt::Debug;
+
 use byteorder::{ByteOrder, LittleEndian};
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
@@ -35,7 +37,7 @@ pub struct Vm {
 
     traced_opcodes: u32,
     #[serde(skip)]
-    trace_buffer: Vec<(usize, Opcode)>,
+    trace_buffer: Vec<(usize, Opcode, Option<Opcode>)>,
 
     #[serde(skip)]
     called_patched_fn: bool,
@@ -212,6 +214,7 @@ impl Vm {
             let instr = self.step().unwrap();
             executed.push(instr);
         }
+
         if self.state == VmState::Halted {
             let message = self.output_buffer.iter().collect::<String>();
             self.messages.push(message.clone());
@@ -306,11 +309,15 @@ impl Vm {
         self.registers[reg] = value;
     }
 
+    pub fn get_registers(&self) -> &[u16; 8] {
+        &self.registers
+    }
+
     pub fn set_traced_opcodes(&mut self, traced: u32) {
         self.traced_opcodes = traced;
     }
 
-    pub fn get_trace_buffer(&self) -> &[(usize, Opcode)] {
+    pub fn get_trace_buffer(&self) -> &[(usize, Opcode, Option<Opcode>)] {
         &self.trace_buffer
     }
 
@@ -441,7 +448,7 @@ impl Vm {
     }
 
     pub fn patch(&mut self, opcode: Opcode, offset: usize) {
-        let bin = opcode.to_machine_code();
+        let bin = opcode.assemble();
         let size = bin.len();
 
         match self.disassemble(offset, 1) {
@@ -578,11 +585,12 @@ impl Vm {
     }
 
     /// Disassemble from starting `Call` of function to all `Ret`
-    /// we don't expecte self modifying code
+    /// don't expect self modifying code
     pub fn disassemble_function(
         &self,
         starting_ip: usize,
-    ) -> Result<Vec<(usize, Opcode)>, Box<dyn std::error::Error>> {
+    ) -> Result<Function, Box<dyn std::error::Error>> {
+        //) -> Result<Vec<(usize, Opcode)>, Box<dyn std::error::Error>> {
         let mut instructions = Vec::new();
 
         let mut explored: Vec<usize> = Vec::new();
@@ -629,10 +637,18 @@ impl Vm {
         }
 
         instructions.sort_by_key(|a| a.0);
-        Ok(instructions)
+
+        let first_offset = instructions.first().unwrap().0;
+        let last_offset = instructions.last().unwrap().0;
+
+        let instructions: Vec<Opcode> = instructions.into_iter().map(|(_, op)| op).collect();
+
+        let function = Function::new(first_offset, last_offset, &instructions);
+        Ok(function)
     }
 
     pub fn pretty_print_dis(instructions: &[(usize, Opcode)]) {
+        // TODO: remove
         let mut last: Option<(usize, Opcode)> = None;
         for &(offset, opcode) in instructions.iter() {
             if let Some((previous_offset, previous_opcode)) = last {
@@ -677,7 +693,8 @@ impl Vm {
         let size = opcode.size();
 
         if (opcode.discriminant() & self.traced_opcodes) != 0 {
-            self.trace_buffer.push((self.ip, opcode));
+            let resolved_opcode = opcode.resolve_opcode(self);
+            self.trace_buffer.push((self.ip, opcode, resolved_opcode));
         }
 
         let next_instruction_ptr = self.ip + size;
@@ -689,64 +706,7 @@ impl Vm {
 
     /// Return `Opcode)` decoded at `ip`
     fn fetch(&self, ip: usize) -> Result<Opcode, Box<dyn std::error::Error>> {
-        let instr_type = self.memory[ip];
-
-        let opcode = match instr_type {
-            0 => Opcode::Halt,
-            1 => Opcode::Set(Val::new(self.memory[ip + 1]), Val::new(self.memory[ip + 2])),
-            2 => Opcode::Push(Val::new(self.memory[ip + 1])),
-            3 => Opcode::Pop(Val::new(self.memory[ip + 1])),
-            4 => Opcode::Eq(
-                Val::new(self.memory[ip + 1]),
-                Val::new(self.memory[ip + 2]),
-                Val::new(self.memory[ip + 3]),
-            ),
-            5 => Opcode::Gt(
-                Val::new(self.memory[ip + 1]),
-                Val::new(self.memory[ip + 2]),
-                Val::new(self.memory[ip + 3]),
-            ),
-            6 => Opcode::Jmp(Val::new(self.memory[ip + 1])),
-            7 => Opcode::Jt(Val::new(self.memory[ip + 1]), Val::new(self.memory[ip + 2])),
-            8 => Opcode::Jf(Val::new(self.memory[ip + 1]), Val::new(self.memory[ip + 2])),
-            9 => Opcode::Add(
-                Val::new(self.memory[ip + 1]),
-                Val::new(self.memory[ip + 2]),
-                Val::new(self.memory[ip + 3]),
-            ),
-            10 => Opcode::Mult(
-                Val::new(self.memory[ip + 1]),
-                Val::new(self.memory[ip + 2]),
-                Val::new(self.memory[ip + 3]),
-            ),
-            11 => Opcode::Mod(
-                Val::new(self.memory[ip + 1]),
-                Val::new(self.memory[ip + 2]),
-                Val::new(self.memory[ip + 3]),
-            ),
-            12 => Opcode::And(
-                Val::new(self.memory[ip + 1]),
-                Val::new(self.memory[ip + 2]),
-                Val::new(self.memory[ip + 3]),
-            ),
-            13 => Opcode::Or(
-                Val::new(self.memory[ip + 1]),
-                Val::new(self.memory[ip + 2]),
-                Val::new(self.memory[ip + 3]),
-            ),
-            14 => Opcode::Not(Val::new(self.memory[ip + 1]), Val::new(self.memory[ip + 2])),
-            15 => Opcode::Rmem(Val::new(self.memory[ip + 1]), Val::new(self.memory[ip + 2])),
-            16 => Opcode::Wmem(Val::new(self.memory[ip + 1]), Val::new(self.memory[ip + 2])),
-            17 => Opcode::Call(Val::new(self.memory[ip + 1])),
-            18 => Opcode::Ret,
-            19 => Opcode::Out(Val::new(self.memory[ip + 1])),
-            20 => Opcode::In(Val::new(self.memory[ip + 1])),
-            21 => Opcode::Noop,
-            std::u16::MAX => Opcode::__Invalid,
-            x => return Err(format!("Can't decode opcode {}", x).into()),
-        };
-
-        Ok(opcode)
+        return Opcode::fetch(&self.memory, ip);
     }
 
     fn execute(
@@ -975,5 +935,77 @@ impl Vm {
 
     pub fn get_mem(&self) -> &[u16] {
         &self.memory
+    }
+}
+
+pub struct Function {
+    start: usize,
+    end: usize,
+    code: Vec<Opcode>,
+}
+
+impl Debug for Function {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for (offset, opcode) in self.code.iter().enumerate() {
+            write!(f, "{} {:?}", offset + self.start, opcode)?;
+        }
+
+        Ok(())
+    }
+}
+
+impl Function {
+    pub fn new(start: usize, end: usize, code: &[Opcode]) -> Self {
+        for op in code {
+            println!("{} {:?}", op.size(), op);
+        }
+
+        let offset_size = end - start;
+        let machine_code = Opcode::assemble_vec(&code);
+        let machine_code_size = machine_code.iter().count();
+
+        // instructions must be a continuous chuck of memory (no gaps)
+        assert_eq!(offset_size + code.last().unwrap().size(), machine_code_size);
+
+        Self {
+            start,
+            end,
+            code: code.iter().cloned().collect(),
+        }
+    }
+
+    pub fn pretty_print(&self) {
+        let mut ptr = self.start;
+
+        for op in &self.code {
+            println!("{} {:?}", ptr, op);
+            ptr += op.size();
+        }
+    }
+
+    pub fn contains(&self, other: &Self) -> bool {
+        self.start <= other.start && self.end >= other.end
+    }
+
+    pub fn merge_biggest<'a>(&'a self, other: &'a Self) -> &'a Self {
+        if self.contains(other) {
+            self
+        } else {
+            other
+        }
+    }
+
+    pub fn graphviz(&self) -> String {
+        let mut s = format!("\"{}\" {{\n", self.start);
+        s.push_str("label = \"");
+        for (offset, op) in self.code.iter().enumerate() {
+            let offset = self.start + offset;
+            s.push_str(&format!("<{}> {:?}|", offset, op));
+        }
+        s.push_str("\"\n");
+        s.push_str(&format!("shape = \"record\""));
+        s.push_str(&format!("];\n"));
+
+        s
     }
 }
