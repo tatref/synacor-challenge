@@ -58,7 +58,10 @@ You find yourself writing "jtQUShZPqyoL" on the tablet.  Perhaps it's some kind 
 
 Trying to explore the world is difficult, as there is a lot of rooms.
 
-A graph traversal algorithm combined with Graphviz can create a nice map. Also the state loader/saver is useful
+A graph traversal algorithm combined with Graphviz can create a nice map. Also the state loader/saver is useful to save time.
+
+- Green: room with items
+- Red: VM state == Halted
 
 ![maze](maze.svg)
 

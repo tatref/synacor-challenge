@@ -112,8 +112,6 @@ fn patching_2125() -> Result<(), Box<dyn std::error::Error>> {
         println!("{}: {:?}", offset, op);
     }
 
-    panic!();
-
     assert_eq!(vm1, vm2);
 
     Ok(())

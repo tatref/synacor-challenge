@@ -167,7 +167,26 @@ impl GameSolver {
             .sorted()
             .collect();
 
-        dbg!(v);
+        dbg!(&v);
+
+        for (count, caller, op) in &v {
+            if let Opcode::Call(ref f) = op {
+                match f {
+                    Val::Invalid => println!("invalid value"),
+                    Val::Num(ip) => {
+                        let machine_code = vm.disassemble_function(*ip as usize).unwrap();
+
+                        for (offset, op) in &machine_code {
+                            println!("{}: {:?}", offset, op);
+                        }
+
+                        println!();
+                    }
+
+                    Val::Reg(_) => println!("Can't disassemble func from register"),
+                }
+            }
+        }
 
         panic!();
     }
