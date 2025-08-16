@@ -5,7 +5,7 @@ use std::fmt::Debug;
 
 use crate::{
     assembly::{Opcode, Val},
-    emulator::{StopVmState, Vm, VmState},
+    emulator::{Function, StopVmState, Vm, VmState},
 };
 use std::{
     collections::{hash_map::DefaultHasher, BTreeMap, HashSet},
@@ -163,35 +163,117 @@ impl GameSolver {
         dbg!(vm.get_trace_buffer().len());
 
         let counters = vm.get_trace_buffer().iter().counts();
-        let v: Vec<_> = counters
+        let sorted_counters: Vec<_> = counters
             .iter()
-            .map(|((offset, op, resolved_op), count)| (count, offset, op, resolved_op))
+            .map(|((caller_offset, op, resolved_op), count)| {
+                (count, caller_offset, op, resolved_op)
+            })
             .sorted()
             .collect();
 
-        dbg!(&v);
+        let functions: Vec<Function> = sorted_counters
+            .iter()
+            .map(|(count, caller_offset, call_op, resolved_op)| {
+                let addr = match call_op {
+                    Call(Val::Invalid) => unreachable!("invalid value"),
+                    Call(Val::Num(addr)) => *addr,
+                    Call(Val::Reg(_reg)) => {
+                        let addr =
+                            match resolved_op.expect("resolved op is None but should be Some") {
+                                Call(Num(addr)) => addr,
+                                _ => unreachable!(),
+                            };
 
-        for (count, caller, call_op, resolved_op) in &v {
-            let addr = match call_op {
-                Call(Val::Invalid) => unreachable!("invalid value"),
-                Call(Val::Num(addr)) => *addr,
-                Call(Val::Reg(_reg)) => {
-                    let addr = match resolved_op.unwrap() {
-                        Call(Num(addr)) => addr,
-                        _ => unreachable!(),
+                        addr
+                    }
+                    _ => unimplemented!(),
+                };
+
+                let function = vm.disassemble_function(addr as usize).unwrap();
+                function
+            })
+            .sorted()
+            .dedup()
+            .collect();
+
+        let mut graphviz = String::new();
+        graphviz.push_str(
+            r#"
+digraph g {
+fontname="Helvetica,Arial,sans-serif"
+node [fontname="Helvetica,Arial,sans-serif"]
+edge [fontname="Helvetica,Arial,sans-serif"]
+
+graph [
+    fontsize=30
+    labelloc="t"
+    label=""
+    splines=true
+    overlap=false
+    rankdir = "LR"
+];
+
+node [fontname="Helvetica,Arial,sans-serif"]
+edge [fontname="Helvetica,Arial,sans-serif"]
+
+"missing" [];
+
+"#,
+        );
+
+        for function in &functions {
+            let function_graphviz = function.graphviz();
+            graphviz.push_str(&function_graphviz);
+            graphviz.push_str("\n");
+        }
+
+        // draw edges
+        for function in &functions {
+            let name = format!("{}", function.start);
+
+            for (offset, op) in function.get_code().iter().enumerate() {
+                let offset = offset + function.start;
+                if let Opcode::Call(dest) = op {
+                    let addr = match dest {
+                        Val::Num(addr) => *addr,
+                        Val::Reg(_reg) => {
+                            // TODO: trace_buffer
+                            let addr = vm
+                                .get_trace_buffer()
+                                .iter()
+                                .filter(|(_offset, _op, _resolved_op)| *_offset == offset)
+                                .map(|(_, _, op)| match op.unwrap() {
+                                    Call(Num(addr)) => addr,
+                                    _ => unimplemented!(),
+                                })
+                                .next();
+
+                            // 0 = unknown
+                            addr.unwrap_or(0)
+                        }
+                        _ => todo!(),
                     };
 
-                    addr
+                    let target_function = functions
+                        .iter()
+                        .filter(|f| f.start <= addr as usize && (addr as usize) <= f.end)
+                        .next();
+
+                    let target_function_name = match target_function {
+                        Some(f) => format!("{}", f.start),
+                        None => "missing".to_string(),
+                    };
+
+                    let edge_graphviz =
+                        format!("\"{name}\":\"{offset}\":w -> \"{target_function_name}\":0\n");
+                    graphviz.push_str(&edge_graphviz);
                 }
-                _ => unreachable!(),
-            };
-
-            let function = vm.disassemble_function(addr as usize).unwrap();
-
-            function.pretty_print();
-
-            println!();
+            }
         }
+
+        graphviz.push_str("}\n");
+
+        std::fs::write("graphviz.txt", graphviz).unwrap();
 
         panic!();
     }

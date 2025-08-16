@@ -9,6 +9,7 @@ use std::{
 use std::fmt::Debug;
 
 use byteorder::{ByteOrder, LittleEndian};
+use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 
@@ -938,9 +939,10 @@ impl Vm {
     }
 }
 
+#[derive(Clone, Eq, PartialEq, Hash, Ord, PartialOrd)]
 pub struct Function {
-    start: usize,
-    end: usize,
+    pub start: usize,
+    pub end: usize,
     code: Vec<Opcode>,
 }
 
@@ -956,10 +958,6 @@ impl Debug for Function {
 
 impl Function {
     pub fn new(start: usize, end: usize, code: &[Opcode]) -> Self {
-        for op in code {
-            println!("{} {:?}", op.size(), op);
-        }
-
         let offset_size = end - start;
         let machine_code = Opcode::assemble_vec(&code);
         let machine_code_size = machine_code.iter().count();
@@ -972,6 +970,10 @@ impl Function {
             end,
             code: code.iter().cloned().collect(),
         }
+    }
+
+    pub fn get_code(&self) -> &[Opcode] {
+        &self.code
     }
 
     pub fn pretty_print(&self) {
@@ -996,15 +998,25 @@ impl Function {
     }
 
     pub fn graphviz(&self) -> String {
-        let mut s = format!("\"{}\" {{\n", self.start);
-        s.push_str("label = \"");
+        let name = format!("{}", self.start);
+
+        let mut s = format!("\"{name}\" [\n");
+        s.push_str("shape=\"none\"\n");
+        s.push_str("label=<\n");
+        s.push_str("<table>\n");
+        s.push_str(&format!(
+            "    <tr><td bgcolor=\"black\" colspan=\"2\" port=\"0\"><font color=\"white\">{}</font></td></tr>\n",
+            self.start
+        ));
         for (offset, op) in self.code.iter().enumerate() {
-            let offset = self.start + offset;
-            s.push_str(&format!("<{}> {:?}|", offset, op));
+            let offset = offset + self.start;
+            s.push_str(&format!(
+                "    <tr><td align=\"left\" port=\"{offset}\">{offset}</td><td>{op :?}</td></tr>\n",
+            ));
         }
-        s.push_str("\"\n");
-        s.push_str(&format!("shape = \"record\""));
-        s.push_str(&format!("];\n"));
+        s.push_str("</table>\n");
+        s.push_str(">\n");
+        s.push_str(&format!("];\n\n"));
 
         s
     }
