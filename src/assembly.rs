@@ -16,7 +16,6 @@ impl std::str::FromStr for Val {
             Ok(Val::Num(s.parse()?))
         } else {
             let l_par = s.find('(');
-            dbg!(l_par);
             let size = s.chars().count();
             let inner = &s[1 + l_par.ok_or("Missing left par")?..(size - 1)];
 
@@ -84,6 +83,7 @@ pub enum Opcode {
     Out(Val) = 1 << 19,
     In(Val) = 1 << 20,
     Noop = 1 << 21,
+    __Invalid = 1 << 31,
 }
 
 impl std::str::FromStr for Opcode {
@@ -401,84 +401,93 @@ impl Opcode {
     }
 
     pub fn size(&self) -> usize {
+        use Opcode::*;
+
         match self {
-            Opcode::Halt => 1,
-            Opcode::Set(_, _) => 3,
-            Opcode::Push(_) => 2,
-            Opcode::Pop(_) => 2,
-            Opcode::Eq(_, _, _) => 4,
-            Opcode::Gt(_, _, _) => 4,
-            Opcode::Jmp(_) => 2,
-            Opcode::Jt(_, _) => 3,
-            Opcode::Jf(_, _) => 3,
-            Opcode::Add(_, _, _) => 4,
-            Opcode::Mult(_, _, _) => 4,
-            Opcode::Mod(_, _, _) => 4,
-            Opcode::And(_, _, _) => 4,
-            Opcode::Or(_, _, _) => 4,
-            Opcode::Not(_, _) => 3,
-            Opcode::Rmem(_, _) => 3,
-            Opcode::Wmem(_, _) => 3,
-            Opcode::Call(_) => 2,
-            Opcode::Ret => 1,
-            Opcode::Out(_) => 2,
-            Opcode::In(_) => 2,
-            Opcode::Noop => 1,
+            Halt => 1,
+            Set(_, _) => 3,
+            Push(_) => 2,
+            Pop(_) => 2,
+            Eq(_, _, _) => 4,
+            Gt(_, _, _) => 4,
+            Jmp(_) => 2,
+            Jt(_, _) => 3,
+            Jf(_, _) => 3,
+            Add(_, _, _) => 4,
+            Mult(_, _, _) => 4,
+            Mod(_, _, _) => 4,
+            And(_, _, _) => 4,
+            Or(_, _, _) => 4,
+            Not(_, _) => 3,
+            Rmem(_, _) => 3,
+            Wmem(_, _) => 3,
+            Call(_) => 2,
+            Ret => 1,
+            Out(_) => 2,
+            In(_) => 2,
+            Noop => 1,
+            __Invalid => 0,
         }
     }
 
     /// Next pointer for branchings instructions
     pub fn next_possible_ip(&self) -> Vec<Val> {
+        use Opcode::*;
+
         match self {
-            Opcode::Halt => vec![],
-            Opcode::Set(_, _) => vec![],
-            Opcode::Push(_) => vec![],
-            Opcode::Pop(_) => vec![],
-            Opcode::Eq(_, _, _) => vec![],
-            Opcode::Gt(_, _, _) => vec![],
-            Opcode::Jmp(a) => vec![*a],
-            Opcode::Jt(_, b) => vec![*b],
-            Opcode::Jf(_, b) => vec![*b],
-            Opcode::Add(_, _, _) => vec![],
-            Opcode::Mult(_, _, _) => vec![],
-            Opcode::Mod(_, _, _) => vec![],
-            Opcode::And(_, _, _) => vec![],
-            Opcode::Or(_, _, _) => vec![],
-            Opcode::Not(_, _) => vec![],
-            Opcode::Rmem(_, _) => vec![],
-            Opcode::Wmem(_, _) => vec![],
-            Opcode::Call(a) => vec![*a],
-            Opcode::Ret => vec![],
-            Opcode::Out(_) => vec![],
-            Opcode::In(_) => vec![],
-            Opcode::Noop => vec![],
+            Halt => vec![],
+            Set(_, _) => vec![],
+            Push(_) => vec![],
+            Pop(_) => vec![],
+            Eq(_, _, _) => vec![],
+            Gt(_, _, _) => vec![],
+            Jmp(a) => vec![*a],
+            Jt(_, b) => vec![*b],
+            Jf(_, b) => vec![*b],
+            Add(_, _, _) => vec![],
+            Mult(_, _, _) => vec![],
+            Mod(_, _, _) => vec![],
+            And(_, _, _) => vec![],
+            Or(_, _, _) => vec![],
+            Not(_, _) => vec![],
+            Rmem(_, _) => vec![],
+            Wmem(_, _) => vec![],
+            Call(a) => vec![*a],
+            Ret => vec![],
+            Out(_) => vec![],
+            In(_) => vec![],
+            Noop => vec![],
+            __Invalid => vec![],
         }
     }
 
     pub fn to_machine_code(&self) -> Vec<u16> {
+        use Opcode::*;
+
         match self {
-            Opcode::Halt => vec![0],
-            Opcode::Set(a, b) => vec![1, a.as_binary(), b.as_binary()],
-            Opcode::Push(_) => todo!(),
-            Opcode::Pop(_) => todo!(),
-            Opcode::Eq(a, b, c) => vec![4, a.as_binary(), b.as_binary(), c.as_binary()],
-            Opcode::Gt(_, _, _) => todo!(),
-            Opcode::Jmp(a) => vec![6, a.as_binary()],
-            Opcode::Jt(a, b) => vec![7, a.as_binary(), b.as_binary()],
-            Opcode::Jf(a, b) => vec![8, a.as_binary(), b.as_binary()],
-            Opcode::Add(a, b, c) => vec![9, a.as_binary(), b.as_binary(), c.as_binary()],
-            Opcode::Mult(_, _, _) => todo!(),
-            Opcode::Mod(_, _, _) => todo!(),
-            Opcode::And(_, _, _) => todo!(),
-            Opcode::Or(_, _, _) => todo!(),
-            Opcode::Not(_, _) => todo!(),
-            Opcode::Rmem(_, _) => todo!(),
-            Opcode::Wmem(_, _) => todo!(),
-            Opcode::Call(a) => vec![17, a.as_binary()],
-            Opcode::Ret => vec![18],
-            Opcode::Out(_) => todo!(),
-            Opcode::In(_) => todo!(),
-            Opcode::Noop => vec![21],
+            Halt => vec![0],
+            Set(a, b) => vec![1, a.as_binary(), b.as_binary()],
+            Push(a) => vec![2, a.as_binary()],
+            Pop(a) => vec![3, a.as_binary()],
+            Eq(a, b, c) => vec![4, a.as_binary(), b.as_binary(), c.as_binary()],
+            Gt(_, _, _) => todo!(),
+            Jmp(a) => vec![6, a.as_binary()],
+            Jt(a, b) => vec![7, a.as_binary(), b.as_binary()],
+            Jf(a, b) => vec![8, a.as_binary(), b.as_binary()],
+            Add(a, b, c) => vec![9, a.as_binary(), b.as_binary(), c.as_binary()],
+            Mult(_, _, _) => todo!(),
+            Mod(_, _, _) => todo!(),
+            And(a, b, c) => vec![12, a.as_binary(), b.as_binary(), c.as_binary()],
+            Or(a, b, c) => vec![13, a.as_binary(), b.as_binary(), c.as_binary()],
+            Not(a, b) => vec![14, a.as_binary(), b.as_binary()],
+            Rmem(_, _) => todo!(),
+            Wmem(_, _) => todo!(),
+            Call(a) => vec![17, a.as_binary()],
+            Ret => vec![18],
+            Out(_) => todo!(),
+            In(_) => todo!(),
+            Noop => vec![21],
+            __Invalid => vec![std::u16::MAX],
         }
     }
 

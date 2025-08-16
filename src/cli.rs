@@ -1,23 +1,19 @@
+use std::collections::HashMap;
+use std::path::Path;
+
 use crate::assembly::Opcode;
 use crate::{emulator::*, solver::GameSolver};
 use clap::builder::BoolishValueParser;
 //use clap::{App, AppSettings, Arg, SubCommand};
 use clap::{builder::RangedU64ValueParser, Arg, Command};
 
-use serde::Deserialize;
-use serde::Serialize;
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Snapshot {
-    name: String,
-    vm: Vm,
-}
+use itertools::Itertools;
 
 pub struct Cli {
     pub cli: Command,
 
     pub vm: Vm,
-    pub snapshots: Vec<Snapshot>,
+    pub saved_states: HashMap<String, Vm>,
 }
 
 impl Cli {
@@ -25,9 +21,9 @@ impl Cli {
         let cli = Command::new("cli")
             .subcommand_required(true)
             .no_binary_name(true)
-            .subcommand(Command::new("helpme"))
             .subcommand(
                 Command::new("bp")
+                    .about("Breakpoints")
                     .subcommand(Command::new("list"))
                     .subcommand(
                         Command::new("set").arg(
@@ -40,13 +36,16 @@ impl Cli {
             )
             .subcommand(
                 Command::new("patch")
+                    .about("Patch opcodes")
                     .arg(Arg::new("opcode"))
                     .arg(Arg::new("offset").value_parser(RangedU64ValueParser::<usize>::new())),
             )
             .subcommand(
                 Command::new("dis")
+                    .about("Disassembler")
                     .subcommand(
                         Command::new("at")
+                            .about("Disassemble at memory offset")
                             .arg(
                                 Arg::new("from")
                                     .required(true)
@@ -59,7 +58,7 @@ impl Cli {
                             ),
                     )
                     .subcommand(
-                        Command::new("fn").arg(
+                        Command::new("fn").about("Disassemble function").arg(
                             Arg::new("from")
                                 .required(true)
                                 .value_parser(RangedU64ValueParser::<usize>::new()),
@@ -69,14 +68,14 @@ impl Cli {
             .subcommand(
                 Command::new("vm")
                     .subcommand(
-                        Command::new("patch").arg(
+                        Command::new("fn_patching").about("Function patching").arg(
                             Arg::new("patch")
                                 .required(true)
                                 .value_parser(BoolishValueParser::new()),
                         ),
                     )
                     .subcommand(
-                        Command::new("register").subcommand(
+                        Command::new("register").about("Edit register").subcommand(
                             Command::new("set")
                                 .arg(
                                     Arg::new("register")
@@ -93,6 +92,7 @@ impl Cli {
             )
             .subcommand(
                 Command::new("mem")
+                    .about("Search memory")
                     .subcommand(Command::new("init"))
                     .subcommand(Command::new("list"))
                     .subcommand(
@@ -134,98 +134,101 @@ impl Cli {
                     ),
             )
             .subcommand(Command::new("run").alias("r"))
-            .subcommand(Command::new("input").alias("i").arg(Arg::new("line")))
+            .subcommand(
+                Command::new("input").about("Feed input").alias("i").arg(
+                    Arg::new("line")
+                        .num_args(1..)
+                        .trailing_var_arg(true)
+                        .allow_hyphen_values(true),
+                ),
+            )
             .subcommand(
                 Command::new("solver")
+                    .about("Challenge specific solvers")
                     .subcommand(Command::new("explore"))
                     .subcommand(Command::new("teleporter")),
             )
             .subcommand(
-                Command::new("snap")
-                    .subcommand(Command::new("load").arg(Arg::new("dump_path").required(true)))
+                Command::new("state")
+                    .about("Emulator save/load state")
+                    .subcommand(Command::new("diskload").arg(Arg::new("dump_path").required(true)))
                     .subcommand(
-                        Command::new("dump")
+                        Command::new("disksave")
                             .arg(Arg::new("name").required(true))
                             .arg(Arg::new("dump_path").required(true)),
                     )
-                    .subcommand(Command::new("take").arg(Arg::new("name").required(true)))
+                    .subcommand(Command::new("save").arg(Arg::new("name").required(true)))
                     .subcommand(Command::new("remove").arg(Arg::new("name").required(true)))
-                    .subcommand(Command::new("restore").arg(Arg::new("name").required(true)))
+                    .subcommand(Command::new("load").arg(Arg::new("name").required(true)))
                     .subcommand(Command::new("list")),
             )
             .subcommand(
-                Command::new("step").alias("s").arg(
-                    Arg::new("count")
-                        .value_parser(RangedU64ValueParser::<u32>::new())
-                        .default_value("1"),
-                ),
+                Command::new("step")
+                    .about("Execute N instructions")
+                    .alias("s")
+                    .arg(
+                        Arg::new("count")
+                            .value_parser(RangedU64ValueParser::<u32>::new())
+                            .default_value("1"),
+                    ),
             );
 
         Self {
             cli,
             vm,
-            snapshots: Vec::new(),
+            saved_states: Default::default(),
         }
     }
 
-    fn get_snap_by_name(&self, name: &str) -> Option<&Snapshot> {
-        self.snapshots.iter().find(|snap| snap.name == name)
+    fn get_state_by_name(&self, name: &str) -> Option<&Vm> {
+        self.saved_states.get(name)
     }
 
-    fn dump_snapshot(&mut self, name: &str, dump_path: &str) {
-        match self.get_snap_by_name(name) {
-            Some(snap) => {
+    fn save_state_to_disk(&mut self, name: &str, dump_path: &str) {
+        match self.get_state_by_name(name) {
+            Some(state) => {
                 let mut f = std::fs::File::create(dump_path).unwrap();
-                serde_json::to_writer(&mut f, &snap).unwrap();
+                serde_json::to_writer(&mut f, &state).unwrap();
             }
-            None => println!("Snap not found"),
+            None => println!("State not found"),
         }
     }
 
-    fn load_snapshot(&mut self, dump_path: &str) -> Result<(), Box<dyn std::error::Error>> {
-        let f = std::fs::File::open(dump_path)?;
-        let snap: Snapshot = serde_json::from_reader(f)?;
-        let name = snap.name.clone();
+    fn load_state_from_disk<P: AsRef<Path>>(
+        &mut self,
+        dump_path: P,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let f = std::fs::File::open(&dump_path)?;
+        let state: Vm = serde_json::from_reader(f)?;
+        let name = dump_path
+            .as_ref()
+            .file_name()
+            .unwrap()
+            .to_string_lossy()
+            .to_string();
 
-        match self.snapshots.iter().find(|s| s.name == name) {
-            Some(_) => (),
-            None => self.snapshots.push(snap),
-        };
-        self.restore_snapshot(&name);
+        self.saved_states.insert(name.clone(), state);
+
+        // load state to current Vm
+        self.load_state(&name);
 
         Ok(())
     }
 
-    fn take_snapshot(&mut self, name: &str) {
-        self.snapshots.push(Snapshot {
-            name: name.to_string(),
-            vm: self.vm.clone(),
-        });
+    fn save_state(&mut self, name: &str) {
+        self.saved_states.insert(name.to_string(), self.vm.clone());
     }
 
-    fn remove_snapshot(&mut self, name: &str) {
-        let mut idx = None;
-        for (i, snap) in self.snapshots.iter().enumerate() {
-            if snap.name == name {
-                idx = Some(i);
-                break;
-            }
-        }
-
-        match idx {
-            Some(idx) => {
-                self.snapshots.remove(idx);
-            }
-            None => println!("Not found"),
-        }
+    fn remove_state(&mut self, name: &str) {
+        self.saved_states.remove(name);
     }
 
-    fn restore_snapshot(&mut self, name: &str) {
-        match self.get_snap_by_name(name) {
-            Some(snap) => {
-                self.vm = snap.vm.clone();
+    fn load_state(&mut self, name: &str) {
+        match self.get_state_by_name(name) {
+            Some(state) => {
+                self.vm = state.clone();
             }
-            None => println!("Snap not found"),
+            None => println!("State not found"),
         }
     }
 
@@ -238,29 +241,40 @@ impl Cli {
         let argv = input_line.split_whitespace();
         let args = match self.cli.clone().try_get_matches_from(argv.clone()) {
             Ok(args) => args,
-            Err(_) => match self.vm.feed(input_line) {
-                Ok(_) => {
-                    self.vm.run();
-                    println!("{}", self.vm.get_messages().last().unwrap());
-                    return Ok(());
-                }
-                Err(e) => {
-                    println!("Invalid command, tried feeding, but didn't work either");
-                    return Err(e);
-                }
-            },
+            Err(e) if e.kind() == clap::error::ErrorKind::DisplayHelp => {
+                e.print().unwrap();
+                return Ok(());
+            }
+            Err(e) => {
+                e.print().unwrap();
+                return Ok(());
+                //return Err(Box::new(e));
+            }
         };
 
         match args.subcommand() {
             Some(("run", _sub)) => {
-                self.vm.run();
+                let _executed = self
+                    .vm
+                    .run_until(StopVmState::new(&[VmState::WaitingForInput]))
+                    .unwrap();
+
                 if let VmState::WaitingForInput = self.vm.get_state() {
                     println!("{}", self.vm.get_messages().last().unwrap());
                 }
             }
             Some(("input", sub)) => {
-                self.vm
-                    .feed(sub.get_one::<String>("line").unwrap_or(&"".to_string()))?;
+                let input = match sub.get_many::<String>("line") {
+                    Some(x) => x,
+                    None => return Ok(()),
+                };
+                let input: String = input.cloned().join(" ");
+                self.vm.feed(&input)?;
+                //self.vm.run();
+                let _executed = self
+                    .vm
+                    .run_until(StopVmState::new(&[VmState::WaitingForInput]))
+                    .unwrap();
                 println!("{}", self.vm.get_messages().last().unwrap());
             }
             Some(("patch", sub)) => {
@@ -337,9 +351,13 @@ impl Cli {
                 None => (),
             },
             Some(("vm", sub)) => match sub.subcommand() {
-                Some(("patch", sub)) => {
+                Some(("fn_patching", sub)) => {
                     let patching = *sub.get_one::<bool>("patch").unwrap();
-                    self.vm.set_patching(patching);
+                    self.vm.set_fn_patching(patching);
+                    match patching {
+                        true => println!("fn_patching: ✔️"),
+                        false => println!("fn_patching: ❌"),
+                    }
                 }
                 Some(("register", sub)) => match sub.subcommand() {
                     Some(("set", sub)) => {
@@ -365,41 +383,44 @@ impl Cli {
                 Some((_, _)) => return Err("unreachable?".into()),
                 None => (),
             },
-            Some(("snap", sub)) => match sub.subcommand() {
-                Some(("dump", sub)) => {
+            Some(("state", sub)) => match sub.subcommand() {
+                Some(("disksave", sub)) => {
                     let name = sub.get_one::<String>("name").unwrap();
                     let dump_path = sub.get_one::<String>("dump_path").unwrap();
-                    self.dump_snapshot(name, &format!("snaps/{}", dump_path));
+                    self.save_state_to_disk(name, &format!("saved_states/{}", dump_path));
                 }
-                Some(("load", subsub)) => {
+                Some(("diskload", subsub)) => {
                     let dump_path = subsub.get_one::<String>("dump_path").unwrap();
-                    self.load_snapshot(&format!("snaps/{}", dump_path))?;
+                    self.load_state_from_disk(&format!("saved_states/{}", dump_path))?;
                     println!(
                         "Last message was:\n{}",
                         self.vm.get_messages().last().unwrap()
                     );
                 }
-                Some(("take", sub)) => {
+                Some(("save", sub)) => {
                     let name = sub.get_one::<String>("name").unwrap();
-                    self.take_snapshot(name);
+                    self.save_state(name);
+                    println!("Saved");
                 }
-                Some(("restore", sub)) => {
+                Some(("load", sub)) => {
                     let name = sub.get_one::<String>("name").unwrap();
-                    self.restore_snapshot(name);
+                    self.load_state(name);
                 }
                 Some(("remove", sub)) => {
                     let name = sub.get_one::<String>("name").unwrap();
-                    self.remove_snapshot(name);
+                    self.remove_state(name);
                 }
                 Some(("list", _)) => {
-                    println!("{} snapshots:", self.snapshots.len());
-                    for (idx, snap) in self.snapshots.iter().enumerate() {
-                        println!("{} {:?}", idx, snap.name);
+                    println!("{} saved states:", self.saved_states.len());
+                    for (name, _state) in self.saved_states.iter() {
+                        println!("{:?}", name);
                     }
                 }
                 _ => {
-                    let name = format!("{:03}", self.snapshots.len());
-                    self.take_snapshot(&name);
+                    println!("{} saved states:", self.saved_states.len());
+                    for (name, _state) in self.saved_states.iter() {
+                        println!("{:?}", name);
+                    }
                 }
             },
             Some(("step", sub)) => {
@@ -410,9 +431,6 @@ impl Cli {
                         Err(e) => println!("{}", e),
                     }
                 }
-            }
-            Some(("helpme", _)) => {
-                self.cli.print_long_help().unwrap();
             }
             Some((x, _sub)) => unimplemented!("Unknown command {x:?}"),
             None => (),

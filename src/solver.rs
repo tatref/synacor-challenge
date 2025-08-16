@@ -1,6 +1,10 @@
+use itertools::Itertools;
 use regex::Regex;
 
-use crate::emulator::{Vm, VmState};
+use crate::{
+    assembly::{Opcode, Val},
+    emulator::{StopVmState, Vm, VmState},
+};
 use std::{
     collections::{hash_map::DefaultHasher, BTreeMap, HashSet},
     hash::{Hash, Hasher},
@@ -11,43 +15,49 @@ pub struct GameSolver {}
 impl GameSolver {
     pub fn explore_maze(vm: &Vm) {
         let message = vm.get_messages().last().unwrap();
-        let level = Level::from(message).unwrap();
-        let first_level = level.clone();
+        let room = Room::from(message).expect("Missing room name (look)");
+        let first_room = room.clone();
 
-        let mut explored: HashSet<Level> = Default::default();
-        let mut queue: BTreeMap<Level, Vm> = Default::default();
-        queue.insert(level, vm.clone());
+        let mut explored: HashSet<Room> = Default::default();
+        let mut queue: BTreeMap<Room, Vm> = Default::default();
+        queue.insert(room, vm.clone());
 
         let mut graphviz = String::from("digraph G {\n");
 
-        while let Some((current_level, current_vm)) = queue.pop_first() {
-            if explored.contains(&current_level) {
+        while let Some((current_room, current_vm)) = queue.pop_first() {
+            if explored.contains(&current_room) {
                 continue;
             }
 
             //dbg!(explored.len(), queue.len());
-            //println!("Exploring {}", current_level.name);
+            //println!("Exploring {}", current_room.name);
 
-            for exit in &current_level.exits {
+            for exit in &current_room.exits {
                 let mut vm = current_vm.clone();
                 vm.feed(exit).unwrap();
-                vm.run();
+                let _ = vm
+                    .run_until(StopVmState::new(&[
+                        VmState::WaitingForInput,
+                        VmState::Halted,
+                        VmState::HitBreakPoint,
+                    ]))
+                    .unwrap();
 
                 if vm.get_state() == VmState::Halted {
-                    continue;
+                    // TODO
+                    //continue;
                 }
                 let message = vm.get_messages().last().unwrap();
-                let new_level = match Level::from(message) {
+                let new_room = match Room::from(message) {
                     Ok(l) => l,
-                    Err(_) => Level {
-                        name: "custom level".into(),
+                    Err(_) => Room {
+                        name: "custom room".into(),
                         description: message.to_string(),
                         exits: Vec::new(),
                         things: Vec::new(),
                     },
                 };
 
-                //println!("exit {} => {}", exit, new_level.name);
                 fn hash_string(input: &str) -> u64 {
                     let mut hasher = DefaultHasher::new();
                     input.hash(&mut hasher);
@@ -55,17 +65,24 @@ impl GameSolver {
                 }
                 let from = hash_string(&format!(
                     "{}{}",
-                    current_level.name, current_level.description
+                    current_room.name, current_room.description
                 ));
-                let to = hash_string(&format!("{}{}", new_level.name, new_level.description));
-                let things = current_level.things.join(" ");
-                let color = if current_level.things.is_empty() {
-                    "black"
-                } else {
-                    "red"
+                let to = hash_string(&format!("{}{}", new_room.name, new_room.description));
+
+                let things = current_room.things.join(" ");
+                //let color = if current_room.things.is_empty() {
+                //    "black"
+                //} else {
+                //    "green"
+                //};
+
+                let color = match (current_room.things.is_empty(), vm.get_state()) {
+                    (_, VmState::Halted) => "red",
+                    (false, _) => "green",
+                    (true, _) => "black",
                 };
 
-                let shape = if current_level == first_level {
+                let shape = if current_room == first_room {
                     "Mdiamond"
                 } else {
                     "ellipse"
@@ -76,27 +93,27 @@ impl GameSolver {
                 graphviz.push_str(&format!(
                     "{} [label=\"{} - {}: {}\", color = {}, shape = {}];\n",
                     from,
-                    current_level.name,
-                    current_level.description.replace('\"', ""),
+                    current_room.name,
+                    current_room.description.replace('\"', ""),
                     things,
                     color,
                     shape
                 ));
 
-                if explored.contains(&new_level) {
+                if explored.contains(&new_room) {
                     continue;
                 }
 
-                queue.insert(new_level, vm.clone());
+                queue.insert(new_room, vm.clone());
             }
 
-            explored.insert(current_level);
+            explored.insert(current_room);
         }
 
-        println!("Finished exploring");
-        for level in &explored {
-            println!("{}", level.name);
-            for thing in &level.things {
+        println!("Finished exploring. List of rooms:");
+        for room in &explored {
+            println!("{}", room.name);
+            for thing in &room.things {
                 println!("- {}", thing);
             }
         }
@@ -107,54 +124,68 @@ impl GameSolver {
             Ok(_) => (),
             Err(x) => println!("{:?}", x),
         }
-        println!("./graphviz.dot");
+        println!("\nSee ./graphviz.dot");
     }
 
     pub fn trace_teleporter(vm: &Vm) {
-        for val in 43000..u16::MAX {
-            dbg!(val);
-            let mut vm = vm.clone();
-            //vm.set_traced_opcodes(Opcode::Call(Val::Invalid).discriminant());
+        use Opcode::*;
+        use Val::*;
 
-            vm.set_patching(true);
-            vm.set_register(7, val);
+        //for val in 43000..u16::MAX {
+        let val = 1;
+        dbg!(val);
+        let mut vm = vm.clone();
+        vm.set_traced_opcodes(Call(Invalid).discriminant());
 
-            let _ = vm.feed("use teleporter");
+        //vm.set_fn_patching(true);
+        vm.set_register(7, val);
 
-            let mut steps = 10000000;
-            while vm.get_state() == VmState::Running {
-                match vm.step() {
-                    Ok(()) => (),
-                    Err(_e) => break,
-                }
-                steps -= 1;
-                if steps == 0 {
-                    println!("early stop {}", val);
-                    break;
-                }
+        let _ = vm.feed("use teleporter");
+
+        let mut steps = 100_000_000;
+        while vm.get_state() == VmState::Running {
+            match vm.step() {
+                Ok(_) => (),
+                Err(_e) => break,
             }
-            //Vm::pretty_print_dis(&vm.get_trace_buffer());
-            if vm.get_state() == VmState::WaitingForInput {
-                dbg!(&vm.get_messages().last());
-                panic!("{}", val);
+            steps -= 1;
+            if steps == 0 {
+                println!("early stop {}", val);
+                break;
             }
         }
+
+        //Vm::pretty_print_dis(&vm.get_trace_buffer());
+        dbg!(&vm.get_messages().last());
+
+        dbg!(vm.get_trace_buffer().len());
+
+        let counters = vm.get_trace_buffer().iter().counts();
+        let v: Vec<_> = counters
+            .iter()
+            .map(|((offset, op), count)| (count, offset, op))
+            .sorted()
+            .collect();
+
+        dbg!(v);
+
+        panic!();
     }
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Hash, Ord, PartialOrd)]
-pub struct Level {
+pub struct Room {
     pub name: String,
     pub description: String,
     pub things: Vec<String>,
     pub exits: Vec<String>,
 }
 
-impl Level {
+impl Room {
     pub fn from(raw: &str) -> Result<Self, Box<dyn std::error::Error>> {
         let re_name = Regex::new(r"== (.+?) ==\n(.+?)\n").unwrap();
         let (name, mut description) = {
-            let caps = re_name.captures(raw).ok_or("No level name")?;
+            let caps = re_name.captures(raw).ok_or("No room name")?;
 
             (
                 caps.get(1).unwrap().as_str().to_string(),
@@ -199,13 +230,13 @@ impl Level {
         }
         let exits = get_exits(raw);
 
-        let level = Level {
+        let room = Room {
             description,
             name,
             things,
             exits,
         };
 
-        Ok(level)
+        Ok(room)
     }
 }

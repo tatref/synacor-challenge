@@ -27,9 +27,10 @@ pub struct Vm {
 
     state: VmState,
 
+    /// Current output buffer
     output_buffer: Vec<char>,
     input_buffer: VecDeque<char>,
-
+    /// Old output buffers
     messages: Vec<String>,
 
     traced_opcodes: u32,
@@ -77,6 +78,8 @@ impl PartialEq for Vm {
 
 impl fmt::Debug for Vm {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        let output_buffer: String = self.output_buffer.iter().collect();
+
         writeln!(f, "VM {{")?;
         writeln!(f, "  registers: {:?}", self.registers)?;
         writeln!(f, "  stack: {:?}", self.stack)?;
@@ -84,6 +87,7 @@ impl fmt::Debug for Vm {
         writeln!(f, "  pc: {:?}", self.pc)?;
         writeln!(f, "  state: {:?}", self.state)?;
         writeln!(f, "  patching: {:?}", self.fn_patching)?;
+        writeln!(f, "  output_buffer: {:?}", output_buffer)?;
         writeln!(f, "  memory: [...]")?;
         write!(f, "}}")
     }
@@ -106,7 +110,138 @@ impl Default for Vm {
     }
 }
 
+pub trait StopCondition {
+    fn must_stop(&mut self, vm: &Vm) -> Result<bool, Box<dyn std::error::Error>>;
+}
+
+pub struct StopNever;
+
+impl StopCondition for StopNever {
+    fn must_stop(&mut self, _vm: &Vm) -> Result<bool, Box<dyn std::error::Error>> {
+        Ok(false)
+    }
+}
+
+pub struct StopVmState {
+    states: Vec<VmState>,
+}
+
+impl StopVmState {
+    pub fn new(states: &[VmState]) -> Self {
+        Self {
+            states: states.iter().copied().collect(),
+        }
+    }
+}
+
+impl StopCondition for StopVmState {
+    fn must_stop(&mut self, vm: &Vm) -> Result<bool, Box<dyn std::error::Error>> {
+        Ok(self.states.iter().any(|s| *s == vm.state))
+    }
+}
+
+pub struct StopRet {
+    ret_counter: i32,
+}
+
+impl StopRet {
+    pub fn new() -> Self {
+        Self { ret_counter: 0 }
+    }
+}
+
+impl StopCondition for StopRet {
+    fn must_stop(&mut self, vm: &Vm) -> Result<bool, Box<dyn std::error::Error>> {
+        let instr = vm.fetch(vm.ip).unwrap();
+        match instr {
+            Opcode::Ret => {
+                self.ret_counter -= 1;
+
+                if self.ret_counter < 0 {
+                    return Err("ret_counter < 0".into());
+                }
+
+                if self.ret_counter == 0 {
+                    Ok(true)
+                } else {
+                    Ok(false)
+                }
+            }
+            Opcode::Call(_) => {
+                self.ret_counter += 1;
+                Ok(false)
+            }
+            _ => Ok(false),
+        }
+    }
+}
+
+pub struct StopInstructionCounter {
+    instuction_counter: usize,
+}
+
+impl StopCondition for StopInstructionCounter {
+    fn must_stop(&mut self, _vm: &Vm) -> Result<bool, Box<dyn std::error::Error>> {
+        if self.instuction_counter <= 0 {
+            Ok(true)
+        } else {
+            self.instuction_counter -= 1;
+            Ok(false)
+        }
+    }
+}
+
+impl<T: StopCondition + 'static> From<T> for Box<dyn StopCondition> {
+    fn from(value: T) -> Self {
+        Box::new(value)
+    }
+}
+
 impl Vm {
+    pub fn run_until<S>(
+        &mut self,
+        stop_condition: S,
+    ) -> Result<Vec<(usize, Opcode)>, Box<dyn std::error::Error>>
+    where
+        S: Into<Box<dyn StopCondition>>,
+    {
+        let mut stop_condition = stop_condition.into();
+        let mut executed = Vec::new();
+
+        while !stop_condition.must_stop(&self)? {
+            let instr = self.step().unwrap();
+            executed.push(instr);
+        }
+        if self.state == VmState::Halted {
+            let message = self.output_buffer.iter().collect::<String>();
+            self.messages.push(message.clone());
+        }
+        if self.state == VmState::HitBreakPoint {
+            println!("Hit breakpoint at {}", self.ip);
+        }
+
+        // loop {
+        //     let opcode = if self.called_patched_fn {
+        //         self.called_patched_fn = false;
+        //         Opcode::Ret
+        //     } else {
+        //         self.fetch(self.ip)?
+        //     };
+        //     let must_stop = stop_condition.must_stop(&self);
+
+        //     let opcode = self.fetch(self.ip)?;
+        //     let next_instruction_ptr = self.ip + opcode.size();
+        //     executed.push((self.ip, opcode));
+        //     self.execute(&opcode, next_instruction_ptr);
+
+        //     if must_stop {
+        //         break;
+        //     }
+        // }
+
+        Ok(executed)
+    }
+
     pub fn new() -> Self {
         Vm {
             memory: vec![0u16; MEM_SIZE],
@@ -179,7 +314,7 @@ impl Vm {
         &self.trace_buffer
     }
 
-    pub fn set_patching(&mut self, val: bool) {
+    pub fn set_fn_patching(&mut self, val: bool) {
         self.fn_patching = val;
     }
 
@@ -511,61 +646,6 @@ impl Vm {
         }
     }
 
-    pub fn run_until_ret(&mut self) -> Result<Vec<(usize, Opcode)>, Box<dyn std::error::Error>> {
-        let mut executed = Vec::new();
-
-        let mut counter = 0;
-        loop {
-            let opcode = if self.called_patched_fn {
-                self.called_patched_fn = false;
-                Opcode::Ret
-            } else {
-                self.fetch(self.ip)?
-            };
-            match opcode {
-                Opcode::Ret => {
-                    counter -= 1;
-                    if counter == 0 {
-                        break;
-                    }
-                }
-                Opcode::Call(_) => counter += 1,
-                _ => (),
-            }
-
-            let next_instruction_ptr = self.ip + opcode.size();
-            self.execute(&opcode, next_instruction_ptr);
-            executed.push((self.ip, opcode));
-        }
-
-        // execute last Ret
-        let opcode = Opcode::Ret;
-        let next_instruction_ptr = self.ip + opcode.size();
-        self.execute(&opcode, next_instruction_ptr);
-
-        executed.push((self.ip, opcode));
-
-        Ok(executed)
-    }
-
-    pub fn run(&mut self) {
-        self.state = VmState::Running;
-
-        while self.state == VmState::Running {
-            self.step().unwrap();
-        }
-
-        if self.state == VmState::Halted {
-            let message = self.output_buffer.iter().collect::<String>();
-            self.messages.push(message.clone());
-            println!("\n\nHalted");
-        }
-
-        if self.state == VmState::HitBreakPoint {
-            println!("Hit breakpoint at {}", self.ip);
-        }
-    }
-
     pub fn feed(&mut self, line: &str) -> Result<(), Box<dyn std::error::Error>> {
         if self.state != VmState::WaitingForInput {
             return Err(format!("State is {:?}, can't feed", self.state).into());
@@ -581,28 +661,30 @@ impl Vm {
         Ok(())
     }
 
-    pub fn step(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn step(&mut self) -> Result<(usize, Opcode), Box<dyn std::error::Error>> {
         if self.state != VmState::Running {
             return Err(format!("Vm is not running: {:?}.", self.state).into());
         }
 
         if self.breakpoints.contains(&self.ip) {
             self.state = VmState::HitBreakPoint;
-            return Ok(());
+            todo!();
+            //return Ok(());
         }
 
-        let instruction = self.fetch(self.ip)?;
-        let size = instruction.size();
+        let ip = self.ip;
+        let opcode = self.fetch(self.ip)?;
+        let size = opcode.size();
 
-        if (instruction.discriminant() & self.traced_opcodes) != 0 {
-            self.trace_buffer.push((self.ip, instruction));
+        if (opcode.discriminant() & self.traced_opcodes) != 0 {
+            self.trace_buffer.push((self.ip, opcode));
         }
 
         let next_instruction_ptr = self.ip + size;
-        self.execute(&instruction, next_instruction_ptr);
+        self.execute(&opcode, next_instruction_ptr)?;
         self.pc += 1;
 
-        Ok(())
+        Ok((ip, opcode))
     }
 
     /// Return `Opcode)` decoded at `ip`
@@ -660,37 +742,44 @@ impl Vm {
             19 => Opcode::Out(Val::new(self.memory[ip + 1])),
             20 => Opcode::In(Val::new(self.memory[ip + 1])),
             21 => Opcode::Noop,
+            std::u16::MAX => Opcode::__Invalid,
             x => return Err(format!("Can't decode opcode {}", x).into()),
         };
 
         Ok(opcode)
     }
 
-    fn execute(&mut self, instruction: &Opcode, next_instruction_ptr: usize) {
+    fn execute(
+        &mut self,
+        instruction: &Opcode,
+        next_instruction_ptr: usize,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        use Opcode::*;
+
         //println!("{:?}", instruction);
 
         self.ip = next_instruction_ptr;
 
         match instruction {
-            Opcode::Halt => self.state = VmState::Halted,
-            Opcode::Set(a, b) => {
+            Halt => self.state = VmState::Halted,
+            Set(a, b) => {
                 let val = self.get_value(b).expect("Invalid number");
                 let reg = self.get_register(a).expect("Not a register");
 
                 self.registers[reg] = val;
             }
-            Opcode::Push(a) => {
+            Push(a) => {
                 let val = self.get_value(a).expect("Invalid number");
 
                 self.stack.push(val);
             }
-            Opcode::Pop(a) => {
+            Pop(a) => {
                 let val = self.stack.pop().expect("Pop: empty stack");
                 let reg = self.get_register(a).expect("Not a register");
 
                 self.registers[reg] = val;
             }
-            Opcode::Eq(a, b, c) => {
+            Eq(a, b, c) => {
                 let val_b = self.get_value(b).expect("Invalid number");
                 let val_c = self.get_value(c).expect("Invalid number");
 
@@ -699,7 +788,7 @@ impl Vm {
                 let reg = self.get_register(a).expect("Not a register");
                 self.registers[reg] = val_a;
             }
-            Opcode::Gt(a, b, c) => {
+            Gt(a, b, c) => {
                 let val_b = self.get_value(b).expect("Invalid number");
                 let val_c = self.get_value(c).expect("Invalid number");
 
@@ -708,65 +797,65 @@ impl Vm {
                 let reg = self.get_register(a).expect("Not a register");
                 self.registers[reg] = val_a;
             }
-            Opcode::Jmp(a) => {
+            Jmp(a) => {
                 self.ip = self.get_value(a).expect("Invalid number") as usize;
             }
-            Opcode::Jt(a, b) => {
+            Jt(a, b) => {
                 let must_jump = self.get_value(a).expect("Invalid number") != 0;
 
                 if must_jump {
                     self.ip = self.get_value(b).expect("Invalid number") as usize;
                 }
             }
-            Opcode::Jf(a, b) => {
+            Jf(a, b) => {
                 let must_jump = self.get_value(a).expect("Invalid number") == 0;
 
                 if must_jump {
                     self.ip = self.get_value(b).expect("Invalid number") as usize;
                 }
             }
-            Opcode::Add(a, b, c) => {
+            Add(a, b, c) => {
                 let val_b = self.get_value(b).expect("Invalid number");
                 let val_c = self.get_value(c).expect("Invalid number");
                 let reg = self.get_register(a).expect("Not a register");
 
                 self.registers[reg] = (val_b + val_c) % 32768; //TODO wrapping_add?
             }
-            Opcode::Mult(a, b, c) => {
+            Mult(a, b, c) => {
                 let val_b = self.get_value(b).expect("Invalid number");
                 let val_c = self.get_value(c).expect("Invalid number");
                 let reg = self.get_register(a).expect("Not a register");
 
                 self.registers[reg] = val_b.wrapping_mul(val_c) % 32768;
             }
-            Opcode::Mod(a, b, c) => {
+            Mod(a, b, c) => {
                 let val_b = self.get_value(b).expect("Invalid number");
                 let val_c = self.get_value(c).expect("Invalid number");
                 let reg = self.get_register(a).expect("Not a register");
 
                 self.registers[reg] = val_b % val_c;
             }
-            Opcode::And(a, b, c) => {
+            And(a, b, c) => {
                 let val_b = self.get_value(b).expect("Invalid number");
                 let val_c = self.get_value(c).expect("Invalid number");
                 let reg = self.get_register(a).expect("Not a register");
 
                 self.registers[reg] = (val_b & val_c) % 32768;
             }
-            Opcode::Or(a, b, c) => {
+            Or(a, b, c) => {
                 let val_b = self.get_value(b).expect("Invalid number");
                 let val_c = self.get_value(c).expect("Invalid number");
                 let reg = self.get_register(a).expect("Not a register");
 
                 self.registers[reg] = (val_b | val_c) % 32768;
             }
-            Opcode::Not(a, b) => {
+            Not(a, b) => {
                 let val_b = self.get_value(b).expect("Invalid number");
                 let reg = self.get_register(a).expect("Not a register");
 
                 self.registers[reg] = (!val_b) % 32768;
             }
-            Opcode::Rmem(a, b) => {
+            Rmem(a, b) => {
                 let addr = self.get_value(b).expect("Invalid number");
                 let reg = self.get_register(a).expect("Not a register");
 
@@ -774,13 +863,13 @@ impl Vm {
 
                 self.registers[reg] = val;
             }
-            Opcode::Wmem(a, b) => {
+            Wmem(a, b) => {
                 let val = self.get_value(b).expect("Invalid number");
                 let addr = self.get_value(a).expect("Not a register");
 
                 self.memory[addr as usize] = val;
             }
-            Opcode::Call(a) => {
+            Call(a) => {
                 let addr = self.get_value(a).expect("Invalid number");
 
                 //dbg!(addr);
@@ -793,18 +882,18 @@ impl Vm {
                                 self.registers[0] = 20;
                             }
                             self.called_patched_fn = true;
-                            return;
+                            return Ok(());
                         }
                         2125 => {
-                            //let mut test = self.clone();
-                            //test.run_until_ret();
+                            let mut test_vm = self.clone();
+                            test_vm.run_until(StopRet::new())?;
 
-                            //self.stack.push(self.ip as u16);
-                            //self.patched_2125();
-                            //self.called_patched_fn = true;
+                            self.stack.push(self.ip as u16);
+                            self.patched_2125();
+                            self.called_patched_fn = true;
 
-                            //assert_eq!(&test, self);
-                            //return;
+                            assert_eq!(&test_vm, self);
+                            return Ok(());
                         }
                         6027 => {
                             self.stack.push(self.ip as u16);
@@ -816,7 +905,7 @@ impl Vm {
                             self.registers[0] = r0;
                             self.registers[1] = r1;
                             self.called_patched_fn = true;
-                            return;
+                            return Ok(());
                         }
                         _ => (),
                     }
@@ -825,7 +914,7 @@ impl Vm {
                 self.stack.push(self.ip as u16);
                 self.ip = addr as usize;
             }
-            Opcode::Ret => match self.stack.pop() {
+            Ret => match self.stack.pop() {
                 Some(addr) => {
                     self.ip = addr as usize;
                 }
@@ -836,12 +925,12 @@ impl Vm {
                     }
                 }
             },
-            Opcode::Out(a) => {
+            Out(a) => {
                 let c = self.get_value(a).expect("Invalid number");
 
                 self.output_buffer.push(c as u8 as char);
             }
-            Opcode::In(a) => {
+            In(a) => {
                 let reg = self.get_register(a).expect("In: not a register");
 
                 match self.input_buffer.pop_front() {
@@ -861,8 +950,11 @@ impl Vm {
                     }
                 }
             }
-            Opcode::Noop => (),
+            Noop => (),
+            __Invalid => panic!("Got __Invalid Opcode at {}", self.ip),
         }
+
+        Ok(())
     }
 
     fn get_value(&self, value: &Val) -> Option<u16> {
@@ -879,5 +971,9 @@ impl Vm {
             Val::Reg(x) => Some(*x),
             Val::Invalid => None,
         }
+    }
+
+    pub fn get_mem(&self) -> &[u16] {
+        &self.memory
     }
 }
