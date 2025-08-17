@@ -377,7 +377,8 @@ impl Cli {
                     GameSolver::explore_maze(&self.vm);
                 }
                 Some(("teleporter", _sub)) => {
-                    GameSolver::trace_teleporter(&self.vm);
+                    let new_vm = GameSolver::trace_teleporter(&self.vm);
+                    self.vm = new_vm;
                 }
                 Some((_, _)) => return Err("unreachable?".into()),
                 None => (),

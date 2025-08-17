@@ -207,7 +207,29 @@ now-bypassed confirmation mechanism will not protect you!
 Of course, since teleportation is impossible, this is all totally ridiculous.
 ```
 
+
+reg7 = 1
+instructions limit = 1.000.000.000
+
+```
+$ i use teleporter
+
+
+A strange, electronic voice is projected into your mind:
+
+  "Unusual setting detected!  Starting confirmation process!  Estimated time to completion: 1 billion years."
+```
+
+(emulator hangs for 30s, takes 20 GiB of RAM for the stack...)
+
 Instrumenting the VM to count specific instructions shows that some functions are called a LOT. If we limit the number of instructions to run, we note that the following calls grow with this limit
+
+Functions call graph
+
+![teleporter](teleporter.svg)
+
+
+Most called functions
 
 ```
   (
@@ -233,4 +255,43 @@ Instrumenting the VM to count specific instructions shows that some functions ar
     ),
 ```
 
+Reimplement fn 6027 in rust
+Increase stack size to 32 MiB
 
+Now setting fn_patching = true
+After < 0.01s
+
+```
+A strange, electronic voice is projected into your mind:
+
+  "Miscalibration detected!  Aborting teleportation!"
+
+Nothing else seems to happen.
+```
+
+Now bute force register values
+
+
+We find the solution : 25734
+
+```
+$ vm register set 7 25734
+$ vm fn_patching true
+fn_patching: ✔️
+$
+$ i use teleporter
+
+
+A strange, electronic voice is projected into your mind:
+
+  "Unusual setting detected!  Starting confirmation process!  Estimated time to completion: 1 billion years."
+
+You wake up on a sandy beach with a slight headache.  The last thing you remember is activating that teleporter... but now you can't find it anywhere in your pack.  Someone seems to have drawn a message in the sand here:
+
+    lVfSqITLZkYK
+
+It begins to rain.  The message washes away.  You take a deep breath and feel firmly grounded in reality as the effects of the teleportation wear off.       
+
+```
+
+# Beach

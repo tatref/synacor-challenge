@@ -1,7 +1,7 @@
 use itertools::iproduct;
 
 use crate::assembly::{Opcode, Val};
-use crate::emulator::{StopRet, Vm};
+use crate::emulator::{StopRet, StopVmState, Vm, VmState};
 
 #[test]
 fn load_program_from_file() -> Result<(), Box<dyn std::error::Error>> {
@@ -101,7 +101,7 @@ fn patching_2125() -> Result<(), Box<dyn std::error::Error>> {
     use Val::*;
 
     let mut prog = vec![Opcode::Call(Val::Num(2125))];
-    prog.extend([Opcode::Noop].repeat(2125 - Opcode::Call(Val::Num(0)).size()));
+    prog.extend([Opcode::Halt].repeat(2125 - Opcode::Call(Val::Num(0)).size()));
 
     prog.extend_from_slice(&[
         Push(Reg(1)),
@@ -122,48 +122,28 @@ fn patching_2125() -> Result<(), Box<dyn std::error::Error>> {
     let mut vm = Vm::default();
     vm.load_program_from_mem(&prog);
 
-    let mut vm1 = vm.clone();
-    let mut vm2 = vm.clone();
-
-    println!("vm1");
-    let executed = vm1.run_until(StopRet::default()).unwrap();
-    for (offset, op) in &executed {
-        println!("{}: {:?}", offset, op);
-    }
-
-    println!();
-    println!("vm2");
-    vm2.set_fn_patching(true);
-    let executed = vm2.run_until(StopRet::default()).unwrap();
-    for (offset, op) in &executed {
-        println!("{}: {:?}", offset, op);
-    }
-
-    assert_eq!(vm1, vm2);
-
-    Ok(())
-}
-
-#[test]
-fn run_until_ret_2125() -> Result<(), Box<dyn std::error::Error>> {
-    let prog = vec![Opcode::Call(Val::Num(2125))];
-    let prog = Opcode::assemble_vec(&prog);
-
-    for (reg0, reg1) in iproduct!(0..100, 0..100) {
-        let mut vm = Vm::default();
-        vm.load_program_from_mem(&prog);
-        vm.set_register(0, reg0);
-        vm.set_register(1, reg1);
+    let range = (0..1000).step_by(34);
+    for (a, b, c) in iproduct!(range.clone(), range.clone(), range.clone()) {
+        vm.set_register(0, a);
+        vm.set_register(1, b);
+        vm.set_register(2, c);
 
         let mut vm1 = vm.clone();
         let mut vm2 = vm.clone();
 
         println!("vm1");
-        let _instr = vm1.run_until(StopRet::default())?;
+        let executed = vm1.run_until(StopRet::default()).unwrap();
+        for (offset, op) in &executed {
+            println!("{}: {:?}", offset, op);
+        }
 
+        println!();
         println!("vm2");
         vm2.set_fn_patching(true);
-        let _instr = vm2.run_until(StopRet::default())?;
+        let executed = vm2.run_until(StopRet::default()).unwrap();
+        for (offset, op) in &executed {
+            println!("{}: {:?}", offset, op);
+        }
 
         assert_eq!(vm1, vm2);
     }
@@ -174,8 +154,6 @@ fn run_until_ret_2125() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 #[allow(unreachable_code)]
 fn patching_3() -> Result<(), Box<dyn std::error::Error>> {
-    todo!();
-
     let prog = vec![
         Opcode::Call(Val::Num(3)),
         Opcode::Halt,
@@ -194,21 +172,21 @@ fn patching_3() -> Result<(), Box<dyn std::error::Error>> {
     let mut vm2 = vm.clone();
 
     println!("vm1");
-    let executed = vm1.run_until(StopRet::default()).unwrap();
+    let executed = vm1.run_until(StopVmState::new(&[VmState::Halted])).unwrap();
     for (offset, op) in &executed {
         println!("{}: {:?}", offset, op);
     }
+    println!();
 
     println!("vm2");
     vm2.set_fn_patching(true);
-    let executed = vm1.run_until(StopRet::default()).unwrap();
+    let executed = vm2.run_until(StopVmState::new(&[VmState::Halted])).unwrap();
     for (offset, op) in &executed {
         println!("xx {}: {:?}", offset, op);
     }
-
-    panic!();
-
     assert_eq!(vm1, vm2);
+
+    dbg!(&vm1, &vm2);
 
     Ok(())
 }

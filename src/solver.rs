@@ -1,7 +1,7 @@
 use itertools::Itertools;
 use regex::Regex;
 
-use std::fmt::Debug;
+use std::{collections::HashMap, fmt::Debug};
 
 use crate::{
     assembly::{Opcode, Val},
@@ -129,22 +129,22 @@ impl GameSolver {
         println!("\nSee ./graphviz.dot");
     }
 
-    pub fn trace_teleporter(vm: &Vm) {
+    pub fn trace_teleporter(vm: &Vm) -> Vm {
         use Opcode::*;
         use Val::*;
 
-        //for val in 43000..u16::MAX {
         let val = 1;
+        //for val in 0..u16::MAX {
         dbg!(val);
         let mut vm = vm.clone();
         vm.set_traced_opcodes(Call(Invalid).discriminant());
 
-        //vm.set_fn_patching(true);
+        vm.set_fn_patching(true);
         vm.set_register(7, val);
 
         let _ = vm.feed("use teleporter");
 
-        let mut steps = 100_000_000;
+        let mut steps = 1_000_000_000;
         while vm.get_state() == VmState::Running {
             match vm.step() {
                 Ok(_) => (),
@@ -157,10 +157,17 @@ impl GameSolver {
             }
         }
 
-        //Vm::pretty_print_dis(&vm.get_trace_buffer());
-        dbg!(&vm.get_messages().last());
-
         dbg!(vm.get_trace_buffer().len());
+
+        let x = vm
+            .get_trace_buffer()
+            .iter()
+            .filter(|(_offset, op, _resolved_op)| match op {
+                Opcode::Call(Num(6026)) => true,
+                _ => false,
+            })
+            .next();
+        dbg!(x);
 
         let counters = vm.get_trace_buffer().iter().counts();
         let sorted_counters: Vec<_> = counters
@@ -272,6 +279,52 @@ edge [fontname="Helvetica,Arial,sans-serif"]
 
         panic!();
     }
+}
+
+pub fn brute_force_fn_2027(vm: &Vm) {
+    use Opcode::*;
+    use Val::*;
+
+    let mut last_messages = HashMap::new();
+    for val in 0..=u16::MAX {
+        //for val in 0..u16::MAX {
+        dbg!(val);
+        let mut vm = vm.clone();
+        vm.set_traced_opcodes(Call(Invalid).discriminant());
+
+        vm.set_fn_patching(true);
+        vm.set_register(7, val);
+
+        let _ = vm.feed("use teleporter");
+
+        // without 2027 patching, we need a lot of instructions
+        let mut steps = 1_000_000_000;
+        while vm.get_state() == VmState::Running {
+            match vm.step() {
+                Ok(_) => (),
+                Err(_e) => break,
+            }
+            steps -= 1;
+            if steps == 0 {
+                println!("early stop {}", val);
+                break;
+            }
+        }
+
+        vm.run_until(StopVmState::new(&[VmState::WaitingForInput]))
+            .unwrap();
+
+        let last_message = vm.get_messages().last().unwrap();
+        last_messages.insert(last_message.clone(), val);
+
+        if last_message.contains("Miscalibration detected!  Aborting teleportation!") {
+            continue;
+        } else {
+            dbg!("Found", val, &last_message);
+        }
+    }
+
+    dbg!(&last_messages);
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Hash, Ord, PartialOrd)]

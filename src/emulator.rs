@@ -30,6 +30,9 @@ pub struct Vm {
     #[serde(skip)]
     last_instr: Option<Opcode>,
 
+    #[serde(skip)]
+    virtual_instructions: Vec<Opcode>,
+
     state: VmState,
 
     /// Current output buffer
@@ -51,7 +54,7 @@ pub struct Vm {
     breakpoints: Vec<usize>,
 
     #[serde(skip)]
-    __6027_cache: HashMap<(u16, u16, u16), (u16, u16)>,
+    pub __6027_cache: HashMap<(u16, u16, u16), (u16, u16)>,
 
     #[serde(skip)]
     scanmem: Vec<Option<u16>>,
@@ -91,7 +94,7 @@ impl fmt::Debug for Vm {
         writeln!(f, "  ip: {:?}", self.ip)?;
         writeln!(f, "  pc: {:?}", self.pc)?;
         writeln!(f, "  state: {:?}", self.state)?;
-        writeln!(f, "  patching: {:?}", self.fn_patching)?;
+        writeln!(f, "  fn_patching: {:?}", self.fn_patching)?;
         writeln!(f, "  output_buffer: {:?}", output_buffer)?;
         writeln!(f, "  memory: [...]")?;
         write!(f, "}}")
@@ -179,7 +182,15 @@ impl StopCondition for StopRet {
 
 #[derive(Debug)]
 pub struct StopInstructionCounter {
-    instuction_counter: usize,
+    instruction_counter: usize,
+}
+
+impl StopInstructionCounter {
+    pub fn new(instruction_counter: usize) -> Self {
+        Self {
+            instruction_counter,
+        }
+    }
 }
 
 impl StopCondition for StopInstructionCounter {
@@ -187,10 +198,10 @@ impl StopCondition for StopInstructionCounter {
     //        Ok(false)
     //    }
     fn must_stop_after_step(&mut self, _vm: &Vm) -> Result<bool, Box<dyn std::error::Error>> {
-        if self.instuction_counter == 0 {
+        if self.instruction_counter == 0 {
             Ok(true)
         } else {
-            self.instuction_counter -= 1;
+            self.instruction_counter -= 1;
             Ok(false)
         }
     }
@@ -214,7 +225,17 @@ impl Vm {
         let mut executed = Vec::new();
 
         self.state = VmState::Running;
-        loop {
+
+        'main_loop: loop {
+            while let Some(virt_instr) = self.virtual_instructions.pop() {
+                self.execute(&virt_instr, 0)?;
+                self.last_instr = Some(virt_instr);
+                executed.push((0, virt_instr));
+                if stop_condition.must_stop_after_step(self)? {
+                    break 'main_loop;
+                }
+            }
+
             let instr = self.step().unwrap();
             self.last_instr = Some(instr.1);
             executed.push(instr);
@@ -232,25 +253,6 @@ impl Vm {
             println!("Hit breakpoint at {}", self.ip);
         }
 
-        // loop {
-        //     let opcode = if self.called_patched_fn {
-        //         self.called_patched_fn = false;
-        //         Opcode::Ret
-        //     } else {
-        //         self.fetch(self.ip)?
-        //     };
-        //     let must_stop = stop_condition.must_stop(&self);
-
-        //     let opcode = self.fetch(self.ip)?;
-        //     let next_instruction_ptr = self.ip + opcode.size();
-        //     executed.push((self.ip, opcode));
-        //     self.execute(&opcode, next_instruction_ptr);
-
-        //     if must_stop {
-        //         break;
-        //     }
-        // }
-
         Ok(executed)
     }
 
@@ -262,6 +264,7 @@ impl Vm {
             ip: 0,
             pc: 0,
             last_instr: None,
+            virtual_instructions: Default::default(),
 
             state: VmState::Running,
 
@@ -692,21 +695,25 @@ impl Vm {
             return Err(format!("Vm is not running: {:?}.", self.state).into());
         }
 
+        // breakpoints
         if self.breakpoints.contains(&self.ip) {
             self.state = VmState::HitBreakPoint;
             todo!();
             //return Ok(());
         }
 
+        // fetch op info
         let ip = self.ip;
         let opcode = self.fetch(self.ip)?;
         let size = opcode.size();
 
+        // tracing
         if (opcode.discriminant() & self.traced_opcodes) != 0 {
             let resolved_opcode = opcode.resolve_opcode(self);
             self.trace_buffer.push((self.ip, opcode, resolved_opcode));
         }
 
+        // actual execution of op
         let next_instruction_ptr = self.ip + size;
         self.execute(&opcode, next_instruction_ptr)?;
         self.pc += 1;
@@ -725,8 +732,6 @@ impl Vm {
         next_instruction_ptr: usize,
     ) -> Result<(), Box<dyn std::error::Error>> {
         use Opcode::*;
-
-        //println!("{:?}", instruction);
 
         self.ip = next_instruction_ptr;
 
@@ -842,10 +847,11 @@ impl Vm {
             Call(a) => {
                 let addr = self.get_value(a).expect("Invalid number");
 
-                //dbg!(addr);
                 if self.fn_patching {
+                    // patched functions implemented in rust
                     match addr {
                         3 => {
+                            // test function
                             self.stack.push(self.ip as u16);
                             {
                                 // function code
@@ -854,18 +860,20 @@ impl Vm {
                             self.called_patched_fn = true;
                             return Ok(());
                         }
-                        2125 => {
-                            let mut test_vm = self.clone();
-                            test_vm.run_until(StopRet::default())?;
+                        2125 => 'f2125: {
+                            //break 'f2125;
 
                             self.stack.push(self.ip as u16);
-                            self.patched_2125();
+                            {
+                                self.patched_2125();
+                            }
                             self.called_patched_fn = true;
+                            self.virtual_instructions.insert(0, Opcode::Ret);
 
-                            assert_eq!(&test_vm, self);
                             return Ok(());
                         }
                         6027 => {
+                            //dbg!("patched 6027");
                             self.stack.push(self.ip as u16);
                             let (r0, r1) = self.patched_6027(
                                 self.registers[0],
@@ -875,12 +883,14 @@ impl Vm {
                             self.registers[0] = r0;
                             self.registers[1] = r1;
                             self.called_patched_fn = true;
+                            self.virtual_instructions.insert(0, Opcode::Ret);
                             return Ok(());
                         }
                         _ => (),
                     }
                 }
 
+                // non-patched function call
                 self.stack.push(self.ip as u16);
                 self.ip = addr as usize;
             }
