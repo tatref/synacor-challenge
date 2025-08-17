@@ -173,24 +173,20 @@ impl GameSolver {
 
         let functions: Vec<Function> = sorted_counters
             .iter()
-            .map(|(count, caller_offset, call_op, resolved_op)| {
+            .map(|(_count, _caller_offset, call_op, resolved_op)| {
                 let addr = match call_op {
                     Call(Val::Invalid) => unreachable!("invalid value"),
                     Call(Val::Num(addr)) => *addr,
                     Call(Val::Reg(_reg)) => {
-                        let addr =
-                            match resolved_op.expect("resolved op is None but should be Some") {
-                                Call(Num(addr)) => addr,
-                                _ => unreachable!(),
-                            };
-
-                        addr
+                        match resolved_op.expect("resolved op is None but should be Some") {
+                            Call(Num(addr)) => addr,
+                            _ => unreachable!(),
+                        }
                     }
                     _ => unimplemented!(),
                 };
 
-                let function = vm.disassemble_function(addr as usize).unwrap();
-                function
+                vm.disassemble_function(addr as usize).unwrap()
             })
             .sorted()
             .dedup()
@@ -224,7 +220,7 @@ edge [fontname="Helvetica,Arial,sans-serif"]
         for function in &functions {
             let function_graphviz = function.graphviz();
             graphviz.push_str(&function_graphviz);
-            graphviz.push_str("\n");
+            graphviz.push('\n');
         }
 
         // draw edges
@@ -256,8 +252,7 @@ edge [fontname="Helvetica,Arial,sans-serif"]
 
                     let target_function = functions
                         .iter()
-                        .filter(|f| f.start <= addr as usize && (addr as usize) <= f.end)
-                        .next();
+                        .find(|f| f.start <= addr as usize && (addr as usize) <= f.end);
 
                     let target_function_name = match target_function {
                         Some(f) => format!("{}", f.start),

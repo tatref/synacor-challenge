@@ -126,7 +126,7 @@ fn patching_2125() -> Result<(), Box<dyn std::error::Error>> {
     let mut vm2 = vm.clone();
 
     println!("vm1");
-    let executed = vm1.run_until(StopRet::new()).unwrap();
+    let executed = vm1.run_until(StopRet::default()).unwrap();
     for (offset, op) in &executed {
         println!("{}: {:?}", offset, op);
     }
@@ -134,7 +134,7 @@ fn patching_2125() -> Result<(), Box<dyn std::error::Error>> {
     println!();
     println!("vm2");
     vm2.set_fn_patching(true);
-    let executed = vm2.run_until(StopRet::new()).unwrap();
+    let executed = vm2.run_until(StopRet::default()).unwrap();
     for (offset, op) in &executed {
         println!("{}: {:?}", offset, op);
     }
@@ -159,11 +159,11 @@ fn run_until_ret_2125() -> Result<(), Box<dyn std::error::Error>> {
         let mut vm2 = vm.clone();
 
         println!("vm1");
-        let _instr = vm1.run_until(StopRet::new())?;
+        let _instr = vm1.run_until(StopRet::default())?;
 
         println!("vm2");
         vm2.set_fn_patching(true);
-        let _instr = vm2.run_until(StopRet::new())?;
+        let _instr = vm2.run_until(StopRet::default())?;
 
         assert_eq!(vm1, vm2);
     }
@@ -194,14 +194,14 @@ fn patching_3() -> Result<(), Box<dyn std::error::Error>> {
     let mut vm2 = vm.clone();
 
     println!("vm1");
-    let executed = vm1.run_until(StopRet::new()).unwrap();
+    let executed = vm1.run_until(StopRet::default()).unwrap();
     for (offset, op) in &executed {
         println!("{}: {:?}", offset, op);
     }
 
     println!("vm2");
     vm2.set_fn_patching(true);
-    let executed = vm1.run_until(StopRet::new()).unwrap();
+    let executed = vm1.run_until(StopRet::default()).unwrap();
     for (offset, op) in &executed {
         println!("xx {}: {:?}", offset, op);
     }
@@ -236,7 +236,7 @@ fn run_until_ret() -> Result<(), Box<dyn std::error::Error>> {
     Vm::pretty_print_dis(&x);
     println!();
 
-    let executed = vm.run_until(StopRet::new()).unwrap();
+    let executed = vm.run_until(StopRet::default()).unwrap();
     println!("Executed:");
     for (offset, op) in &executed {
         println!("xx {}: {:?}", offset, op);

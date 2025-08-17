@@ -9,7 +9,6 @@ use std::{
 use std::fmt::Debug;
 
 use byteorder::{ByteOrder, LittleEndian};
-use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 
@@ -132,25 +131,20 @@ pub struct StopVmState {
 impl StopVmState {
     pub fn new(states: &[VmState]) -> Self {
         Self {
-            states: states.iter().copied().collect(),
+            states: states.to_vec(),
         }
     }
 }
 
 impl StopCondition for StopVmState {
     fn must_stop(&mut self, vm: &Vm) -> Result<bool, Box<dyn std::error::Error>> {
-        Ok(self.states.iter().any(|s| *s == vm.state))
+        Ok(self.states.contains(&vm.state))
     }
 }
 
+#[derive(Default)]
 pub struct StopRet {
     ret_counter: i32,
-}
-
-impl StopRet {
-    pub fn new() -> Self {
-        Self { ret_counter: 0 }
-    }
 }
 
 impl StopCondition for StopRet {
@@ -185,7 +179,7 @@ pub struct StopInstructionCounter {
 
 impl StopCondition for StopInstructionCounter {
     fn must_stop(&mut self, _vm: &Vm) -> Result<bool, Box<dyn std::error::Error>> {
-        if self.instuction_counter <= 0 {
+        if self.instuction_counter == 0 {
             Ok(true)
         } else {
             self.instuction_counter -= 1;
@@ -211,7 +205,7 @@ impl Vm {
         let mut stop_condition = stop_condition.into();
         let mut executed = Vec::new();
 
-        while !stop_condition.must_stop(&self)? {
+        while !stop_condition.must_stop(self)? {
             let instr = self.step().unwrap();
             executed.push(instr);
         }
@@ -707,7 +701,7 @@ impl Vm {
 
     /// Return `Opcode)` decoded at `ip`
     fn fetch(&self, ip: usize) -> Result<Opcode, Box<dyn std::error::Error>> {
-        return Opcode::fetch(&self.memory, ip);
+        Opcode::fetch(&self.memory, ip)
     }
 
     fn execute(
@@ -847,7 +841,7 @@ impl Vm {
                         }
                         2125 => {
                             let mut test_vm = self.clone();
-                            test_vm.run_until(StopRet::new())?;
+                            test_vm.run_until(StopRet::default())?;
 
                             self.stack.push(self.ip as u16);
                             self.patched_2125();
@@ -959,8 +953,8 @@ impl Debug for Function {
 impl Function {
     pub fn new(start: usize, end: usize, code: &[Opcode]) -> Self {
         let offset_size = end - start;
-        let machine_code = Opcode::assemble_vec(&code);
-        let machine_code_size = machine_code.iter().count();
+        let machine_code = Opcode::assemble_vec(code);
+        let machine_code_size = machine_code.len();
 
         // instructions must be a continuous chuck of memory (no gaps)
         assert_eq!(offset_size + code.last().unwrap().size(), machine_code_size);
@@ -968,7 +962,7 @@ impl Function {
         Self {
             start,
             end,
-            code: code.iter().cloned().collect(),
+            code: code.to_vec(),
         }
     }
 
@@ -1016,7 +1010,7 @@ impl Function {
         }
         s.push_str("</table>\n");
         s.push_str(">\n");
-        s.push_str(&format!("];\n\n"));
+        s.push_str("];\n\n");
 
         s
     }

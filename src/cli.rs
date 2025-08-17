@@ -184,7 +184,7 @@ impl Cli {
         self.saved_states.get(name)
     }
 
-    fn save_state_to_disk(&mut self, name: &str, dump_path: &str) {
+    fn save_state_to_disk<P: AsRef<Path>>(&mut self, name: &str, dump_path: P) {
         match self.get_state_by_name(name) {
             Some(state) => {
                 let mut f = std::fs::File::create(dump_path).unwrap();
@@ -386,11 +386,11 @@ impl Cli {
                 Some(("disksave", sub)) => {
                     let name = sub.get_one::<String>("name").unwrap();
                     let dump_path = sub.get_one::<String>("dump_path").unwrap();
-                    self.save_state_to_disk(name, &format!("saved_states/{}", dump_path));
+                    self.save_state_to_disk(name, format!("saved_states/{}", dump_path));
                 }
                 Some(("diskload", subsub)) => {
                     let dump_path = subsub.get_one::<String>("dump_path").unwrap();
-                    self.load_state_from_disk(&format!("saved_states/{}", dump_path))?;
+                    self.load_state_from_disk(format!("saved_states/{}", dump_path))?;
                     println!(
                         "Last message was:\n{}",
                         self.vm.get_messages().last().unwrap()

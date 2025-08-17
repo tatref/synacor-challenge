@@ -408,7 +408,7 @@ impl Opcode {
 
         match self {
             Call(Num(_)) => None,
-            Call(Reg(reg)) => Some(Call(Num(vm.get_registers()[*reg] as u16))),
+            Call(Reg(reg)) => Some(Call(Num(vm.get_registers()[*reg]))),
             Call(Invalid) => unimplemented!(),
             _ => unimplemented!(),
         }
@@ -545,7 +545,7 @@ impl Opcode {
 
         let mut ptr = 0;
         while ptr < machine_code.len() {
-            let instr = Opcode::fetch(&machine_code, ptr)?;
+            let instr = Opcode::fetch(machine_code, ptr)?;
 
             let size = instr.size();
             instructions.push((start, instr));
@@ -583,7 +583,7 @@ impl Opcode {
             Out(a) => vec![19, a.as_binary()],
             In(a) => vec![20, a.as_binary()],
             Noop => vec![21],
-            __Invalid => vec![std::u16::MAX],
+            __Invalid => vec![u16::MAX],
         }
     }
 
