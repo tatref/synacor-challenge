@@ -31,6 +31,7 @@ fn hash_vm(vm: &Vm) -> u64 {
 impl GameSolver {
     pub fn explore_maze(vm: &Vm) {
         let message = vm.get_messages().last().unwrap();
+        let mut clusters: HashMap<String, Vec<String>> = HashMap::new();
         let room = Room::from(message).expect("Missing room name (look)");
         let first_room = room.clone();
 
@@ -49,10 +50,10 @@ impl GameSolver {
 
             let things = current_room.things.join(" ");
 
-            let color = match (current_room.things.is_empty(), current_vm.get_state()) {
-                (_, VmState::Halted) => "red",
-                (false, _) => "green",
-                (true, _) => "black",
+            let (color, penwidth) = match (current_room.things.is_empty(), current_vm.get_state()) {
+                (_, VmState::Halted) => ("red", "3"),
+                (false, _) => ("green", "3"),
+                (true, _) => ("black", "1"),
             };
 
             let shape = if current_room == first_room {
@@ -61,16 +62,28 @@ impl GameSolver {
                 "ellipse"
             };
 
-            #[allow(clippy::format_in_format_args)]
-            graphviz.push_str(&format!(
-                "{} [label=\"{} - {}: {}\", color = {}, shape = {}];\n",
+            let graphviz_room = format!(
+                "{} [label=\"{} - {}: {}\",\n color = {},\n shape = {},\n penwidth = {}];\n",
                 from,
                 current_room.name,
-                current_room.description.replace('\"', ""),
+                current_room.description.replace('\"', " "),
                 things,
                 color,
-                shape
-            ));
+                shape,
+                penwidth
+            );
+
+            #[allow(clippy::format_in_format_args)]
+            clusters
+                .entry(
+                    current_room
+                        .name
+                        .replace(|c: char| !c.is_ascii_alphanumeric(), " ")
+                        .split_whitespace()
+                        .join("_"),
+                )
+                .or_insert(Vec::new())
+                .push(graphviz_room);
 
             for exit in &current_room.exits {
                 let mut next_vm = current_vm.clone();
@@ -92,7 +105,7 @@ impl GameSolver {
                     Ok(l) => l,
                     Err(_) => Room {
                         name: "custom room".into(),
-                        description: message.to_string(),
+                        description: message.split_whitespace().join(" "),
                         exits: Vec::new(),
                         things: Vec::new(),
                     },
@@ -109,6 +122,27 @@ impl GameSolver {
 
             explored.insert(current_room);
         }
+
+        let colors = [
+            "lightblue",
+            "lightyellow",
+            "darkseagreen1",
+            "lightpink",
+            "lightgray",
+        ];
+        for (idx, (cluster, rooms)) in clusters.iter().enumerate() {
+            let color = colors[idx % colors.len()];
+            graphviz.push_str(&format!("subgraph cluster_{} {{\n", cluster));
+            graphviz.push_str("style = filled;\n");
+            graphviz.push_str(&format!("bgcolor = {};\n", color));
+            graphviz.push_str(&format!("label = \"{}\";\n", cluster));
+            for room in rooms {
+                graphviz.push_str(room);
+            }
+
+            graphviz.push_str("}\n");
+        }
+
         graphviz.push_str("}\n\n");
 
         match std::fs::write("graphviz.dot", graphviz) {

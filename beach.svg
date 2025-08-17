@@ -1,0 +1,779 @@
+<svg width="10394pt" height="1303pt" viewBox="0.00 0.00 10394.00 1303.20" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 1299.2)">
+<title>G</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-1299.2 10390,-1299.2 10390,4 -4,4"/>
+<g id="clust1" class="cluster">
+<title>cluster_Tropical_Cave</title>
+<polygon fill="lightblue" stroke="black" points="3465,-520.4 3465,-909.2 6077,-909.2 6077,-520.4 3465,-520.4"/>
+<text text-anchor="middle" x="4771" y="-892.6" font-family="Times,serif" font-size="14.00">Tropical_Cave</text>
+</g>
+<g id="clust2" class="cluster">
+<title>cluster_Tropical_Island</title>
+<polygon fill="lightyellow" stroke="black" points="3898,-8 3898,-485.6 6304,-485.6 6304,-8 3898,-8"/>
+<text text-anchor="middle" x="5101" y="-469" font-family="Times,serif" font-size="14.00">Tropical_Island</text>
+</g>
+<g id="clust3" class="cluster">
+<title>cluster_Tropical_Cave_Alcove</title>
+<polygon fill="#c1ffc1" stroke="black" points="6085,-609.2 6085,-686 7543,-686 7543,-609.2 6085,-609.2"/>
+<text text-anchor="middle" x="6814" y="-669.4" font-family="Times,serif" font-size="14.00">Tropical_Cave_Alcove</text>
+</g>
+<g id="clust4" class="cluster">
+<title>cluster_Vault_Lock</title>
+<polygon fill="lightpink" stroke="black" points="8,-185.6 8,-1287.2 2402,-1287.2 2402,-185.6 8,-185.6"/>
+<text text-anchor="middle" x="1205" y="-1270.6" font-family="Times,serif" font-size="14.00">Vault_Lock</text>
+</g>
+<g id="clust5" class="cluster">
+<title>cluster_custom_room</title>
+<polygon fill="lightgray" stroke="black" points="2904,-185.6 2904,-262.4 3396,-262.4 3396,-185.6 2904,-185.6"/>
+<text text-anchor="middle" x="3150" y="-245.8" font-family="Times,serif" font-size="14.00">custom_room</text>
+</g>
+<g id="clust6" class="cluster">
+<title>cluster_Vault_Antechamber</title>
+<polygon fill="lightblue" stroke="black" points="2487,-720.8 2487,-797.6 3453,-797.6 3453,-720.8 2487,-720.8"/>
+<text text-anchor="middle" x="2970" y="-781" font-family="Times,serif" font-size="14.00">Vault_Antechamber</text>
+</g>
+<g id="clust7" class="cluster">
+<title>cluster_Beach</title>
+<polygon fill="lightyellow" stroke="black" points="6312,-96.8 6312,-262.4 10378,-262.4 10378,-96.8 6312,-96.8"/>
+<text text-anchor="middle" x="8345" y="-245.8" font-family="Times,serif" font-size="14.00">Beach</text>
+</g>
+<g id="clust8" class="cluster">
+<title>cluster_Vault_Door</title>
+<polygon fill="#c1ffc1" stroke="black" points="2410,-297.2 2410,-374 3890,-374 3890,-297.2 2410,-297.2"/>
+<text text-anchor="middle" x="3150" y="-357.4" font-family="Times,serif" font-size="14.00">Vault_Door</text>
+</g>
+<!-- 1058364310751253359 -->
+<g id="node1" class="node">
+<title>1058364310751253359</title>
+<polygon fill="none" stroke="green" stroke-width="3" points="3445.2,-764.8 2494.8,-764.8 2494.8,-728.8 3445.2,-728.8 3445.2,-764.8"/>
+<text text-anchor="middle" x="2970" y="-742.6" font-family="Times,serif" font-size="14.00">Vault Antechamber - You are in the antechamber to a grid of rooms that control the door to the vault.  You notice the number '22' is carved into the orb's pedestal.: orb</text>
+</g>
+<!-- 7030527366688144785 -->
+<g id="node2" class="node">
+<title>7030527366688144785</title>
+<ellipse fill="none" stroke="black" cx="1852" cy="-1236.4" rx="542.12" ry="18"/>
+<text text-anchor="middle" x="1852" y="-1232.2" font-family="Times,serif" font-size="14.00">Vault Lock - You are in a grid of rooms that control the door to the vault.The floor of this room is a large mosaic depicting a '+' symbol.: </text>
+</g>
+<!-- 1058364310751253359&#45;&gt;7030527366688144785 -->
+<g id="edge1" class="edge">
+<title>1058364310751253359-&gt;7030527366688144785</title>
+<path fill="none" stroke="black" d="M2800.28,-766.3C2699.03,-782.23 2590,-810.32 2590,-857.4 2590,-1148.6 2590,-1148.6 2590,-1148.6 2590,-1188.96 2413.68,-1210.6 2233.41,-1222.18"/>
+<polygon fill="black" stroke="black" points="2233.35,-1218.68 2223.59,-1222.8 2233.79,-1225.66 2233.35,-1218.68"/>
+<text text-anchor="middle" x="2604.78" y="-1010.2" font-family="Times,serif" font-size="14.00">north</text>
+</g>
+<!-- 10987204422680133858 -->
+<g id="node3" class="node">
+<title>10987204422680133858</title>
+<ellipse fill="none" stroke="black" cx="1814" cy="-635.2" rx="539.89" ry="18"/>
+<text text-anchor="middle" x="1814" y="-631" font-family="Times,serif" font-size="14.00">Vault Lock - You are in a grid of rooms that control the door to the vault.The floor of this room is a large mosaic depicting a '-' symbol.: </text>
+</g>
+<!-- 1058364310751253359&#45;&gt;10987204422680133858 -->
+<g id="edge2" class="edge">
+<title>1058364310751253359-&gt;10987204422680133858</title>
+<path fill="none" stroke="black" d="M2774.88,-727.3C2558.31,-706.77 2211.4,-673.88 1998.99,-653.74"/>
+<polygon fill="black" stroke="black" points="1999.51,-650.27 1989.23,-652.81 1998.85,-657.24 1999.51,-650.27"/>
+<text text-anchor="middle" x="2606.97" y="-698.2" font-family="Times,serif" font-size="14.00">east</text>
+</g>
+<!-- 1422170878855264266 -->
+<g id="node4" class="node">
+<title>1422170878855264266</title>
+<ellipse fill="none" stroke="black" cx="4329" cy="-858.4" rx="467.2" ry="18"/>
+<text text-anchor="middle" x="4329" y="-854.2" font-family="Times,serif" font-size="14.00">Tropical Cave - This tunnel slopes deeper underground to the north, but the fireflies are all around to light your path.: </text>
+</g>
+<!-- 1058364310751253359&#45;&gt;1422170878855264266 -->
+<g id="edge3" class="edge">
+<title>1058364310751253359-&gt;1422170878855264266</title>
+<path fill="none" stroke="black" d="M3138.88,-766.29C3233.52,-776.31 3353.75,-788.47 3461,-797.6 3666.63,-815.11 3900,-830.96 4072.94,-841.94"/>
+<polygon fill="black" stroke="black" points="4072.53,-845.42 4082.73,-842.56 4072.97,-838.43 4072.53,-845.42"/>
+<text text-anchor="middle" x="3786.26" y="-809.8" font-family="Times,serif" font-size="14.00">south</text>
+</g>
+<!-- 7030527366688144785&#45;&gt;1058364310751253359 -->
+<g id="edge35" class="edge">
+<title>7030527366688144785-&gt;1058364310751253359</title>
+<path fill="none" stroke="black" d="M2179.97,-1221.68C2467.18,-1207.4 2839,-1182.38 2839,-1148.6 2839,-1148.6 2839,-1148.6 2839,-857.4 2839,-817.32 2875.52,-789.01 2909.99,-771.22"/>
+<polygon fill="black" stroke="black" points="2911.31,-774.47 2918.74,-766.92 2908.22,-768.18 2911.31,-774.47"/>
+<text text-anchor="middle" x="2854.17" y="-1010.2" font-family="Times,serif" font-size="14.00">south</text>
+</g>
+<!-- 9071313073423261533 -->
+<g id="node17" class="node">
+<title>9071313073423261533</title>
+<ellipse fill="none" stroke="black" cx="663" cy="-1147.6" rx="550.07" ry="18"/>
+<text text-anchor="middle" x="663" y="-1143.4" font-family="Times,serif" font-size="14.00">Vault Lock - You are in a grid of rooms that control the door to the vault.The floor of this room is a large mosaic depicting the number '4'.: </text>
+</g>
+<!-- 7030527366688144785&#45;&gt;9071313073423261533 -->
+<g id="edge33" class="edge">
+<title>7030527366688144785-&gt;9071313073423261533</title>
+<path fill="none" stroke="black" d="M1633.92,-1219.48C1423.81,-1204.14 1107.15,-1181.02 893.1,-1165.4"/>
+<polygon fill="black" stroke="black" points="893.45,-1161.91 883.22,-1164.68 892.94,-1168.9 893.45,-1161.91"/>
+<text text-anchor="middle" x="1378.77" y="-1187.8" font-family="Times,serif" font-size="14.00">north</text>
+</g>
+<!-- 2375424416964404982 -->
+<g id="node18" class="node">
+<title>2375424416964404982</title>
+<ellipse fill="none" stroke="black" cx="1804" cy="-746.8" rx="550.07" ry="18"/>
+<text text-anchor="middle" x="1804" y="-742.6" font-family="Times,serif" font-size="14.00">Vault Lock - You are in a grid of rooms that control the door to the vault.The floor of this room is a large mosaic depicting the number '4'.: </text>
+</g>
+<!-- 7030527366688144785&#45;&gt;2375424416964404982 -->
+<g id="edge34" class="edge">
+<title>7030527366688144785-&gt;2375424416964404982</title>
+<path fill="none" stroke="black" d="M2218.24,-1222.76C2274.03,-1217.65 2316.9,-1210.48 2328,-1200.4 2458.96,-1081.52 2496.63,-936.78 2378,-805.6 2359.47,-785.11 2250.32,-771.55 2132.1,-762.75"/>
+<polygon fill="black" stroke="black" points="2132.37,-759.26 2122.14,-762.02 2131.86,-766.24 2132.37,-759.26"/>
+<text text-anchor="middle" x="2457.48" y="-1010.2" font-family="Times,serif" font-size="14.00">east</text>
+</g>
+<!-- 10987204422680133858&#45;&gt;1058364310751253359 -->
+<g id="edge38" class="edge">
+<title>10987204422680133858-&gt;1058364310751253359</title>
+<path fill="none" stroke="black" d="M2094.46,-650.98C2250.13,-660.51 2447.08,-674.75 2622,-694 2697.92,-702.35 2782.7,-714.9 2849.57,-725.56"/>
+<polygon fill="black" stroke="black" points="2848.64,-728.96 2859.07,-727.08 2849.75,-722.04 2848.64,-728.96"/>
+<text text-anchor="middle" x="2759.56" y="-698.2" font-family="Times,serif" font-size="14.00">west</text>
+</g>
+<!-- 10987204422680133858&#45;&gt;2375424416964404982 -->
+<g id="edge36" class="edge">
+<title>10987204422680133858-&gt;2375424416964404982</title>
+<path fill="none" stroke="black" d="M1801.98,-653.51C1795.07,-664.55 1787.06,-679.46 1783.45,-694 1781.65,-701.25 1781.49,-703.59 1783.45,-710.8 1784.15,-713.38 1785.1,-715.97 1786.2,-718.5"/>
+<polygon fill="black" stroke="black" points="1782.96,-719.86 1790.68,-727.11 1789.17,-716.63 1782.96,-719.86"/>
+<text text-anchor="middle" x="1798.22" y="-698.2" font-family="Times,serif" font-size="14.00">north</text>
+</g>
+<!-- 8945159030153720476 -->
+<g id="node19" class="node">
+<title>8945159030153720476</title>
+<ellipse fill="none" stroke="black" cx="1755" cy="-546.4" rx="550.07" ry="18"/>
+<text text-anchor="middle" x="1755" y="-542.2" font-family="Times,serif" font-size="14.00">Vault Lock - You are in a grid of rooms that control the door to the vault.The floor of this room is a large mosaic depicting the number '9'.: </text>
+</g>
+<!-- 10987204422680133858&#45;&gt;8945159030153720476 -->
+<g id="edge37" class="edge">
+<title>10987204422680133858-&gt;8945159030153720476</title>
+<path fill="none" stroke="black" d="M1783.66,-617.1C1777.06,-612.1 1770.71,-606.1 1766.23,-599.2 1761.72,-592.25 1758.99,-583.78 1757.35,-575.73"/>
+<polygon fill="black" stroke="black" points="1760.83,-575.3 1755.87,-565.93 1753.91,-576.34 1760.83,-575.3"/>
+<text text-anchor="middle" x="1777.12" y="-586.6" font-family="Times,serif" font-size="14.00">east</text>
+</g>
+<!-- 1422170878855264266&#45;&gt;1058364310751253359 -->
+<g id="edge4" class="edge">
+<title>1422170878855264266-&gt;1058364310751253359</title>
+<path fill="none" stroke="black" d="M4189.67,-840.74C4084.21,-828.84 3935.71,-813.57 3805,-805.6 3652.35,-796.29 3613.63,-807.1 3461,-797.6 3351.39,-790.78 3228.46,-778.3 3133.01,-767.55"/>
+<polygon fill="black" stroke="black" points="3133.64,-764.09 3123.31,-766.45 3132.86,-771.05 3133.64,-764.09"/>
+<text text-anchor="middle" x="4021.73" y="-809.8" font-family="Times,serif" font-size="14.00">north</text>
+</g>
+<!-- 3725517507831076501 -->
+<g id="node5" class="node">
+<title>3725517507831076501</title>
+<ellipse fill="none" stroke="black" cx="4771" cy="-746.8" rx="1297.83" ry="18"/>
+<text text-anchor="middle" x="4771" y="-742.6" font-family="Times,serif" font-size="14.00">Tropical Cave - The cave is a little wider here.  You find the cobweb-encrusted remains of a small camp, and although you don't suspect the broken pieces of tables and chairs will prove useful to your quest, the fireflies seem to like using the debris as a shelter.  A passageway leads north and south, and there is an alcove to the east.: </text>
+</g>
+<!-- 1422170878855264266&#45;&gt;3725517507831076501 -->
+<g id="edge5" class="edge">
+<title>1422170878855264266-&gt;3725517507831076501</title>
+<path fill="none" stroke="black" d="M4398.55,-840.15C4477.54,-820.57 4606.27,-788.65 4689.79,-767.94"/>
+<polygon fill="black" stroke="black" points="4690.43,-771.38 4699.29,-765.58 4688.74,-764.59 4690.43,-771.38"/>
+<text text-anchor="middle" x="4551.92" y="-809.8" font-family="Times,serif" font-size="14.00">south</text>
+</g>
+<!-- 3725517507831076501&#45;&gt;1422170878855264266 -->
+<g id="edge6" class="edge">
+<title>3725517507831076501-&gt;1422170878855264266</title>
+<path fill="none" stroke="black" d="M4731.95,-765.21C4692.21,-782.24 4628.45,-807.71 4571,-822.4 4544.97,-829.05 4517.03,-834.56 4489.7,-839.07"/>
+<polygon fill="black" stroke="black" points="4489.26,-835.6 4479.94,-840.64 4490.37,-842.51 4489.26,-835.6"/>
+<text text-anchor="middle" x="4641.87" y="-809.8" font-family="Times,serif" font-size="14.00">north</text>
+</g>
+<!-- 6358854175244480269 -->
+<g id="node6" class="node">
+<title>6358854175244480269</title>
+<ellipse fill="none" stroke="black" cx="4834" cy="-635.2" rx="539.92" ry="18"/>
+<text text-anchor="middle" x="4834" y="-631" font-family="Times,serif" font-size="14.00">Tropical Cave - Fireflies slowly drift around you and light the tunnel, which seems to get brighter to the south, but dimmer to the north.: </text>
+</g>
+<!-- 3725517507831076501&#45;&gt;6358854175244480269 -->
+<g id="edge7" class="edge">
+<title>3725517507831076501-&gt;6358854175244480269</title>
+<path fill="none" stroke="black" d="M4771.37,-728.7C4772.18,-718.22 4774.32,-704.78 4779.66,-694 4785.67,-681.88 4795.07,-670.55 4804.37,-661.19"/>
+<polygon fill="black" stroke="black" points="4806.51,-663.98 4811.33,-654.54 4801.68,-658.91 4806.51,-663.98"/>
+<text text-anchor="middle" x="4794.83" y="-698.2" font-family="Times,serif" font-size="14.00">south</text>
+</g>
+<!-- 13904568891029110829 -->
+<g id="node7" class="node">
+<title>13904568891029110829</title>
+<ellipse fill="none" stroke="black" cx="6814" cy="-635.2" rx="721.39" ry="18"/>
+<text text-anchor="middle" x="6814" y="-631" font-family="Times,serif" font-size="14.00">Tropical Cave Alcove - At the back of this alcove, there is a small table, a chair, and a broken lantern.  It looks like this space was used much more recently than the camp to the west.: </text>
+</g>
+<!-- 3725517507831076501&#45;&gt;13904568891029110829 -->
+<g id="edge8" class="edge">
+<title>3725517507831076501-&gt;13904568891029110829</title>
+<path fill="none" stroke="black" d="M5184.49,-729.28C5442.37,-718.39 5781.1,-703.03 6081,-686 6247.15,-676.56 6434.35,-663.81 6577.97,-653.57"/>
+<polygon fill="black" stroke="black" points="6577.87,-657.09 6587.6,-652.88 6577.38,-650.11 6577.87,-657.09"/>
+<text text-anchor="middle" x="5913.8" y="-698.2" font-family="Times,serif" font-size="14.00">east</text>
+</g>
+<!-- 6358854175244480269&#45;&gt;3725517507831076501 -->
+<g id="edge9" class="edge">
+<title>6358854175244480269-&gt;3725517507831076501</title>
+<path fill="none" stroke="black" d="M4831.1,-653.61C4827.85,-669.49 4821.47,-693.11 4810,-710.8 4807.86,-714.11 4805.32,-717.3 4802.59,-720.31"/>
+<polygon fill="black" stroke="black" points="4800.23,-717.72 4795.6,-727.25 4805.16,-722.69 4800.23,-717.72"/>
+<text text-anchor="middle" x="4832.84" y="-698.2" font-family="Times,serif" font-size="14.00">north</text>
+</g>
+<!-- 13266643934501022318 -->
+<g id="node8" class="node">
+<title>13266643934501022318</title>
+<ellipse fill="none" stroke="black" cx="4902" cy="-546.4" rx="896.16" ry="18"/>
+<text text-anchor="middle" x="4902" y="-542.2" font-family="Times,serif" font-size="14.00">Tropical Cave - You stand at the entrance to a natural cave which looks like it hasn't been visited in quite some time.  Light pours in through the opening to the south, while fireflies light the path further into the cave to the north.: </text>
+</g>
+<!-- 6358854175244480269&#45;&gt;13266643934501022318 -->
+<g id="edge10" class="edge">
+<title>6358854175244480269-&gt;13266643934501022318</title>
+<path fill="none" stroke="black" d="M4835.77,-617C4837.58,-606.22 4841.25,-592.5 4848.66,-582.4 4851.5,-578.53 4854.9,-574.97 4858.6,-571.72"/>
+<polygon fill="black" stroke="black" points="4860.68,-574.54 4866.44,-565.65 4856.39,-569.01 4860.68,-574.54"/>
+<text text-anchor="middle" x="4863.83" y="-586.6" font-family="Times,serif" font-size="14.00">south</text>
+</g>
+<!-- 13904568891029110829&#45;&gt;3725517507831076501 -->
+<g id="edge13" class="edge">
+<title>13904568891029110829-&gt;3725517507831076501</title>
+<path fill="none" stroke="black" d="M6644.94,-653.18C6466.98,-670.41 6178.57,-696.52 5929,-710.8 5780.73,-719.28 5621.65,-725.79 5470.33,-730.74"/>
+<polygon fill="black" stroke="black" points="5470.38,-727.24 5460.5,-731.06 5470.61,-734.24 5470.38,-727.24"/>
+<text text-anchor="middle" x="6185.2" y="-698.2" font-family="Times,serif" font-size="14.00">west</text>
+</g>
+<!-- 13266643934501022318&#45;&gt;6358854175244480269 -->
+<g id="edge11" class="edge">
+<title>13266643934501022318-&gt;6358854175244480269</title>
+<path fill="none" stroke="black" d="M4896.67,-564.89C4892.87,-575.52 4887,-588.97 4879,-599.2 4876.12,-602.88 4872.77,-606.4 4869.22,-609.68"/>
+<polygon fill="black" stroke="black" points="4867.23,-606.79 4861.86,-615.92 4871.75,-612.12 4867.23,-606.79"/>
+<text text-anchor="middle" x="4903.57" y="-586.6" font-family="Times,serif" font-size="14.00">north</text>
+</g>
+<!-- 5228599879719289676 -->
+<g id="node9" class="node">
+<title>5228599879719289676</title>
+<ellipse fill="none" stroke="black" cx="4991" cy="-434.8" rx="1029.29" ry="18"/>
+<text text-anchor="middle" x="4991" y="-430.6" font-family="Times,serif" font-size="14.00">Tropical Island - The narrow path slopes downward to the north and leads to the mouth of a small cave.  A sign nearby reads  Treasure Vault Access , but different handwriting has crossed this out and written  Lair of Horrible Monster!  All non-pirates keep out! .: </text>
+</g>
+<!-- 13266643934501022318&#45;&gt;5228599879719289676 -->
+<g id="edge12" class="edge">
+<title>13266643934501022318-&gt;5228599879719289676</title>
+<path fill="none" stroke="black" d="M4909.83,-528.28C4915.02,-517.79 4922.39,-504.35 4930.66,-493.6 4939.65,-481.93 4951,-470.42 4961.43,-460.78"/>
+<polygon fill="black" stroke="black" points="4963.68,-463.47 4968.77,-454.18 4959,-458.26 4963.68,-463.47"/>
+<text text-anchor="middle" x="4945.83" y="-497.8" font-family="Times,serif" font-size="14.00">south</text>
+</g>
+<!-- 5228599879719289676&#45;&gt;13266643934501022318 -->
+<g id="edge14" class="edge">
+<title>5228599879719289676-&gt;13266643934501022318</title>
+<path fill="none" stroke="black" d="M4987.41,-453.18C4983.32,-469.47 4975.27,-493.76 4961,-510.4 4957.5,-514.48 4953.4,-518.21 4949.03,-521.58"/>
+<polygon fill="black" stroke="black" points="4947.22,-518.58 4940.99,-527.15 4951.21,-524.33 4947.22,-518.58"/>
+<text text-anchor="middle" x="4986.79" y="-497.8" font-family="Times,serif" font-size="14.00">north</text>
+</g>
+<!-- 3407442578618486275 -->
+<g id="node10" class="node">
+<title>3407442578618486275</title>
+<ellipse fill="none" stroke="black" cx="5101" cy="-323.2" rx="1194.97" ry="18"/>
+<text text-anchor="middle" x="5101" y="-319" font-family="Times,serif" font-size="14.00">Tropical Island - You are on a narrow path between two steep rock faces which look like they have been here for thousands of years.  Rain trickles down through the vegetation and moss, and through the leaves you can occasionally see a sliver of light hundreds of feet above you where the rock walls end.: </text>
+</g>
+<!-- 5228599879719289676&#45;&gt;3407442578618486275 -->
+<g id="edge15" class="edge">
+<title>5228599879719289676-&gt;3407442578618486275</title>
+<path fill="none" stroke="black" d="M5004.13,-416.37C5012.23,-406.01 5023.06,-392.82 5033.66,-382 5045,-370.42 5058.39,-358.6 5070.23,-348.69"/>
+<polygon fill="black" stroke="black" points="5072.27,-351.55 5077.76,-342.48 5067.82,-346.15 5072.27,-351.55"/>
+<text text-anchor="middle" x="5048.83" y="-386.2" font-family="Times,serif" font-size="14.00">south</text>
+</g>
+<!-- 3407442578618486275&#45;&gt;5228599879719289676 -->
+<g id="edge16" class="edge">
+<title>3407442578618486275-&gt;5228599879719289676</title>
+<path fill="none" stroke="black" d="M5096.03,-341.57C5090.54,-358.1 5080.26,-382.76 5064,-398.8 5059.56,-403.18 5054.47,-407.09 5049.08,-410.57"/>
+<polygon fill="black" stroke="black" points="5047.32,-407.54 5040.45,-415.6 5050.85,-413.59 5047.32,-407.54"/>
+<text text-anchor="middle" x="5091.51" y="-386.2" font-family="Times,serif" font-size="14.00">north</text>
+</g>
+<!-- 15784617728142248709 -->
+<g id="node11" class="node">
+<title>15784617728142248709</title>
+<ellipse fill="none" stroke="black" cx="5154" cy="-211.6" rx="987.94" ry="18"/>
+<text text-anchor="middle" x="5154" y="-207.4" font-family="Times,serif" font-size="14.00">Tropical Island - The embankment of the cove come toegher here to your east and west.  Between these tall rock faces, there is a narrow, overgrown path leading north.  You hear waves lapping up on a beach through the dense vegetation to your south.: </text>
+</g>
+<!-- 3407442578618486275&#45;&gt;15784617728142248709 -->
+<g id="edge17" class="edge">
+<title>3407442578618486275-&gt;15784617728142248709</title>
+<path fill="none" stroke="black" d="M5098.22,-304.82C5097.28,-294.47 5097.39,-281.28 5101.66,-270.4 5106.44,-258.24 5115.05,-247.04 5123.92,-237.8"/>
+<polygon fill="black" stroke="black" points="5126.23,-240.43 5130.96,-230.95 5121.35,-235.42 5126.23,-240.43"/>
+<text text-anchor="middle" x="5116.83" y="-274.6" font-family="Times,serif" font-size="14.00">south</text>
+</g>
+<!-- 15784617728142248709&#45;&gt;3407442578618486275 -->
+<g id="edge18" class="edge">
+<title>15784617728142248709-&gt;3407442578618486275</title>
+<path fill="none" stroke="black" d="M5151.1,-230.03C5147.99,-245.71 5142.08,-269.01 5132,-287.2 5130.32,-290.23 5128.35,-293.22 5126.21,-296.1"/>
+<polygon fill="black" stroke="black" points="5123.64,-293.71 5120.02,-303.67 5129.06,-298.15 5123.64,-293.71"/>
+<text text-anchor="middle" x="5153.96" y="-274.6" font-family="Times,serif" font-size="14.00">north</text>
+</g>
+<!-- 8540731737800303818 -->
+<g id="node12" class="node">
+<title>8540731737800303818</title>
+<ellipse fill="none" stroke="black" cx="5423" cy="-122.8" rx="850.12" ry="18"/>
+<text text-anchor="middle" x="5423" y="-118.6" font-family="Times,serif" font-size="14.00">Tropical Island - The large trees here seem to be protecting you from the rain.  As you push through the undergrowth, you can hear birds chirping overhead.  There is a steep rock face to your west blocking your path.: </text>
+</g>
+<!-- 15784617728142248709&#45;&gt;8540731737800303818 -->
+<g id="edge19" class="edge">
+<title>15784617728142248709-&gt;8540731737800303818</title>
+<path fill="none" stroke="black" d="M5208.11,-193.14C5251.43,-179.16 5312.33,-159.51 5358.24,-144.7"/>
+<polygon fill="black" stroke="black" points="5359.09,-148.1 5367.53,-141.7 5356.94,-141.44 5359.09,-148.1"/>
+<text text-anchor="middle" x="5327.76" y="-163" font-family="Times,serif" font-size="14.00">south</text>
+</g>
+<!-- 8540731737800303818&#45;&gt;15784617728142248709 -->
+<g id="edge20" class="edge">
+<title>8540731737800303818-&gt;15784617728142248709</title>
+<path fill="none" stroke="black" d="M5402.76,-141.1C5388.18,-152.64 5367.54,-167.19 5347,-175.6 5332.47,-181.55 5316.91,-186.5 5301.17,-190.6"/>
+<polygon fill="black" stroke="black" points="5300.58,-187.14 5291.72,-192.95 5302.27,-193.93 5300.58,-187.14"/>
+<text text-anchor="middle" x="5392.79" y="-163" font-family="Times,serif" font-size="14.00">north</text>
+</g>
+<!-- 14774841388953723114 -->
+<g id="node13" class="node">
+<title>14774841388953723114</title>
+<ellipse fill="none" stroke="black" cx="7365" cy="-211.6" rx="686.84" ry="18"/>
+<text text-anchor="middle" x="7365" y="-207.4" font-family="Times,serif" font-size="14.00">Beach - This is a sandy beach in a cove on some tropical island.  It is raining.  The ocean is to your south, and heavy foliage is to your north; the beach extends west and east.: </text>
+</g>
+<!-- 8540731737800303818&#45;&gt;14774841388953723114 -->
+<g id="edge21" class="edge">
+<title>8540731737800303818-&gt;14774841388953723114</title>
+<path fill="none" stroke="black" d="M5696.4,-140.31C5884.07,-151.28 6138.9,-165.48 6363.66,-175.6 6545.07,-183.76 6745.05,-191.09 6918.27,-196.9"/>
+<polygon fill="black" stroke="black" points="6918.02,-200.4 6928.13,-197.23 6918.26,-193.4 6918.02,-200.4"/>
+<text text-anchor="middle" x="6378.83" y="-163" font-family="Times,serif" font-size="14.00">south</text>
+</g>
+<!-- 5414921381082749976 -->
+<g id="node14" class="node">
+<title>5414921381082749976</title>
+<ellipse fill="none" stroke="black" cx="5472" cy="-34" rx="559.94" ry="18"/>
+<text text-anchor="middle" x="5472" y="-29.8" font-family="Times,serif" font-size="14.00">Tropical Island - The east embankment of the cove towers over you.  It produces a small waterfall here which cascades excitedly into a pool.: </text>
+</g>
+<!-- 8540731737800303818&#45;&gt;5414921381082749976 -->
+<g id="edge22" class="edge">
+<title>8540731737800303818-&gt;5414921381082749976</title>
+<path fill="none" stroke="black" d="M5437.66,-104.61C5441.94,-99.13 5446.43,-92.89 5450,-86.8 5454.36,-79.35 5458.33,-70.87 5461.66,-62.96"/>
+<polygon fill="black" stroke="black" points="5464.89,-64.32 5465.36,-53.73 5458.39,-61.71 5464.89,-64.32"/>
+<text text-anchor="middle" x="5469.33" y="-74.2" font-family="Times,serif" font-size="14.00">east</text>
+</g>
+<!-- 14774841388953723114&#45;&gt;8540731737800303818 -->
+<g id="edge25" class="edge">
+<title>14774841388953723114-&gt;8540731737800303818</title>
+<path fill="none" stroke="black" d="M7089.87,-194.65C6895.5,-183.7 6628.84,-169.3 6394,-158.8 6228.34,-151.4 6046.73,-144.52 5885.84,-138.85"/>
+<polygon fill="black" stroke="black" points="5886.41,-135.37 5876.3,-138.52 5886.17,-142.37 5886.41,-135.37"/>
+<text text-anchor="middle" x="6729.27" y="-163" font-family="Times,serif" font-size="14.00">north</text>
+</g>
+<!-- 13923783650140622538 -->
+<g id="node15" class="node">
+<title>13923783650140622538</title>
+<ellipse fill="none" stroke="black" cx="7365" cy="-122.8" rx="1044.87" ry="18"/>
+<text text-anchor="middle" x="7365" y="-118.6" font-family="Times,serif" font-size="14.00">Beach - This is a sandy beach in a cove on some tropical island.  It is raining.  To your west is an embankment of the cove which looks too steep to climb.  The beach extends to the east, and there is dense foliage to the north.  The ocean to the south seems uninviting.: </text>
+</g>
+<!-- 14774841388953723114&#45;&gt;13923783650140622538 -->
+<g id="edge23" class="edge">
+<title>14774841388953723114-&gt;13923783650140622538</title>
+<path fill="none" stroke="black" d="M7350.25,-193.14C7346.62,-187.84 7343.23,-181.77 7341.34,-175.6 7339.15,-168.46 7339.15,-165.94 7341.34,-158.8 7342.14,-156.2 7343.2,-153.61 7344.44,-151.1"/>
+<polygon fill="black" stroke="black" points="7347.4,-152.96 7349.48,-142.57 7341.38,-149.39 7347.4,-152.96"/>
+<text text-anchor="middle" x="7354.17" y="-163" font-family="Times,serif" font-size="14.00">west</text>
+</g>
+<!-- 6336717595021973895 -->
+<g id="node16" class="node">
+<title>6336717595021973895</title>
+<ellipse fill="none" stroke="black" cx="9399" cy="-122.8" rx="971.33" ry="18"/>
+<text text-anchor="middle" x="9399" y="-118.6" font-family="Times,serif" font-size="14.00">Beach - This is a sandy beach in a cove on some tropical island.  It is raining.  The steep cove embankment to your east blocks your path, and the ocean waters here look unsafe.  The beach extends to the west, and there is dense foliage to the north.: </text>
+</g>
+<!-- 14774841388953723114&#45;&gt;6336717595021973895 -->
+<g id="edge24" class="edge">
+<title>14774841388953723114-&gt;6336717595021973895</title>
+<path fill="none" stroke="black" d="M7714.66,-195.68C8075.61,-180.27 8637.37,-156.3 9011.61,-140.33"/>
+<polygon fill="black" stroke="black" points="9011.55,-143.84 9021.39,-139.91 9011.25,-136.84 9011.55,-143.84"/>
+<text text-anchor="middle" x="8575.06" y="-163" font-family="Times,serif" font-size="14.00">east</text>
+</g>
+<!-- 5414921381082749976&#45;&gt;15784617728142248709 -->
+<g id="edge30" class="edge">
+<title>5414921381082749976-&gt;15784617728142248709</title>
+<path fill="none" stroke="black" d="M5101.19,-47.87C4847.89,-58.54 4554.49,-75.39 4534.45,-96.8 4521.08,-111.08 4521.42,-126.22 4534.45,-140.8 4556.22,-165.16 4695.25,-182.07 4836.1,-193.13"/>
+<polygon fill="black" stroke="black" points="4835.79,-196.62 4846.03,-193.9 4836.33,-189.64 4835.79,-196.62"/>
+<text text-anchor="middle" x="4549.22" y="-118.6" font-family="Times,serif" font-size="14.00">north</text>
+</g>
+<!-- 5414921381082749976&#45;&gt;8540731737800303818 -->
+<g id="edge32" class="edge">
+<title>5414921381082749976-&gt;8540731737800303818</title>
+<path fill="none" stroke="black" d="M5436.23,-52.37C5429.84,-57.17 5424.04,-63.01 5420.34,-70 5416.64,-76.97 5415.79,-85.24 5416.26,-93.11"/>
+<polygon fill="black" stroke="black" points="5412.79,-93.57 5417.61,-103 5419.73,-92.62 5412.79,-93.57"/>
+<text text-anchor="middle" x="5433.17" y="-74.2" font-family="Times,serif" font-size="14.00">west</text>
+</g>
+<!-- 5414921381082749976&#45;&gt;6336717595021973895 -->
+<g id="edge31" class="edge">
+<title>5414921381082749976-&gt;6336717595021973895</title>
+<path fill="none" stroke="black" d="M5863.55,-47.23C6258.9,-59.15 6887.13,-76.86 7430.66,-86.8 7869.87,-94.83 7979.79,-88.98 8419,-96.8 8565.67,-99.41 8724.67,-103.1 8871.07,-106.84"/>
+<polygon fill="black" stroke="black" points="8870.88,-110.34 8880.97,-107.1 8871.06,-103.34 8870.88,-110.34"/>
+<text text-anchor="middle" x="7445.83" y="-74.2" font-family="Times,serif" font-size="14.00">south</text>
+</g>
+<!-- 13923783650140622538&#45;&gt;8540731737800303818 -->
+<g id="edge29" class="edge">
+<title>13923783650140622538-&gt;8540731737800303818</title>
+<path fill="none" stroke="black" d="M6319.76,-122.8C6308.02,-122.8 6296.3,-122.8 6284.59,-122.8"/>
+<polygon fill="black" stroke="black" points="6284.89,-119.3 6274.89,-122.8 6284.89,-126.3 6284.89,-119.3"/>
+<text text-anchor="middle" x="6296.63" y="-130" font-family="Times,serif" font-size="14.00">north</text>
+</g>
+<!-- 13923783650140622538&#45;&gt;14774841388953723114 -->
+<g id="edge28" class="edge">
+<title>13923783650140622538-&gt;14774841388953723114</title>
+<path fill="none" stroke="black" d="M7366.19,-141.24C7366.52,-146.84 7366.84,-153.08 7367,-158.8 7367.21,-166.26 7367.21,-168.14 7367,-175.6 7366.94,-177.66 7366.86,-179.78 7366.77,-181.91"/>
+<polygon fill="black" stroke="black" points="7363.29,-181.48 7366.27,-191.65 7370.28,-181.84 7363.29,-181.48"/>
+<text text-anchor="middle" x="7378.04" y="-163" font-family="Times,serif" font-size="14.00">east</text>
+</g>
+<!-- 6336717595021973895&#45;&gt;14774841388953723114 -->
+<g id="edge26" class="edge">
+<title>6336717595021973895-&gt;14774841388953723114</title>
+<path fill="none" stroke="black" d="M9168.1,-140.76C9006.33,-152.11 8785.07,-166.57 8590,-175.6 8364.63,-186.03 8115.78,-193.83 7901.58,-199.38"/>
+<polygon fill="black" stroke="black" points="7901.53,-195.88 7891.62,-199.64 7901.71,-202.88 7901.53,-195.88"/>
+<text text-anchor="middle" x="8892.18" y="-163" font-family="Times,serif" font-size="14.00">west</text>
+</g>
+<!-- 6336717595021973895&#45;&gt;5414921381082749976 -->
+<g id="edge27" class="edge">
+<title>6336717595021973895-&gt;5414921381082749976</title>
+<path fill="none" stroke="black" d="M8893.84,-107C8503.63,-95.87 7950.13,-80.76 7465,-70 6960.49,-58.81 6384.08,-49.02 5981.38,-42.65"/>
+<polygon fill="black" stroke="black" points="5981.68,-39.16 5971.62,-42.5 5981.56,-46.16 5981.68,-39.16"/>
+<text text-anchor="middle" x="8118.01" y="-74.2" font-family="Times,serif" font-size="14.00">north</text>
+</g>
+<!-- 9071313073423261533&#45;&gt;7030527366688144785 -->
+<g id="edge41" class="edge">
+<title>9071313073423261533-&gt;7030527366688144785</title>
+<path fill="none" stroke="black" d="M791.35,-1165.55C882.08,-1176.96 1006.63,-1191.51 1116.66,-1200.4 1232.86,-1209.79 1359.61,-1216.93 1474.63,-1222.23"/>
+<polygon fill="black" stroke="black" points="1474.42,-1225.73 1484.57,-1222.69 1474.74,-1218.74 1474.42,-1225.73"/>
+<text text-anchor="middle" x="1131.83" y="-1187.8" font-family="Times,serif" font-size="14.00">south</text>
+</g>
+<!-- 4376900119788728244 -->
+<g id="node20" class="node">
+<title>4376900119788728244</title>
+<ellipse fill="none" stroke="black" cx="558" cy="-635.2" rx="541.5" ry="18"/>
+<text text-anchor="middle" x="558" y="-631" font-family="Times,serif" font-size="14.00">Vault Lock - You are in a grid of rooms that control the door to the vault.The floor of this room is a large mosaic depicting a '*' symbol.: </text>
+</g>
+<!-- 9071313073423261533&#45;&gt;4376900119788728244 -->
+<g id="edge39" class="edge">
+<title>9071313073423261533-&gt;4376900119788728244</title>
+<path fill="none" stroke="black" d="M220.77,-1136.61C150.72,-1131.34 96.4,-1123.42 82,-1111.6 10.38,-1052.81 38.4,-1001.64 32,-909.2 25.4,-813.78 -31.83,-765.23 32,-694 49.41,-674.57 154.93,-661 266.95,-651.92"/>
+<polygon fill="black" stroke="black" points="266.96,-655.43 276.65,-651.15 266.4,-648.45 266.96,-655.43"/>
+<text text-anchor="middle" x="47.77" y="-921.4" font-family="Times,serif" font-size="14.00">north</text>
+</g>
+<!-- 17521473894535830629 -->
+<g id="node21" class="node">
+<title>17521473894535830629</title>
+<ellipse fill="none" stroke="black" cx="663" cy="-1058.8" rx="541.5" ry="18"/>
+<text text-anchor="middle" x="663" y="-1054.6" font-family="Times,serif" font-size="14.00">Vault Lock - You are in a grid of rooms that control the door to the vault.The floor of this room is a large mosaic depicting a '*' symbol.: </text>
+</g>
+<!-- 9071313073423261533&#45;&gt;17521473894535830629 -->
+<g id="edge40" class="edge">
+<title>9071313073423261533-&gt;17521473894535830629</title>
+<path fill="none" stroke="black" d="M650.25,-1129.27C646.98,-1123.88 643.92,-1117.73 642.23,-1111.6 640.26,-1104.4 640.26,-1102 642.23,-1094.8 642.94,-1092.21 643.9,-1089.62 645.01,-1087.09"/>
+<polygon fill="black" stroke="black" points="647.99,-1088.95 649.55,-1078.47 641.79,-1085.69 647.99,-1088.95"/>
+<text text-anchor="middle" x="653.12" y="-1099" font-family="Times,serif" font-size="14.00">east</text>
+</g>
+<!-- 2375424416964404982&#45;&gt;7030527366688144785 -->
+<g id="edge73" class="edge">
+<title>2375424416964404982-&gt;7030527366688144785</title>
+<path fill="none" stroke="black" d="M2149.87,-761.19C2225.7,-769.78 2292.72,-783.57 2324,-805.6 2366.39,-835.45 2352.36,-865.66 2358,-917.2 2378.09,-1100.93 2125.32,-1183.02 1969.63,-1215.98"/>
+<polygon fill="black" stroke="black" points="1969.15,-1212.5 1960.07,-1217.96 1970.57,-1219.35 1969.15,-1212.5"/>
+<text text-anchor="middle" x="2356.35" y="-1010.2" font-family="Times,serif" font-size="14.00">west</text>
+</g>
+<!-- 2375424416964404982&#45;&gt;10987204422680133858 -->
+<g id="edge72" class="edge">
+<title>2375424416964404982-&gt;10987204422680133858</title>
+<path fill="none" stroke="black" d="M1809.31,-728.51C1810.8,-722.92 1812.22,-716.65 1813,-710.8 1815.01,-695.71 1815.39,-678.74 1815.2,-664.81"/>
+<polygon fill="black" stroke="black" points="1818.71,-664.89 1814.96,-654.98 1811.71,-665.07 1818.71,-664.89"/>
+<text text-anchor="middle" x="1829.72" y="-698.2" font-family="Times,serif" font-size="14.00">south</text>
+</g>
+<!-- 2375424416964404982&#45;&gt;17521473894535830629 -->
+<g id="edge70" class="edge">
+<title>2375424416964404982-&gt;17521473894535830629</title>
+<path fill="none" stroke="black" d="M2125.51,-761.76C2275.27,-779.88 2404.35,-820.24 2323,-909.2 2242.91,-996.78 1583.6,-1033.14 1120.43,-1047.96"/>
+<polygon fill="black" stroke="black" points="1120.58,-1044.45 1110.7,-1048.27 1120.81,-1051.45 1120.58,-1044.45"/>
+<text text-anchor="middle" x="2326.91" y="-921.4" font-family="Times,serif" font-size="14.00">north</text>
+</g>
+<!-- 17858411142283036711 -->
+<g id="node26" class="node">
+<title>17858411142283036711</title>
+<ellipse fill="none" stroke="black" cx="676" cy="-858.4" rx="539.89" ry="18"/>
+<text text-anchor="middle" x="676" y="-854.2" font-family="Times,serif" font-size="14.00">Vault Lock - You are in a grid of rooms that control the door to the vault.The floor of this room is a large mosaic depicting a '-' symbol.: </text>
+</g>
+<!-- 2375424416964404982&#45;&gt;17858411142283036711 -->
+<g id="edge71" class="edge">
+<title>2375424416964404982-&gt;17858411142283036711</title>
+<path fill="none" stroke="black" d="M1766.65,-765.15C1725.76,-783.19 1657.77,-810.44 1596,-822.4 1569.2,-827.59 1308.89,-837.21 1072,-845.05"/>
+<polygon fill="black" stroke="black" points="1072.13,-841.55 1062.25,-845.38 1072.36,-848.54 1072.13,-841.55"/>
+<text text-anchor="middle" x="1671.37" y="-809.8" font-family="Times,serif" font-size="14.00">east</text>
+</g>
+<!-- 8945159030153720476&#45;&gt;10987204422680133858 -->
+<g id="edge79" class="edge">
+<title>8945159030153720476-&gt;10987204422680133858</title>
+<path fill="none" stroke="black" d="M1773.2,-564.7C1778.33,-570.09 1783.69,-576.24 1788,-582.4 1793.3,-589.97 1798.14,-598.77 1802.17,-606.94"/>
+<polygon fill="black" stroke="black" points="1798.91,-608.24 1806.33,-615.8 1805.25,-605.26 1798.91,-608.24"/>
+<text text-anchor="middle" x="1810.75" y="-586.6" font-family="Times,serif" font-size="14.00">west</text>
+</g>
+<!-- 8945159030153720476&#45;&gt;17858411142283036711 -->
+<g id="edge77" class="edge">
+<title>8945159030153720476-&gt;17858411142283036711</title>
+<path fill="none" stroke="black" d="M1417.81,-561C1349.33,-570.27 1290.43,-585.24 1265,-609.2 1231.57,-640.7 1256.35,-666.04 1246,-710.8 1236.98,-749.8 1234.84,-759.69 1222,-797.6 1218.19,-808.86 1221.63,-815.43 1212,-822.4 1197.93,-832.58 1146.68,-839.8 1081.08,-844.92"/>
+<polygon fill="black" stroke="black" points="1081.21,-841.4 1071.5,-845.64 1081.73,-848.38 1081.21,-841.4"/>
+<text text-anchor="middle" x="1263.24" y="-698.2" font-family="Times,serif" font-size="14.00">north</text>
+</g>
+<!-- 2605361348070033667 -->
+<g id="node30" class="node">
+<title>2605361348070033667</title>
+<ellipse fill="none" stroke="black" cx="1755" cy="-434.8" rx="541.5" ry="18"/>
+<text text-anchor="middle" x="1755" y="-430.6" font-family="Times,serif" font-size="14.00">Vault Lock - You are in a grid of rooms that control the door to the vault.The floor of this room is a large mosaic depicting a '*' symbol.: </text>
+</g>
+<!-- 8945159030153720476&#45;&gt;2605361348070033667 -->
+<g id="edge78" class="edge">
+<title>8945159030153720476-&gt;2605361348070033667</title>
+<path fill="none" stroke="black" d="M1738.95,-528.11C1735,-522.82 1731.31,-516.71 1729.23,-510.4 1724.09,-494.74 1729.47,-477.32 1736.63,-463.25"/>
+<polygon fill="black" stroke="black" points="1739.67,-464.98 1741.55,-454.55 1733.58,-461.53 1739.67,-464.98"/>
+<text text-anchor="middle" x="1740.12" y="-497.8" font-family="Times,serif" font-size="14.00">east</text>
+</g>
+<!-- 4376900119788728244&#45;&gt;9071313073423261533 -->
+<g id="edge43" class="edge">
+<title>4376900119788728244-&gt;9071313073423261533</title>
+<path fill="none" stroke="black" d="M278.74,-651.02C177.07,-662.7 79.12,-683.56 47,-720.8 25.31,-745.95 30.7,-888.07 45,-909.2 50.37,-917.13 58.54,-910.14 65,-917.2 115.01,-971.84 56.46,-1028.94 113,-1076.8 145.98,-1104.72 223.48,-1121.64 310.22,-1131.84"/>
+<polygon fill="black" stroke="black" points="309.56,-1135.29 319.89,-1132.94 310.35,-1128.33 309.56,-1135.29"/>
+<text text-anchor="middle" x="92.14" y="-921.4" font-family="Times,serif" font-size="14.00">south</text>
+</g>
+<!-- 12233752060051337683 -->
+<g id="node22" class="node">
+<title>12233752060051337683</title>
+<ellipse fill="none" stroke="black" cx="606" cy="-746.8" rx="550.07" ry="18"/>
+<text text-anchor="middle" x="606" y="-742.6" font-family="Times,serif" font-size="14.00">Vault Lock - You are in a grid of rooms that control the door to the vault.The floor of this room is a large mosaic depicting the number '8'.: </text>
+</g>
+<!-- 4376900119788728244&#45;&gt;12233752060051337683 -->
+<g id="edge42" class="edge">
+<title>4376900119788728244-&gt;12233752060051337683</title>
+<path fill="none" stroke="black" d="M554.82,-653.53C552.79,-669.35 552.04,-692.93 561.23,-710.8 563.05,-714.33 565.4,-717.61 568.07,-720.64"/>
+<polygon fill="black" stroke="black" points="565.54,-723.06 575.18,-727.44 570.38,-718 565.54,-723.06"/>
+<text text-anchor="middle" x="572.12" y="-698.2" font-family="Times,serif" font-size="14.00">east</text>
+</g>
+<!-- 17521473894535830629&#45;&gt;9071313073423261533 -->
+<g id="edge47" class="edge">
+<title>17521473894535830629-&gt;9071313073423261533</title>
+<path fill="none" stroke="black" d="M663.6,-1077.24C663.76,-1082.85 663.92,-1089.09 664,-1094.8 664.11,-1102.27 664.11,-1104.13 664,-1111.6 663.97,-1113.65 663.93,-1115.77 663.89,-1117.91"/>
+<polygon fill="black" stroke="black" points="660.39,-1117.56 663.64,-1127.64 667.39,-1117.74 660.39,-1117.56"/>
+<text text-anchor="middle" x="676.91" y="-1099" font-family="Times,serif" font-size="14.00">west</text>
+</g>
+<!-- 17521473894535830629&#45;&gt;2375424416964404982 -->
+<g id="edge46" class="edge">
+<title>17521473894535830629-&gt;2375424416964404982</title>
+<path fill="none" stroke="black" d="M469.24,-1041.54C381.72,-1030.83 290.3,-1013.88 256,-988 228.14,-966.97 250.74,-937.01 222,-917.2 204.56,-905.18 141.34,-924.8 127,-909.2 106.31,-886.69 105.82,-862.46 127,-840.4 167.55,-798.17 1121.56,-801.12 1180,-797.6 1324.25,-788.92 1487.01,-775.82 1610.12,-765.23"/>
+<polygon fill="black" stroke="black" points="1610.36,-768.72 1620.03,-764.38 1609.76,-761.75 1610.36,-768.72"/>
+<text text-anchor="middle" x="250.8" y="-921.4" font-family="Times,serif" font-size="14.00">south</text>
+</g>
+<!-- 17521473894535830629&#45;&gt;12233752060051337683 -->
+<g id="edge44" class="edge">
+<title>17521473894535830629-&gt;12233752060051337683</title>
+<path fill="none" stroke="black" d="M335.9,-1044.08C263.53,-1038.86 203.54,-1031.9 188,-1022.8 139.4,-994.36 165.14,-948 118,-917.2 100.63,-905.85 85.36,-925.08 72,-909.2 42.36,-873.96 41.24,-839.87 72,-805.6 89.56,-786.04 195.23,-772.5 307.99,-763.47"/>
+<polygon fill="black" stroke="black" points="308.07,-766.97 317.77,-762.7 307.52,-759.99 308.07,-766.97"/>
+<text text-anchor="middle" x="150.53" y="-921.4" font-family="Times,serif" font-size="14.00">north</text>
+</g>
+<!-- 14256037300005793995 -->
+<g id="node23" class="node">
+<title>14256037300005793995</title>
+<ellipse fill="none" stroke="black" cx="820" cy="-970" rx="554.9" ry="18"/>
+<text text-anchor="middle" x="820" y="-965.8" font-family="Times,serif" font-size="14.00">Vault Lock - You are in a grid of rooms that control the door to the vault.The floor of this room is a large mosaic depicting the number '11'.: </text>
+</g>
+<!-- 17521473894535830629&#45;&gt;14256037300005793995 -->
+<g id="edge45" class="edge">
+<title>17521473894535830629-&gt;14256037300005793995</title>
+<path fill="none" stroke="black" d="M694.39,-1040.44C718.67,-1027.02 752.5,-1008.32 778.93,-993.71"/>
+<polygon fill="black" stroke="black" points="780.28,-996.96 787.34,-989.06 776.89,-990.83 780.28,-996.96"/>
+<text text-anchor="middle" x="766.44" y="-1010.2" font-family="Times,serif" font-size="14.00">east</text>
+</g>
+<!-- 12233752060051337683&#45;&gt;4376900119788728244 -->
+<g id="edge76" class="edge">
+<title>12233752060051337683-&gt;4376900119788728244</title>
+<path fill="none" stroke="black" d="M598.5,-728.67C590.94,-711.4 579.13,-684.46 570.22,-664.1"/>
+<polygon fill="black" stroke="black" points="573.43,-662.71 566.21,-654.95 567.02,-665.52 573.43,-662.71"/>
+<text text-anchor="middle" x="603.31" y="-698.2" font-family="Times,serif" font-size="14.00">west</text>
+</g>
+<!-- 12233752060051337683&#45;&gt;17521473894535830629 -->
+<g id="edge75" class="edge">
+<title>12233752060051337683-&gt;17521473894535830629</title>
+<path fill="none" stroke="black" d="M288.44,-761.86C140.09,-780.01 11.92,-820.36 92,-909.2 103.52,-921.98 154.23,-908.39 169,-917.2 217.78,-946.31 191.92,-994.2 241,-1022.8 254.37,-1030.59 304.59,-1037.04 365.98,-1042.19"/>
+<polygon fill="black" stroke="black" points="365.39,-1045.66 375.64,-1042.98 365.96,-1038.68 365.39,-1045.66"/>
+<text text-anchor="middle" x="203.25" y="-921.4" font-family="Times,serif" font-size="14.00">south</text>
+</g>
+<!-- 4315320095550544774 -->
+<g id="node24" class="node">
+<title>4315320095550544774</title>
+<ellipse fill="none" stroke="black" cx="1774" cy="-858.4" rx="539.89" ry="18"/>
+<text text-anchor="middle" x="1774" y="-854.2" font-family="Times,serif" font-size="14.00">Vault Lock - You are in a grid of rooms that control the door to the vault.The floor of this room is a large mosaic depicting a '-' symbol.: </text>
+</g>
+<!-- 12233752060051337683&#45;&gt;4315320095550544774 -->
+<g id="edge74" class="edge">
+<title>12233752060051337683-&gt;4315320095550544774</title>
+<path fill="none" stroke="black" d="M781.44,-764.31C909.72,-775.68 1088.01,-790.07 1245,-797.6 1269.48,-798.77 1662.42,-798.94 1686,-805.6 1706.2,-811.3 1726.55,-822.81 1742.58,-833.54"/>
+<polygon fill="black" stroke="black" points="1740.51,-836.36 1750.72,-839.19 1744.5,-830.61 1740.51,-836.36"/>
+<text text-anchor="middle" x="1735.15" y="-809.8" font-family="Times,serif" font-size="14.00">east</text>
+</g>
+<!-- 14256037300005793995&#45;&gt;17521473894535830629 -->
+<g id="edge51" class="edge">
+<title>14256037300005793995-&gt;17521473894535830629</title>
+<path fill="none" stroke="black" d="M731.02,-988.18C719.05,-992.78 707.44,-998.61 697.34,-1006 688.61,-1012.39 681.45,-1021.72 675.97,-1030.71"/>
+<polygon fill="black" stroke="black" points="673.04,-1028.77 671.24,-1039.21 679.16,-1032.17 673.04,-1028.77"/>
+<text text-anchor="middle" x="710.17" y="-1010.2" font-family="Times,serif" font-size="14.00">west</text>
+</g>
+<!-- 14256037300005793995&#45;&gt;4315320095550544774 -->
+<g id="edge48" class="edge">
+<title>14256037300005793995-&gt;4315320095550544774</title>
+<path fill="none" stroke="black" d="M966.45,-952.18C1142.31,-931.97 1436.11,-898.22 1616.67,-877.47"/>
+<polygon fill="black" stroke="black" points="1616.83,-880.98 1626.36,-876.36 1616.03,-874.03 1616.83,-880.98"/>
+<text text-anchor="middle" x="1283.17" y="-921.4" font-family="Times,serif" font-size="14.00">north</text>
+</g>
+<!-- 468269820676516598 -->
+<g id="node25" class="node">
+<title>468269820676516598</title>
+<ellipse fill="none" stroke="black" cx="1850" cy="-211.6" rx="541.5" ry="18"/>
+<text text-anchor="middle" x="1850" y="-207.4" font-family="Times,serif" font-size="14.00">Vault Lock - You are in a grid of rooms that control the door to the vault.The floor of this room is a large mosaic depicting a '*' symbol.: </text>
+</g>
+<!-- 14256037300005793995&#45;&gt;468269820676516598 -->
+<g id="edge49" class="edge">
+<title>14256037300005793995-&gt;468269820676516598</title>
+<path fill="none" stroke="black" d="M659.79,-952.29C550.14,-941.25 401.39,-927.06 270,-917.2 254.13,-916.01 137.93,-920.76 127,-909.2 105.99,-886.98 105.83,-862.46 127,-840.4 136.99,-829.99 1155.01,-808.01 1165,-797.6 1188.63,-772.97 1166.86,-754.88 1165,-720.8 1160.77,-643.39 1146,-624.93 1146,-547.4 1146,-547.4 1146,-547.4 1146,-322.2 1146,-275.31 1392.99,-245.52 1594.38,-229.02"/>
+<polygon fill="black" stroke="black" points="1594.56,-232.51 1604.24,-228.22 1593.99,-225.54 1594.56,-232.51"/>
+<text text-anchor="middle" x="1159.52" y="-586.6" font-family="Times,serif" font-size="14.00">east</text>
+</g>
+<!-- 14256037300005793995&#45;&gt;17858411142283036711 -->
+<g id="edge50" class="edge">
+<title>14256037300005793995-&gt;17858411142283036711</title>
+<path fill="none" stroke="black" d="M797.18,-951.63C773.06,-933.28 734.84,-904.18 707.78,-883.58"/>
+<polygon fill="black" stroke="black" points="709.99,-880.87 699.91,-877.6 705.75,-886.44 709.99,-880.87"/>
+<text text-anchor="middle" x="788.59" y="-921.4" font-family="Times,serif" font-size="14.00">south</text>
+</g>
+<!-- 4315320095550544774&#45;&gt;12233752060051337683 -->
+<g id="edge60" class="edge">
+<title>4315320095550544774-&gt;12233752060051337683</title>
+<path fill="none" stroke="black" d="M1598.51,-840.93C1381.93,-820.61 1015.17,-786.19 793.29,-765.37"/>
+<polygon fill="black" stroke="black" points="793.64,-761.89 783.36,-764.44 792.99,-768.86 793.64,-761.89"/>
+<text text-anchor="middle" x="1409.03" y="-809.8" font-family="Times,serif" font-size="14.00">west</text>
+</g>
+<!-- 4315320095550544774&#45;&gt;14256037300005793995 -->
+<g id="edge59" class="edge">
+<title>4315320095550544774-&gt;14256037300005793995</title>
+<path fill="none" stroke="black" d="M1605.61,-875.96C1497.03,-886.31 1352.75,-899.49 1225,-909.2 1167.13,-913.6 1152.25,-910.03 1094.66,-917.2 1032.06,-924.99 962.21,-938.23 908.62,-949.37"/>
+<polygon fill="black" stroke="black" points="907.98,-945.93 898.92,-951.4 909.42,-952.78 907.98,-945.93"/>
+<text text-anchor="middle" x="1109.83" y="-921.4" font-family="Times,serif" font-size="14.00">south</text>
+</g>
+<!-- 16759170172096344183 -->
+<g id="node27" class="node">
+<title>16759170172096344183</title>
+<ellipse fill="none" stroke="black" cx="3150" cy="-323.2" rx="731.89" ry="18"/>
+<text text-anchor="middle" x="3150" y="-319" font-family="Times,serif" font-size="14.00">Vault Door - You stand before the door to the vault; it has a large '30' carved into it.  Affixed to the wall near the door, there is a running hourglass which never seems to run out of sand.: </text>
+</g>
+<!-- 4315320095550544774&#45;&gt;16759170172096344183 -->
+<g id="edge58" class="edge">
+<title>4315320095550544774-&gt;16759170172096344183</title>
+<path fill="none" stroke="black" d="M2124.48,-844.32C2230.72,-835.68 2331.56,-821.36 2378,-797.6 2404.29,-784.15 2422,-777.33 2422,-747.8 2422,-747.8 2422,-747.8 2422,-433.8 2422,-426.17 2472.04,-396.2 2521,-382 2582.59,-364.13 2719.21,-350.53 2849.44,-341.02"/>
+<polygon fill="black" stroke="black" points="2849.57,-344.52 2859.3,-340.31 2849.07,-337.54 2849.57,-344.52"/>
+<text text-anchor="middle" x="2432.88" y="-586.6" font-family="Times,serif" font-size="14.00">east</text>
+</g>
+<!-- 468269820676516598&#45;&gt;14256037300005793995 -->
+<g id="edge54" class="edge">
+<title>468269820676516598-&gt;14256037300005793995</title>
+<path fill="none" stroke="black" d="M2144.19,-227.11C2260.95,-241.21 2368,-268.71 2368,-322.2 2368,-547.4 2368,-547.4 2368,-547.4 2368,-570.59 2368.91,-576.65 2374.34,-599.2 2375.45,-603.8 2376.9,-604.6 2378,-609.2 2397.43,-690.65 2392.38,-715.11 2378,-797.6 2372.65,-828.27 2370.18,-914.38 2346,-934 2326.44,-949.87 1791.3,-959.24 1360.22,-964.23"/>
+<polygon fill="black" stroke="black" points="1360.25,-960.73 1350.29,-964.34 1360.33,-967.73 1360.25,-960.73"/>
+<text text-anchor="middle" x="2387.17" y="-586.6" font-family="Times,serif" font-size="14.00">west</text>
+</g>
+<!-- 468269820676516598&#45;&gt;16759170172096344183 -->
+<g id="edge52" class="edge">
+<title>468269820676516598-&gt;16759170172096344183</title>
+<path fill="none" stroke="black" d="M2043.15,-228.88C2283.25,-249.13 2691.57,-283.55 2939.47,-304.45"/>
+<polygon fill="black" stroke="black" points="2939.02,-307.93 2949.28,-305.28 2939.61,-300.95 2939.02,-307.93"/>
+<text text-anchor="middle" x="2744.28" y="-274.6" font-family="Times,serif" font-size="14.00">north</text>
+</g>
+<!-- 7850067408082970598 -->
+<g id="node28" class="node">
+<title>7850067408082970598</title>
+<ellipse fill="none" stroke="black" cx="1794" cy="-323.2" rx="554.9" ry="18"/>
+<text text-anchor="middle" x="1794" y="-319" font-family="Times,serif" font-size="14.00">Vault Lock - You are in a grid of rooms that control the door to the vault.The floor of this room is a large mosaic depicting the number '18'.: </text>
+</g>
+<!-- 468269820676516598&#45;&gt;7850067408082970598 -->
+<g id="edge53" class="edge">
+<title>468269820676516598-&gt;7850067408082970598</title>
+<path fill="none" stroke="black" d="M1827.87,-229.91C1816.36,-240.29 1803.34,-254.54 1796.66,-270.4 1793.68,-277.48 1792.39,-285.6 1792,-293.27"/>
+<polygon fill="black" stroke="black" points="1788.5,-293.24 1792,-303.24 1795.5,-293.23 1788.5,-293.24"/>
+<text text-anchor="middle" x="1811.83" y="-274.6" font-family="Times,serif" font-size="14.00">south</text>
+</g>
+<!-- 17858411142283036711&#45;&gt;2375424416964404982 -->
+<g id="edge64" class="edge">
+<title>17858411142283036711-&gt;2375424416964404982</title>
+<path fill="none" stroke="black" d="M1082.97,-846.23C1239.53,-840.53 1398.92,-832.61 1475,-822.4 1564.63,-810.37 1665.82,-785.72 1732.03,-768.04"/>
+<polygon fill="black" stroke="black" points="1732.54,-771.53 1741.29,-765.55 1730.72,-764.77 1732.54,-771.53"/>
+<text text-anchor="middle" x="1579.11" y="-809.8" font-family="Times,serif" font-size="14.00">west</text>
+</g>
+<!-- 17858411142283036711&#45;&gt;8945159030153720476 -->
+<g id="edge63" class="edge">
+<title>17858411142283036711-&gt;8945159030153720476</title>
+<path fill="none" stroke="black" d="M1084.29,-846.3C1143.35,-841.07 1188.33,-833.45 1200,-822.4 1241.75,-782.88 1203.68,-750.23 1215.66,-694 1226.48,-643.24 1209.35,-614.66 1250,-582.4 1262.15,-572.76 1305.98,-565.78 1363.1,-560.72"/>
+<polygon fill="black" stroke="black" points="1363.13,-564.23 1372.8,-559.89 1362.54,-557.25 1363.13,-564.23"/>
+<text text-anchor="middle" x="1230.83" y="-698.2" font-family="Times,serif" font-size="14.00">south</text>
+</g>
+<!-- 17858411142283036711&#45;&gt;14256037300005793995 -->
+<g id="edge61" class="edge">
+<title>17858411142283036711-&gt;14256037300005793995</title>
+<path fill="none" stroke="black" d="M681.81,-876.9C688.26,-893.76 700.22,-918.87 718.45,-934 724.33,-938.88 730.93,-943.1 737.87,-946.73"/>
+<polygon fill="black" stroke="black" points="736.33,-949.88 746.87,-951.01 739.34,-943.56 736.33,-949.88"/>
+<text text-anchor="middle" x="733.22" y="-921.4" font-family="Times,serif" font-size="14.00">north</text>
+</g>
+<!-- 17858411142283036711&#45;&gt;7850067408082970598 -->
+<g id="edge62" class="edge">
+<title>17858411142283036711-&gt;7850067408082970598</title>
+<path fill="none" stroke="black" d="M924.52,-841.99C1042.2,-832.17 1161.26,-817.51 1180,-797.6 1238.13,-735.85 1147.15,-478.81 1205,-416.8 1243.65,-375.37 1356.95,-352.44 1473.98,-339.77"/>
+<polygon fill="black" stroke="black" points="1474.23,-343.26 1483.81,-338.73 1473.5,-336.3 1474.23,-343.26"/>
+<text text-anchor="middle" x="1202.54" y="-586.6" font-family="Times,serif" font-size="14.00">east</text>
+</g>
+<!-- 16759170172096344183&#45;&gt;4315320095550544774 -->
+<g id="edge56" class="edge">
+<title>16759170172096344183-&gt;4315320095550544774</title>
+<path fill="none" stroke="black" d="M2909.68,-340.64C2712.96,-357.44 2467,-387.68 2467,-433.8 2467,-747.8 2467,-747.8 2467,-747.8 2467,-783.7 2465.33,-801.69 2436,-822.4 2417.6,-835.39 2348.56,-843.71 2261.57,-849"/>
+<polygon fill="black" stroke="black" points="2261.6,-845.49 2251.82,-849.57 2262.01,-852.48 2261.6,-845.49"/>
+<text text-anchor="middle" x="2479.83" y="-586.6" font-family="Times,serif" font-size="14.00">west</text>
+</g>
+<!-- 16759170172096344183&#45;&gt;468269820676516598 -->
+<g id="edge55" class="edge">
+<title>16759170172096344183-&gt;468269820676516598</title>
+<path fill="none" stroke="black" d="M3036.79,-304.93C2959.76,-293.69 2855.42,-279.5 2763,-270.4 2566.58,-251.06 2345.71,-236.88 2170.42,-227.4"/>
+<polygon fill="black" stroke="black" points="2170.62,-223.91 2160.45,-226.86 2170.24,-230.9 2170.62,-223.91"/>
+<text text-anchor="middle" x="2916.81" y="-274.6" font-family="Times,serif" font-size="14.00">south</text>
+</g>
+<!-- 2818697729045639336 -->
+<g id="node29" class="node">
+<title>2818697729045639336</title>
+<ellipse fill="none" stroke="black" cx="3150" cy="-211.6" rx="238.19" ry="18"/>
+<text text-anchor="middle" x="3150" y="-207.4" font-family="Times,serif" font-size="14.00">custom room - The vault door is sealed. What do you do?: </text>
+</g>
+<!-- 16759170172096344183&#45;&gt;2818697729045639336 -->
+<g id="edge57" class="edge">
+<title>16759170172096344183-&gt;2818697729045639336</title>
+<path fill="none" stroke="black" d="M3150,-305.07C3150,-288.04 3150,-261.6 3150,-241.35"/>
+<polygon fill="black" stroke="black" points="3153.5,-241.48 3150,-231.48 3146.5,-241.48 3153.5,-241.48"/>
+<text text-anchor="middle" x="3164" y="-274.6" font-family="Times,serif" font-size="14.00">vault</text>
+</g>
+<!-- 7850067408082970598&#45;&gt;468269820676516598 -->
+<g id="edge65" class="edge">
+<title>7850067408082970598-&gt;468269820676516598</title>
+<path fill="none" stroke="black" d="M1813.2,-304.97C1818.24,-299.67 1823.3,-293.55 1827,-287.2 1835.34,-272.88 1840.97,-255.21 1844.56,-240.67"/>
+<polygon fill="black" stroke="black" points="1847.89,-241.8 1846.69,-231.27 1841.07,-240.25 1847.89,-241.8"/>
+<text text-anchor="middle" x="1849.27" y="-274.6" font-family="Times,serif" font-size="14.00">north</text>
+</g>
+<!-- 7850067408082970598&#45;&gt;17858411142283036711 -->
+<g id="edge67" class="edge">
+<title>7850067408082970598-&gt;17858411142283036711</title>
+<path fill="none" stroke="black" d="M2032.83,-339.87C2147.25,-352.66 2267.5,-375.65 2305,-416.8 2336.13,-450.96 2310.15,-474.34 2314,-520.4 2314.73,-529.15 2314.61,-592.54 2320.34,-599.2 2333.04,-613.96 2350.9,-593.94 2363,-609.2 2389.01,-642.01 2392,-767.4 2363,-797.6 2357.44,-803.39 1568.56,-829.29 1071.67,-845.04"/>
+<polygon fill="black" stroke="black" points="1071.76,-841.54 1061.87,-845.35 1071.98,-848.53 1071.76,-841.54"/>
+<text text-anchor="middle" x="2333.17" y="-586.6" font-family="Times,serif" font-size="14.00">west</text>
+</g>
+<!-- 7850067408082970598&#45;&gt;2605361348070033667 -->
+<g id="edge66" class="edge">
+<title>7850067408082970598-&gt;2605361348070033667</title>
+<path fill="none" stroke="black" d="M1792.49,-341.67C1790.69,-357.17 1786.87,-380.18 1779,-398.8 1777.87,-401.47 1776.52,-404.15 1775.05,-406.77"/>
+<polygon fill="black" stroke="black" points="1772.13,-404.84 1769.74,-415.16 1778.04,-408.58 1772.13,-404.84"/>
+<text text-anchor="middle" x="1799.66" y="-386.2" font-family="Times,serif" font-size="14.00">south</text>
+</g>
+<!-- 2605361348070033667&#45;&gt;8945159030153720476 -->
+<g id="edge69" class="edge">
+<title>2605361348070033667-&gt;8945159030153720476</title>
+<path fill="none" stroke="black" d="M1755,-453.17C1755,-470.29 1755,-496.74 1755,-516.94"/>
+<polygon fill="black" stroke="black" points="1751.5,-516.76 1755,-526.76 1758.5,-516.76 1751.5,-516.76"/>
+<text text-anchor="middle" x="1767.83" y="-497.8" font-family="Times,serif" font-size="14.00">west</text>
+</g>
+<!-- 2605361348070033667&#45;&gt;7850067408082970598 -->
+<g id="edge68" class="edge">
+<title>2605361348070033667-&gt;7850067408082970598</title>
+<path fill="none" stroke="black" d="M1747.38,-416.62C1743.91,-406.35 1741.38,-393.17 1745.45,-382 1749.77,-370.15 1757.7,-359.04 1765.92,-349.79"/>
+<polygon fill="black" stroke="black" points="1768.38,-352.28 1772.74,-342.62 1763.31,-347.46 1768.38,-352.28"/>
+<text text-anchor="middle" x="1760.22" y="-386.2" font-family="Times,serif" font-size="14.00">north</text>
+</g>
+</g>
+</svg>

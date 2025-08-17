@@ -65,10 +65,6 @@ A graph traversal algorithm combined with Graphviz can create a nice map. Also t
 
 ![maze](maze.svg)
 
-More correct version?
-
-![maze2](maze.svg)
-
 Grab empty lantern and can
 
 ```
@@ -335,3 +331,4 @@ Day 89: Every once in a great while, one of the crewmembers has the same story: 
 Day 144: We are abandoning the mission.  None of us can work out the solution to the puzzle.  I will leave this journal here to help future adventurers, though I am not sure what help it will give.  Good luck!
 ```
 
+![beach](beach.svg)
