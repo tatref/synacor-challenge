@@ -27,6 +27,9 @@ pub struct Vm {
     /// Program Counter
     pc: usize,
 
+    #[serde(skip)]
+    last_instr: Option<Opcode>,
+
     state: VmState,
 
     /// Current output buffer
@@ -112,18 +115,20 @@ impl Default for Vm {
     }
 }
 
-pub trait StopCondition {
-    fn must_stop(&mut self, vm: &Vm) -> Result<bool, Box<dyn std::error::Error>>;
+pub trait StopCondition: Debug {
+    fn must_stop_after_step(&mut self, vm: &Vm) -> Result<bool, Box<dyn std::error::Error>>;
 }
 
+#[derive(Debug)]
 pub struct StopNever;
 
 impl StopCondition for StopNever {
-    fn must_stop(&mut self, _vm: &Vm) -> Result<bool, Box<dyn std::error::Error>> {
+    fn must_stop_after_step(&mut self, _vm: &Vm) -> Result<bool, Box<dyn std::error::Error>> {
         Ok(false)
     }
 }
 
+#[derive(Debug)]
 pub struct StopVmState {
     states: Vec<VmState>,
 }
@@ -137,21 +142,20 @@ impl StopVmState {
 }
 
 impl StopCondition for StopVmState {
-    fn must_stop(&mut self, vm: &Vm) -> Result<bool, Box<dyn std::error::Error>> {
+    fn must_stop_after_step(&mut self, vm: &Vm) -> Result<bool, Box<dyn std::error::Error>> {
         Ok(self.states.contains(&vm.state))
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct StopRet {
     ret_counter: i32,
 }
 
 impl StopCondition for StopRet {
-    fn must_stop(&mut self, vm: &Vm) -> Result<bool, Box<dyn std::error::Error>> {
-        let instr = vm.fetch(vm.ip).unwrap();
-        match instr {
-            Opcode::Ret => {
+    fn must_stop_after_step(&mut self, vm: &Vm) -> Result<bool, Box<dyn std::error::Error>> {
+        match vm.last_instr {
+            Some(Opcode::Ret) => {
                 self.ret_counter -= 1;
 
                 if self.ret_counter < 0 {
@@ -164,7 +168,7 @@ impl StopCondition for StopRet {
                     Ok(false)
                 }
             }
-            Opcode::Call(_) => {
+            Some(Opcode::Call(_)) => {
                 self.ret_counter += 1;
                 Ok(false)
             }
@@ -173,12 +177,16 @@ impl StopCondition for StopRet {
     }
 }
 
+#[derive(Debug)]
 pub struct StopInstructionCounter {
     instuction_counter: usize,
 }
 
 impl StopCondition for StopInstructionCounter {
-    fn must_stop(&mut self, _vm: &Vm) -> Result<bool, Box<dyn std::error::Error>> {
+    //    fn must_stop_before_step(&mut self, _vm: &Vm) -> Result<bool, Box<dyn std::error::Error>> {
+    //        Ok(false)
+    //    }
+    fn must_stop_after_step(&mut self, _vm: &Vm) -> Result<bool, Box<dyn std::error::Error>> {
         if self.instuction_counter == 0 {
             Ok(true)
         } else {
@@ -205,9 +213,15 @@ impl Vm {
         let mut stop_condition = stop_condition.into();
         let mut executed = Vec::new();
 
-        while !stop_condition.must_stop(self)? {
+        self.state = VmState::Running;
+        loop {
             let instr = self.step().unwrap();
+            self.last_instr = Some(instr.1);
             executed.push(instr);
+
+            if stop_condition.must_stop_after_step(self)? {
+                break;
+            }
         }
 
         if self.state == VmState::Halted {
@@ -247,6 +261,7 @@ impl Vm {
             stack: Vec::new(),
             ip: 0,
             pc: 0,
+            last_instr: None,
 
             state: VmState::Running,
 
