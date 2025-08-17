@@ -1,0 +1,537 @@
+<svg width="3432pt" height="1445pt" viewBox="0.00 0.00 3432.14 1445.22" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 1441.22)">
+<title>G</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-1441.22 3428.14,-1441.22 3428.14,4 -4,4"/>
+<!-- 8365075372895872953 -->
+<g id="node1" class="node">
+<title>8365075372895872953</title>
+<polygon fill="none" stroke="green" points="3375.91,-1437.22 2249.49,-1437.22 2249.49,-1401.22 3375.91,-1401.22 3375.91,-1437.22"/>
+<text text-anchor="middle" x="2812.7" y="-1415.02" font-family="Times,serif" font-size="14.00">Foothills - You find yourself standing at the base of an enormous mountain.  At its base to the north, there is a massive doorway.  A sign nearby reads Keep out!  Definitely no treasure within!: tablet</text>
+</g>
+<!-- 16121353451567468662 -->
+<g id="node2" class="node">
+<title>16121353451567468662</title>
+<ellipse fill="none" stroke="black" cx="2144.7" cy="-1330.42" rx="578.48" ry="18"/>
+<text text-anchor="middle" x="2144.7" y="-1326.22" font-family="Times,serif" font-size="14.00">Dark cave - This seems to be the mouth of a deep cave.  As you peer north into the darkness, you think you hear the echoes of bats deeper within.: </text>
+</g>
+<!-- 8365075372895872953&#45;&gt;16121353451567468662 -->
+<g id="edge1" class="edge">
+<title>8365075372895872953-&gt;16121353451567468662</title>
+<path fill="none" stroke="black" d="M2678.32,-1400.76C2564.76,-1386 2402.57,-1364.92 2286.85,-1349.89"/>
+<polygon fill="black" stroke="black" points="2287.32,-1346.42 2276.95,-1348.6 2286.42,-1353.36 2287.32,-1346.42"/>
+<text text-anchor="middle" x="2563.03" y="-1370.62" font-family="Times,serif" font-size="14.00">doorway</text>
+</g>
+<!-- 5327607003674881416 -->
+<g id="node3" class="node">
+<title>5327607003674881416</title>
+<ellipse fill="none" stroke="black" cx="3082.7" cy="-1330.42" rx="341.44" ry="18"/>
+<text text-anchor="middle" x="3082.7" y="-1326.22" font-family="Times,serif" font-size="14.00">Foothills - As you begin to leave, you feel the urge for adventure pulling you back...: </text>
+</g>
+<!-- 8365075372895872953&#45;&gt;5327607003674881416 -->
+<g id="edge2" class="edge">
+<title>8365075372895872953-&gt;5327607003674881416</title>
+<path fill="none" stroke="black" d="M2867.01,-1400.76C2910.78,-1386.69 2972.42,-1366.87 3018.6,-1352.02"/>
+<polygon fill="black" stroke="black" points="3019.51,-1355.41 3027.95,-1349.02 3017.36,-1348.75 3019.51,-1355.41"/>
+<text text-anchor="middle" x="2987.05" y="-1370.62" font-family="Times,serif" font-size="14.00">south</text>
+</g>
+<!-- 16121353451567468662&#45;&gt;8365075372895872953 -->
+<g id="edge4" class="edge">
+<title>16121353451567468662-&gt;8365075372895872953</title>
+<path fill="none" stroke="black" d="M2422.96,-1346.61C2479.01,-1351.53 2537.38,-1357.97 2591.7,-1366.42 2641.21,-1374.11 2696.05,-1386.94 2738.72,-1397.9"/>
+<polygon fill="black" stroke="black" points="2737.83,-1401.29 2748.39,-1400.41 2739.59,-1394.51 2737.83,-1401.29"/>
+<text text-anchor="middle" x="2692.56" y="-1370.62" font-family="Times,serif" font-size="14.00">south</text>
+</g>
+<!-- 9944927317727569731 -->
+<g id="node4" class="node">
+<title>9944927317727569731</title>
+<ellipse fill="none" stroke="black" cx="2091.7" cy="-1241.62" rx="420.53" ry="18"/>
+<text text-anchor="middle" x="2091.7" y="-1237.42" font-family="Times,serif" font-size="14.00">Dark cave - The cave is somewhat narrow here, and the light from the doorway to the south is quite dim.: </text>
+</g>
+<!-- 16121353451567468662&#45;&gt;9944927317727569731 -->
+<g id="edge3" class="edge">
+<title>16121353451567468662-&gt;9944927317727569731</title>
+<path fill="none" stroke="black" d="M2109.41,-1312.15C2102.93,-1307.32 2097,-1301.44 2093.15,-1294.42 2089.36,-1287.5 2088,-1279.25 2087.84,-1271.38"/>
+<polygon fill="black" stroke="black" points="2091.33,-1271.64 2088.3,-1261.48 2084.34,-1271.31 2091.33,-1271.64"/>
+<text text-anchor="middle" x="2107.93" y="-1281.82" font-family="Times,serif" font-size="14.00">north</text>
+</g>
+<!-- 5327607003674881416&#45;&gt;8365075372895872953 -->
+<g id="edge9" class="edge">
+<title>5327607003674881416-&gt;8365075372895872953</title>
+<path fill="none" stroke="black" d="M3062.46,-1348.72C3047.88,-1360.26 3027.24,-1374.81 3006.7,-1383.22 2992.35,-1389.09 2977.01,-1393.98 2961.47,-1398.05"/>
+<polygon fill="black" stroke="black" points="2961.01,-1394.55 2952.16,-1400.37 2962.71,-1401.35 2961.01,-1394.55"/>
+<text text-anchor="middle" x="3052.49" y="-1370.62" font-family="Times,serif" font-size="14.00">north</text>
+</g>
+<!-- 9944927317727569731&#45;&gt;16121353451567468662 -->
+<g id="edge6" class="edge">
+<title>9944927317727569731-&gt;16121353451567468662</title>
+<path fill="none" stroke="black" d="M2108.98,-1259.89C2113.81,-1265.28 2118.8,-1271.44 2122.7,-1277.62 2127.31,-1284.92 2131.36,-1293.35 2134.68,-1301.26"/>
+<polygon fill="black" stroke="black" points="2131.41,-1302.5 2138.33,-1310.52 2137.92,-1299.93 2131.41,-1302.5"/>
+<text text-anchor="middle" x="2146.62" y="-1281.82" font-family="Times,serif" font-size="14.00">south</text>
+</g>
+<!-- 10881724332527995136 -->
+<g id="node5" class="node">
+<title>10881724332527995136</title>
+<ellipse fill="none" stroke="black" cx="2319.7" cy="-1152.82" rx="781.42" ry="18"/>
+<text text-anchor="middle" x="2319.7" y="-1148.62" font-family="Times,serif" font-size="14.00">Dark cave - The cave acoustics dramatically change as you find yourself at a legde above a large chasm.  There is barely enough light here to notice a rope bridge leading out into the dark emptiness.: </text>
+</g>
+<!-- 9944927317727569731&#45;&gt;10881724332527995136 -->
+<g id="edge5" class="edge">
+<title>9944927317727569731-&gt;10881724332527995136</title>
+<path fill="none" stroke="black" d="M2137.29,-1223.26C2173.64,-1209.42 2224.71,-1189.98 2263.57,-1175.19"/>
+<polygon fill="black" stroke="black" points="2264.67,-1178.51 2272.77,-1171.68 2262.18,-1171.97 2264.67,-1178.51"/>
+<text text-anchor="middle" x="2240.9" y="-1193.02" font-family="Times,serif" font-size="14.00">north</text>
+</g>
+<!-- 10881724332527995136&#45;&gt;16121353451567468662 -->
+<g id="edge8" class="edge">
+<title>10881724332527995136-&gt;16121353451567468662</title>
+<path fill="none" stroke="black" d="M2420.36,-1171.1C2488.01,-1187.12 2558.6,-1215.26 2521.7,-1259.62 2500.53,-1285.07 2438.9,-1301.28 2371.45,-1311.59"/>
+<polygon fill="black" stroke="black" points="2371.02,-1308.11 2361.63,-1313.03 2372.04,-1315.04 2371.02,-1308.11"/>
+<text text-anchor="middle" x="2547.01" y="-1237.42" font-family="Times,serif" font-size="14.00">south</text>
+</g>
+<!-- 10632262804544610098 -->
+<g id="node6" class="node">
+<title>10632262804544610098</title>
+<ellipse fill="none" stroke="black" cx="2319.7" cy="-1064.02" rx="532.25" ry="18"/>
+<text text-anchor="middle" x="2319.7" y="-1059.82" font-family="Times,serif" font-size="14.00">Rope bridge - This rope bridge creaks as you walk along it.  You aren't sure how old it is, or whether it can even support your weight.: </text>
+</g>
+<!-- 10881724332527995136&#45;&gt;10632262804544610098 -->
+<g id="edge7" class="edge">
+<title>10881724332527995136-&gt;10632262804544610098</title>
+<path fill="none" stroke="black" d="M2302.13,-1134.35C2297.98,-1129.13 2294.13,-1123.12 2291.94,-1116.82 2289.48,-1109.77 2289.48,-1107.07 2291.94,-1100.02 2292.9,-1097.26 2294.17,-1094.56 2295.65,-1091.96"/>
+<polygon fill="black" stroke="black" points="2298.52,-1093.97 2301.28,-1083.74 2292.74,-1090.01 2298.52,-1093.97"/>
+<text text-anchor="middle" x="2309.82" y="-1104.22" font-family="Times,serif" font-size="14.00">bridge</text>
+</g>
+<!-- 10632262804544610098&#45;&gt;10881724332527995136 -->
+<g id="edge11" class="edge">
+<title>10632262804544610098-&gt;10881724332527995136</title>
+<path fill="none" stroke="black" d="M2324.47,-1082.33C2325.79,-1087.93 2327.04,-1094.2 2327.7,-1100.02 2328.54,-1107.44 2328.54,-1109.4 2327.7,-1116.82 2327.45,-1119 2327.12,-1121.25 2326.74,-1123.5"/>
+<polygon fill="black" stroke="black" points="2323.37,-1122.52 2324.77,-1133.02 2330.22,-1123.93 2323.37,-1122.52"/>
+<text text-anchor="middle" x="2341.54" y="-1104.22" font-family="Times,serif" font-size="14.00">back</text>
+</g>
+<!-- 698241318426060279 -->
+<g id="node7" class="node">
+<title>698241318426060279</title>
+<ellipse fill="none" stroke="black" cx="2319.7" cy="-975.22" rx="770.29" ry="18"/>
+<text text-anchor="middle" x="2319.7" y="-971.02" font-family="Times,serif" font-size="14.00">Falling through the air! - As you continue along the bridge, it snaps!  You try to grab the bridge, but it evades your grasp in the darkness.  You are plummeting quickly downward into the chasm...: </text>
+</g>
+<!-- 10632262804544610098&#45;&gt;698241318426060279 -->
+<g id="edge10" class="edge">
+<title>10632262804544610098-&gt;698241318426060279</title>
+<path fill="none" stroke="black" d="M2319.7,-1045.87C2319.7,-1034.18 2319.7,-1018.41 2319.7,-1004.84"/>
+<polygon fill="black" stroke="black" points="2323.2,-1005.14 2319.7,-995.14 2316.2,-1005.14 2323.2,-1005.14"/>
+<text text-anchor="middle" x="2343.8" y="-1015.42" font-family="Times,serif" font-size="14.00">continue</text>
+</g>
+<!-- 5481805069169804605 -->
+<g id="node8" class="node">
+<title>5481805069169804605</title>
+<ellipse fill="none" stroke="black" cx="2319.7" cy="-886.42" rx="872.39" ry="18"/>
+<text text-anchor="middle" x="2319.7" y="-882.22" font-family="Times,serif" font-size="14.00">Moss cavern - You are standing in a large cavern full of bioluminescent moss.  It must have broken your fall!  The cavern extends to the east and west; at the west end, you think you see a passage leading out of the cavern.: </text>
+</g>
+<!-- 698241318426060279&#45;&gt;5481805069169804605 -->
+<g id="edge12" class="edge">
+<title>698241318426060279-&gt;5481805069169804605</title>
+<path fill="none" stroke="black" d="M2319.7,-957.07C2319.7,-945.38 2319.7,-929.61 2319.7,-916.04"/>
+<polygon fill="black" stroke="black" points="2323.2,-916.34 2319.7,-906.34 2316.2,-916.34 2323.2,-916.34"/>
+<text text-anchor="middle" x="2335.26" y="-926.62" font-family="Times,serif" font-size="14.00">down</text>
+</g>
+<!-- 15525096771922237932 -->
+<g id="node9" class="node">
+<title>15525096771922237932</title>
+<ellipse fill="none" stroke="black" cx="1396.7" cy="-797.62" rx="672.06" ry="18"/>
+<text text-anchor="middle" x="1396.7" y="-793.42" font-family="Times,serif" font-size="14.00">Moss cavern - You are standing in a large cavern full of bioluminescent moss.  The cavern extends to the east.  There is a crevise in the rocks which opens into a passage.: </text>
+</g>
+<!-- 5481805069169804605&#45;&gt;15525096771922237932 -->
+<g id="edge13" class="edge">
+<title>5481805069169804605-&gt;15525096771922237932</title>
+<path fill="none" stroke="black" d="M2138.17,-868.35C1978.92,-853.37 1748.17,-831.67 1586.5,-816.47"/>
+<polygon fill="black" stroke="black" points="1587.26,-813.02 1576.98,-815.57 1586.6,-819.99 1587.26,-813.02"/>
+<text text-anchor="middle" x="1953.7" y="-837.82" font-family="Times,serif" font-size="14.00">west</text>
+</g>
+<!-- 7631285671849925407 -->
+<g id="node10" class="node">
+<title>7631285671849925407</title>
+<ellipse fill="none" stroke="green" cx="2584.7" cy="-797.62" rx="498.03" ry="18"/>
+<text text-anchor="middle" x="2584.7" y="-793.42" font-family="Times,serif" font-size="14.00">Moss cavern - You are standing in a large cavern full of bioluminescent moss.  The cavern extends to the west.: empty lantern</text>
+</g>
+<!-- 5481805069169804605&#45;&gt;7631285671849925407 -->
+<g id="edge14" class="edge">
+<title>5481805069169804605-&gt;7631285671849925407</title>
+<path fill="none" stroke="black" d="M2371.39,-867.98C2401.55,-857.85 2440.36,-844.9 2474.94,-833.62 2489.18,-828.97 2504.49,-824.05 2519.01,-819.4"/>
+<polygon fill="black" stroke="black" points="2520.03,-822.75 2528.5,-816.38 2517.91,-816.08 2520.03,-822.75"/>
+<text text-anchor="middle" x="2485.82" y="-837.82" font-family="Times,serif" font-size="14.00">east</text>
+</g>
+<!-- 15525096771922237932&#45;&gt;5481805069169804605 -->
+<g id="edge15" class="edge">
+<title>15525096771922237932-&gt;5481805069169804605</title>
+<path fill="none" stroke="black" d="M1725.31,-813.75C1805.69,-818.81 1891.39,-825.33 1970.7,-833.62 2050.2,-841.92 2139.32,-855.22 2207.61,-866.26"/>
+<polygon fill="black" stroke="black" points="2206.89,-869.69 2217.32,-867.84 2208.01,-862.78 2206.89,-869.69"/>
+<text text-anchor="middle" x="2106.71" y="-837.82" font-family="Times,serif" font-size="14.00">east</text>
+</g>
+<!-- 17780436859688940574 -->
+<g id="node11" class="node">
+<title>17780436859688940574</title>
+<ellipse fill="none" stroke="black" cx="1396.7" cy="-708.82" rx="732.65" ry="18"/>
+<text text-anchor="middle" x="1396.7" y="-704.62" font-family="Times,serif" font-size="14.00">Passage - You are in a crevise on the west wall of the moss cavern.  A dark passage leads further west.  There is a ladder here which leads down into a smaller, moss-filled cavern below.: </text>
+</g>
+<!-- 15525096771922237932&#45;&gt;17780436859688940574 -->
+<g id="edge16" class="edge">
+<title>15525096771922237932-&gt;17780436859688940574</title>
+<path fill="none" stroke="black" d="M1376.46,-779.14C1371.87,-774 1367.63,-768.03 1365.16,-761.62 1362.49,-754.65 1362.49,-751.79 1365.16,-744.82 1366.28,-741.91 1367.76,-739.1 1369.47,-736.41"/>
+<polygon fill="black" stroke="black" points="1372.23,-738.57 1375.54,-728.5 1366.67,-734.31 1372.23,-738.57"/>
+<text text-anchor="middle" x="1386.93" y="-749.02" font-family="Times,serif" font-size="14.00">passage</text>
+</g>
+<!-- 7631285671849925407&#45;&gt;5481805069169804605 -->
+<g id="edge17" class="edge">
+<title>7631285671849925407-&gt;5481805069169804605</title>
+<path fill="none" stroke="black" d="M2560.42,-815.94C2543.35,-827.34 2519.57,-841.72 2496.7,-850.42 2481.09,-856.36 2464.31,-861.34 2447.51,-865.51"/>
+<polygon fill="black" stroke="black" points="2446.88,-862.06 2437.96,-867.78 2448.5,-868.87 2446.88,-862.06"/>
+<text text-anchor="middle" x="2542.4" y="-837.82" font-family="Times,serif" font-size="14.00">west</text>
+</g>
+<!-- 17780436859688940574&#45;&gt;15525096771922237932 -->
+<g id="edge18" class="edge">
+<title>17780436859688940574-&gt;15525096771922237932</title>
+<path fill="none" stroke="black" d="M1403.84,-726.97C1405.83,-732.56 1407.71,-738.86 1408.7,-744.82 1409.93,-752.18 1409.93,-754.25 1408.7,-761.62 1408.31,-763.94 1407.79,-766.32 1407.18,-768.69"/>
+<polygon fill="black" stroke="black" points="1403.9,-767.43 1404.29,-778.02 1410.59,-769.5 1403.9,-767.43"/>
+<text text-anchor="middle" x="1428.27" y="-749.02" font-family="Times,serif" font-size="14.00">cavern</text>
+</g>
+<!-- 447285304303355626 -->
+<g id="node12" class="node">
+<title>447285304303355626</title>
+<ellipse fill="none" stroke="black" cx="1602.7" cy="-620.02" rx="554.37" ry="18"/>
+<text text-anchor="middle" x="1602.7" y="-615.82" font-family="Times,serif" font-size="14.00">Twisty passages - You are in a maze of twisty little passages, all dimly lit by more bioluminescent moss.  There is a ladder here leading up.: </text>
+</g>
+<!-- 17780436859688940574&#45;&gt;447285304303355626 -->
+<g id="edge19" class="edge">
+<title>17780436859688940574-&gt;447285304303355626</title>
+<path fill="none" stroke="black" d="M1430.35,-690.57C1451.46,-680.03 1479.38,-666.58 1504.72,-656.02 1516.08,-651.28 1528.34,-646.58 1540.2,-642.24"/>
+<polygon fill="black" stroke="black" points="1541.31,-645.57 1549.53,-638.88 1538.94,-638.98 1541.31,-645.57"/>
+<text text-anchor="middle" x="1522.21" y="-660.22" font-family="Times,serif" font-size="14.00">ladder</text>
+</g>
+<!-- 3201119203588921637 -->
+<g id="node13" class="node">
+<title>3201119203588921637</title>
+<ellipse fill="none" stroke="black" cx="768.7" cy="-620.02" rx="262.04" ry="18"/>
+<text text-anchor="middle" x="768.7" y="-615.82" font-family="Times,serif" font-size="14.00">Passage - It is pitch black.  You are likely to be eaten by a grue.: </text>
+</g>
+<!-- 17780436859688940574&#45;&gt;3201119203588921637 -->
+<g id="edge20" class="edge">
+<title>17780436859688940574-&gt;3201119203588921637</title>
+<path fill="none" stroke="black" d="M1272.25,-690.62C1162.4,-675.43 1003.1,-653.41 893.22,-638.23"/>
+<polygon fill="black" stroke="black" points="893.97,-634.8 883.58,-636.9 893.01,-641.73 893.97,-634.8"/>
+<text text-anchor="middle" x="1163.44" y="-660.22" font-family="Times,serif" font-size="14.00">darkness</text>
+</g>
+<!-- 447285304303355626&#45;&gt;17780436859688940574 -->
+<g id="edge30" class="edge">
+<title>447285304303355626-&gt;17780436859688940574</title>
+<path fill="none" stroke="black" d="M1586.02,-638.31C1574.12,-649.7 1557.17,-664.07 1539.7,-672.82 1528.48,-678.44 1516.29,-683.19 1503.94,-687.2"/>
+<polygon fill="black" stroke="black" points="1503.03,-683.81 1494.5,-690.09 1505.09,-690.51 1503.03,-683.81"/>
+<text text-anchor="middle" x="1581.6" y="-660.22" font-family="Times,serif" font-size="14.00">ladder</text>
+</g>
+<!-- 16281999036973417035 -->
+<g id="node18" class="node">
+<title>16281999036973417035</title>
+<ellipse fill="none" stroke="black" cx="1509.7" cy="-353.62" rx="288.33" ry="18"/>
+<text text-anchor="middle" x="1509.7" y="-349.42" font-family="Times,serif" font-size="14.00">Twisty passages - You are in a twisty maze of little passages, all alike.: </text>
+</g>
+<!-- 447285304303355626&#45;&gt;16281999036973417035 -->
+<g id="edge31" class="edge">
+<title>447285304303355626-&gt;16281999036973417035</title>
+<path fill="none" stroke="black" d="M1641.72,-601.73C1648.97,-596.93 1655.79,-591.06 1660.7,-584.02 1710.09,-513.13 1720.6,-451.88 1660.7,-389.62 1654.75,-383.43 1642.39,-378.16 1627.19,-373.72"/>
+<polygon fill="black" stroke="black" points="1628.28,-370.39 1617.71,-371.18 1626.46,-377.15 1628.28,-370.39"/>
+<text text-anchor="middle" x="1716.56" y="-482.62" font-family="Times,serif" font-size="14.00">north</text>
+</g>
+<!-- 16672844538226992313 -->
+<g id="node19" class="node">
+<title>16672844538226992313</title>
+<ellipse fill="none" stroke="black" cx="1509.7" cy="-264.82" rx="288.33" ry="18"/>
+<text text-anchor="middle" x="1509.7" y="-260.62" font-family="Times,serif" font-size="14.00">Twisty passages - You are in a maze of little twisty passages, all alike.: </text>
+</g>
+<!-- 447285304303355626&#45;&gt;16672844538226992313 -->
+<g id="edge32" class="edge">
+<title>447285304303355626-&gt;16672844538226992313</title>
+<path fill="none" stroke="black" d="M2087.2,-611.02C2295.35,-600.83 2491.7,-578.86 2491.7,-532.22 2491.7,-532.22 2491.7,-532.22 2491.7,-352.62 2491.7,-341.29 2483.13,-340.04 2472.7,-335.62 2356.92,-286.51 2046,-270.99 1808.49,-266.56"/>
+<polygon fill="black" stroke="black" points="1808.81,-263.06 1798.75,-266.38 1808.69,-270.06 1808.81,-263.06"/>
+<text text-anchor="middle" x="2506.87" y="-438.22" font-family="Times,serif" font-size="14.00">south</text>
+</g>
+<!-- 2916148824947368487 -->
+<g id="node20" class="node">
+<title>2916148824947368487</title>
+<ellipse fill="none" stroke="black" cx="639.7" cy="-531.22" rx="288.33" ry="18"/>
+<text text-anchor="middle" x="639.7" y="-527.02" font-family="Times,serif" font-size="14.00">Twisty passages - You are in a maze of alike little passages, all twisty.: </text>
+</g>
+<!-- 447285304303355626&#45;&gt;2916148824947368487 -->
+<g id="edge33" class="edge">
+<title>447285304303355626-&gt;2916148824947368487</title>
+<path fill="none" stroke="black" d="M1420.15,-602.56C1244.93,-586.77 982.3,-563.1 810.96,-547.65"/>
+<polygon fill="black" stroke="black" points="811.33,-544.17 801.06,-546.76 810.7,-551.14 811.33,-544.17"/>
+<text text-anchor="middle" x="1218.34" y="-571.42" font-family="Times,serif" font-size="14.00">east</text>
+</g>
+<!-- 1172321899377142759 -->
+<g id="node21" class="node">
+<title>1172321899377142759</title>
+<ellipse fill="none" stroke="black" cx="1282.7" cy="-531.22" rx="288.33" ry="18"/>
+<text text-anchor="middle" x="1282.7" y="-527.02" font-family="Times,serif" font-size="14.00">Twisty passages - You are in a little maze of twisty passages, all alike.: </text>
+</g>
+<!-- 447285304303355626&#45;&gt;1172321899377142759 -->
+<g id="edge34" class="edge">
+<title>447285304303355626-&gt;1172321899377142759</title>
+<path fill="none" stroke="black" d="M1538.71,-601.66C1486.16,-587.41 1411.67,-567.2 1356.58,-552.26"/>
+<polygon fill="black" stroke="black" points="1357.52,-548.88 1346.95,-549.64 1355.68,-555.64 1357.52,-548.88"/>
+<text text-anchor="middle" x="1484.19" y="-571.42" font-family="Times,serif" font-size="14.00">west</text>
+</g>
+<!-- 3201119203588921637&#45;&gt;17780436859688940574 -->
+<g id="edge22" class="edge">
+<title>3201119203588921637-&gt;17780436859688940574</title>
+<path fill="none" stroke="black" d="M952.22,-633.21C1044.56,-639.95 1146.32,-648.46 1191.7,-656.02 1237.71,-663.68 1288.54,-676.5 1328.08,-687.46"/>
+<polygon fill="black" stroke="black" points="1326.89,-690.76 1337.46,-690.09 1328.78,-684.02 1326.89,-690.76"/>
+<text text-anchor="middle" x="1284.5" y="-660.22" font-family="Times,serif" font-size="14.00">back</text>
+</g>
+<!-- 1205054496128142177 -->
+<g id="node14" class="node">
+<title>1205054496128142177</title>
+<ellipse fill="none" stroke="black" cx="601.7" cy="-353.62" rx="540.17" ry="18"/>
+<text text-anchor="middle" x="601.7" y="-349.42" font-family="Times,serif" font-size="14.00">Fumbling around in the darkness - Without a source of light, you have become hopelessly lost and are fumbling around in the darkness.: </text>
+</g>
+<!-- 3201119203588921637&#45;&gt;1205054496128142177 -->
+<g id="edge21" class="edge">
+<title>3201119203588921637-&gt;1205054496128142177</title>
+<path fill="none" stroke="black" d="M580.73,-607.14C378.42,-589.89 76.32,-549.59 7.7,-460.42 -2.06,-447.74 -2.93,-436.37 7.7,-424.42 29.98,-399.37 180.93,-381.83 325.07,-370.6"/>
+<polygon fill="black" stroke="black" points="325.1,-374.11 334.81,-369.85 324.57,-367.13 325.1,-374.11"/>
+<text text-anchor="middle" x="69.64" y="-482.62" font-family="Times,serif" font-size="14.00">continue</text>
+</g>
+<!-- 14782744812977174805 -->
+<g id="node15" class="node">
+<title>14782744812977174805</title>
+<ellipse fill="none" stroke="black" cx="600.7" cy="-264.82" rx="523.96" ry="18"/>
+<text text-anchor="middle" x="600.7" y="-260.62" font-family="Times,serif" font-size="14.00">Fumbling around in the darkness - You can't seem to find your way.  However, you do think you hear low growling in the distance.: </text>
+</g>
+<!-- 1205054496128142177&#45;&gt;14782744812977174805 -->
+<g id="edge23" class="edge">
+<title>1205054496128142177-&gt;14782744812977174805</title>
+<path fill="none" stroke="black" d="M580.34,-335.31C575.49,-330.18 571.01,-324.16 568.39,-317.62 565.62,-310.68 565.67,-307.77 568.39,-300.82 569.58,-297.78 571.16,-294.86 573,-292.07"/>
+<polygon fill="black" stroke="black" points="575.59,-294.43 579.03,-284.41 570.09,-290.1 575.59,-294.43"/>
+<text text-anchor="middle" x="590.55" y="-305.02" font-family="Times,serif" font-size="14.00">forward</text>
+</g>
+<!-- 1205054496128142177&#45;&gt;14782744812977174805 -->
+<g id="edge24" class="edge">
+<title>1205054496128142177-&gt;14782744812977174805</title>
+<path fill="none" stroke="black" d="M608.65,-335.42C611.89,-325.38 614.64,-312.43 612.7,-300.82 612.31,-298.49 611.79,-296.11 611.18,-293.74"/>
+<polygon fill="black" stroke="black" points="614.59,-292.93 608.29,-284.42 607.9,-295 614.59,-292.93"/>
+<text text-anchor="middle" x="626.56" y="-305.02" font-family="Times,serif" font-size="14.00">back</text>
+</g>
+<!-- 15534820594753379670 -->
+<g id="node16" class="node">
+<title>15534820594753379670</title>
+<ellipse fill="none" stroke="black" cx="600.7" cy="-176.02" rx="379.78" ry="18"/>
+<text text-anchor="middle" x="600.7" y="-171.82" font-family="Times,serif" font-size="14.00">Panicked and lost - The growling is getting louder.  Did I mention there are Grues down here?: </text>
+</g>
+<!-- 14782744812977174805&#45;&gt;15534820594753379670 -->
+<g id="edge25" class="edge">
+<title>14782744812977174805-&gt;15534820594753379670</title>
+<path fill="none" stroke="black" d="M588.62,-246.41C585.53,-241.01 582.63,-234.89 581.04,-228.82 579.15,-221.59 579.15,-219.24 581.04,-212.02 581.68,-209.55 582.55,-207.08 583.55,-204.65"/>
+<polygon fill="black" stroke="black" points="586.64,-206.3 587.95,-195.78 580.37,-203.18 586.64,-206.3"/>
+<text text-anchor="middle" x="590.37" y="-216.22" font-family="Times,serif" font-size="14.00">run</text>
+</g>
+<!-- 14782744812977174805&#45;&gt;15534820594753379670 -->
+<g id="edge26" class="edge">
+<title>14782744812977174805-&gt;15534820594753379670</title>
+<path fill="none" stroke="black" d="M600.7,-246.67C600.7,-234.98 600.7,-219.21 600.7,-205.64"/>
+<polygon fill="black" stroke="black" points="604.2,-205.94 600.7,-195.94 597.2,-205.94 604.2,-205.94"/>
+<text text-anchor="middle" x="631.03" y="-216.22" font-family="Times,serif" font-size="14.00">investigate</text>
+</g>
+<!-- 576258722785933099 -->
+<g id="node17" class="node">
+<title>576258722785933099</title>
+<ellipse fill="none" stroke="red" cx="600.7" cy="-52.61" rx="135.83" ry="52.61"/>
+<text text-anchor="middle" x="600.7" y="-73.21" font-family="Times,serif" font-size="14.00">custom room - </text>
+<text text-anchor="middle" x="600.7" y="-40.41" font-family="Times,serif" font-size="14.00">You have been eaten by a grue.</text>
+<text text-anchor="middle" x="600.7" y="-23.61" font-family="Times,serif" font-size="14.00">: </text>
+</g>
+<!-- 15534820594753379670&#45;&gt;576258722785933099 -->
+<g id="edge27" class="edge">
+<title>15534820594753379670-&gt;576258722785933099</title>
+<path fill="none" stroke="black" d="M573.87,-157.74C568.28,-152.75 563.15,-146.79 560.04,-140.02 556.93,-133.23 558.09,-130.42 560.04,-123.22 560.83,-120.28 561.79,-117.34 562.87,-114.41"/>
+<polygon fill="black" stroke="black" points="566.03,-115.92 566.68,-105.35 559.58,-113.21 566.03,-115.92"/>
+<text text-anchor="middle" x="569.37" y="-127.42" font-family="Times,serif" font-size="14.00">run</text>
+</g>
+<!-- 15534820594753379670&#45;&gt;576258722785933099 -->
+<g id="edge28" class="edge">
+<title>15534820594753379670-&gt;576258722785933099</title>
+<path fill="none" stroke="black" d="M600.7,-157.62C600.7,-146.75 600.7,-132.02 600.7,-117.07"/>
+<polygon fill="black" stroke="black" points="604.2,-117.16 600.7,-107.16 597.2,-117.16 604.2,-117.16"/>
+<text text-anchor="middle" x="612.75" y="-127.42" font-family="Times,serif" font-size="14.00">wait</text>
+</g>
+<!-- 15534820594753379670&#45;&gt;576258722785933099 -->
+<g id="edge29" class="edge">
+<title>15534820594753379670-&gt;576258722785933099</title>
+<path fill="none" stroke="black" d="M616.28,-157.67C620.11,-152.37 623.7,-146.28 625.7,-140.02 628.22,-132.14 628.63,-123.83 627.7,-115.6"/>
+<polygon fill="black" stroke="black" points="631.18,-115.17 625.93,-105.96 624.29,-116.43 631.18,-115.17"/>
+<text text-anchor="middle" x="640.21" y="-127.42" font-family="Times,serif" font-size="14.00">hide</text>
+</g>
+<!-- 16281999036973417035&#45;&gt;447285304303355626 -->
+<g id="edge54" class="edge">
+<title>16281999036973417035-&gt;447285304303355626</title>
+<path fill="none" stroke="black" d="M1595.96,-371.26C1612.98,-376.3 1627.28,-382.44 1632.7,-389.62 1678.08,-449.71 1640.91,-544.81 1617.75,-591.42"/>
+<polygon fill="black" stroke="black" points="1614.65,-589.81 1613.2,-600.31 1620.88,-593.01 1614.65,-589.81"/>
+<text text-anchor="middle" x="1668.28" y="-482.62" font-family="Times,serif" font-size="14.00">south</text>
+</g>
+<!-- 16281999036973417035&#45;&gt;16281999036973417035 -->
+<g id="edge55" class="edge">
+<title>16281999036973417035-&gt;16281999036973417035</title>
+<path fill="none" stroke="black" d="M1780.56,-359.99C1802.46,-358.6 1816.03,-356.48 1816.03,-353.62 1816.03,-351.29 1807.07,-349.45 1791.96,-348.1"/>
+<polygon fill="black" stroke="black" points="1792.3,-344.62 1782.07,-347.36 1791.78,-351.6 1792.3,-344.62"/>
+<text text-anchor="middle" x="1828.86" y="-349.42" font-family="Times,serif" font-size="14.00">west</text>
+</g>
+<!-- 16281999036973417035&#45;&gt;16672844538226992313 -->
+<g id="edge53" class="edge">
+<title>16281999036973417035-&gt;16672844538226992313</title>
+<path fill="none" stroke="black" d="M1491.02,-335.31C1486.6,-330.1 1482.5,-324.04 1480.15,-317.62 1477.58,-310.61 1477.58,-307.83 1480.15,-300.82 1481.21,-297.91 1482.64,-295.07 1484.29,-292.36"/>
+<polygon fill="black" stroke="black" points="1487.07,-294.49 1490.13,-284.35 1481.41,-290.37 1487.07,-294.49"/>
+<text text-anchor="middle" x="1494.93" y="-305.02" font-family="Times,serif" font-size="14.00">north</text>
+</g>
+<!-- 16672844538226992313&#45;&gt;447285304303355626 -->
+<g id="edge45" class="edge">
+<title>16672844538226992313-&gt;447285304303355626</title>
+<path fill="none" stroke="black" d="M1790.39,-269.16C2004.21,-273.17 2280.23,-281.91 2391.7,-300.82 2477.21,-315.32 2557.7,-344.7 2557.7,-352.62 2557.7,-532.22 2557.7,-532.22 2557.7,-532.22 2557.7,-594.83 2487.94,-571 2426.7,-584.02 2362.63,-597.64 2239.11,-606 2106.82,-611.11"/>
+<polygon fill="black" stroke="black" points="2107.02,-607.6 2097.16,-611.48 2107.28,-614.59 2107.02,-607.6"/>
+<text text-anchor="middle" x="2572.48" y="-438.22" font-family="Times,serif" font-size="14.00">north</text>
+</g>
+<!-- 16672844538226992313&#45;&gt;16281999036973417035 -->
+<g id="edge46" class="edge">
+<title>16672844538226992313-&gt;16281999036973417035</title>
+<path fill="none" stroke="black" d="M1512.09,-283.23C1512.75,-288.83 1513.37,-295.08 1513.7,-300.82 1514.13,-308.27 1514.13,-310.16 1513.7,-317.62 1513.58,-319.68 1513.43,-321.81 1513.24,-323.95"/>
+<polygon fill="black" stroke="black" points="1509.78,-323.39 1512.24,-333.7 1516.75,-324.11 1509.78,-323.39"/>
+<text text-anchor="middle" x="1529.19" y="-305.02" font-family="Times,serif" font-size="14.00">south</text>
+</g>
+<!-- 16672844538226992313&#45;&gt;16672844538226992313 -->
+<g id="edge47" class="edge">
+<title>16672844538226992313-&gt;16672844538226992313</title>
+<path fill="none" stroke="black" d="M1780.56,-271.19C1802.46,-269.8 1816.03,-267.68 1816.03,-264.82 1816.03,-262.49 1807.07,-260.65 1791.96,-259.3"/>
+<polygon fill="black" stroke="black" points="1792.3,-255.82 1782.07,-258.56 1791.78,-262.8 1792.3,-255.82"/>
+<text text-anchor="middle" x="1826.91" y="-260.62" font-family="Times,serif" font-size="14.00">east</text>
+</g>
+<!-- 2916148824947368487&#45;&gt;447285304303355626 -->
+<g id="edge40" class="edge">
+<title>2916148824947368487-&gt;447285304303355626</title>
+<path fill="none" stroke="black" d="M739.06,-548.56C812.38,-560.07 914.68,-574.98 1005.04,-584.02 1090.25,-592.54 1182.51,-599.2 1268.47,-604.32"/>
+<polygon fill="black" stroke="black" points="1268.03,-607.8 1278.22,-604.89 1268.45,-600.81 1268.03,-607.8"/>
+<text text-anchor="middle" x="1017.87" y="-571.42" font-family="Times,serif" font-size="14.00">west</text>
+</g>
+<!-- 2916148824947368487&#45;&gt;1205054496128142177 -->
+<g id="edge41" class="edge">
+<title>2916148824947368487-&gt;1205054496128142177</title>
+<path fill="none" stroke="black" d="M649.55,-512.9C663.98,-484.99 686.8,-429.18 663.7,-389.62 661.42,-385.71 658.52,-382.2 655.22,-379.06"/>
+<polygon fill="black" stroke="black" points="657.54,-376.43 647.54,-372.93 653.18,-381.9 657.54,-376.43"/>
+<text text-anchor="middle" x="684.44" y="-438.22" font-family="Times,serif" font-size="14.00">east</text>
+</g>
+<!-- 2916148824947368487&#45;&gt;2916148824947368487 -->
+<g id="edge39" class="edge">
+<title>2916148824947368487-&gt;2916148824947368487</title>
+<path fill="none" stroke="black" d="M910.56,-537.59C932.46,-536.2 946.03,-534.08 946.03,-531.22 946.03,-528.89 937.07,-527.05 921.96,-525.7"/>
+<polygon fill="black" stroke="black" points="922.3,-522.22 912.07,-524.96 921.78,-529.2 922.3,-522.22"/>
+<text text-anchor="middle" x="961.2" y="-527.02" font-family="Times,serif" font-size="14.00">south</text>
+</g>
+<!-- 16178787705536214282 -->
+<g id="node23" class="node">
+<title>16178787705536214282</title>
+<ellipse fill="none" stroke="black" cx="304.7" cy="-442.42" rx="288.33" ry="18"/>
+<text text-anchor="middle" x="304.7" y="-438.22" font-family="Times,serif" font-size="14.00">Twisty passages - You are in a maze of alike twisty passages, all little.: </text>
+</g>
+<!-- 2916148824947368487&#45;&gt;16178787705536214282 -->
+<g id="edge38" class="edge">
+<title>2916148824947368487-&gt;16178787705536214282</title>
+<path fill="none" stroke="black" d="M574.31,-513.28C518.95,-498.93 439.52,-478.35 381.21,-463.24"/>
+<polygon fill="black" stroke="black" points="382.23,-459.89 371.67,-460.77 380.48,-466.67 382.23,-459.89"/>
+<text text-anchor="middle" x="516.98" y="-482.62" font-family="Times,serif" font-size="14.00">north</text>
+</g>
+<!-- 1172321899377142759&#45;&gt;447285304303355626 -->
+<g id="edge37" class="edge">
+<title>1172321899377142759-&gt;447285304303355626</title>
+<path fill="none" stroke="black" d="M1419.44,-547.49C1446.73,-552.4 1474.91,-558.83 1500.7,-567.22 1522.69,-574.37 1545.78,-585.73 1564.42,-596"/>
+<polygon fill="black" stroke="black" points="1562.53,-598.95 1572.96,-600.81 1565.96,-592.85 1562.53,-598.95"/>
+<text text-anchor="middle" x="1552.15" y="-571.42" font-family="Times,serif" font-size="14.00">east</text>
+</g>
+<!-- 1172321899377142759&#45;&gt;1172321899377142759 -->
+<g id="edge35" class="edge">
+<title>1172321899377142759-&gt;1172321899377142759</title>
+<path fill="none" stroke="black" d="M1553.56,-537.59C1575.46,-536.2 1589.03,-534.08 1589.03,-531.22 1589.03,-528.89 1580.07,-527.05 1564.96,-525.7"/>
+<polygon fill="black" stroke="black" points="1565.3,-522.22 1555.07,-524.96 1564.78,-529.2 1565.3,-522.22"/>
+<text text-anchor="middle" x="1603.81" y="-527.02" font-family="Times,serif" font-size="14.00">north</text>
+</g>
+<!-- 12469004508810770635 -->
+<g id="node22" class="node">
+<title>12469004508810770635</title>
+<ellipse fill="none" stroke="black" cx="1282.7" cy="-442.42" rx="288.33" ry="18"/>
+<text text-anchor="middle" x="1282.7" y="-438.22" font-family="Times,serif" font-size="14.00">Twisty passages - You are in a twisty alike of little passages, all maze.: </text>
+</g>
+<!-- 1172321899377142759&#45;&gt;12469004508810770635 -->
+<g id="edge36" class="edge">
+<title>1172321899377142759-&gt;12469004508810770635</title>
+<path fill="none" stroke="black" d="M1282.7,-513.07C1282.7,-501.38 1282.7,-485.61 1282.7,-472.04"/>
+<polygon fill="black" stroke="black" points="1286.2,-472.34 1282.7,-462.34 1279.2,-472.34 1286.2,-472.34"/>
+<text text-anchor="middle" x="1297.87" y="-482.62" font-family="Times,serif" font-size="14.00">south</text>
+</g>
+<!-- 12469004508810770635&#45;&gt;1205054496128142177 -->
+<g id="edge51" class="edge">
+<title>12469004508810770635-&gt;1205054496128142177</title>
+<path fill="none" stroke="black" d="M1159.38,-425.7C1042.95,-410.86 868.37,-388.61 745.63,-372.96"/>
+<polygon fill="black" stroke="black" points="746.15,-369.5 735.79,-371.71 745.26,-376.44 746.15,-369.5"/>
+<text text-anchor="middle" x="1014.08" y="-393.82" font-family="Times,serif" font-size="14.00">east</text>
+</g>
+<!-- 12469004508810770635&#45;&gt;16281999036973417035 -->
+<g id="edge49" class="edge">
+<title>12469004508810770635-&gt;16281999036973417035</title>
+<path fill="none" stroke="black" d="M1327.82,-424.16C1364.1,-410.29 1415.25,-390.73 1454.07,-375.89"/>
+<polygon fill="black" stroke="black" points="1455.16,-379.22 1463.25,-372.38 1452.66,-372.68 1455.16,-379.22"/>
+<text text-anchor="middle" x="1431.7" y="-393.82" font-family="Times,serif" font-size="14.00">south</text>
+</g>
+<!-- 12469004508810770635&#45;&gt;16672844538226992313 -->
+<g id="edge50" class="edge">
+<title>12469004508810770635-&gt;16672844538226992313</title>
+<path fill="none" stroke="black" d="M1247.63,-424.17C1210.57,-403.65 1160.84,-368.09 1187.04,-335.62 1208.09,-309.53 1277.29,-292.7 1346.23,-282.13"/>
+<polygon fill="black" stroke="black" points="1346.41,-285.64 1355.79,-280.71 1345.38,-278.72 1346.41,-285.64"/>
+<text text-anchor="middle" x="1199.87" y="-349.42" font-family="Times,serif" font-size="14.00">west</text>
+</g>
+<!-- 18396888397680678906 -->
+<g id="node24" class="node">
+<title>18396888397680678906</title>
+<ellipse fill="none" stroke="green" cx="2161.7" cy="-353.62" rx="301.73" ry="18"/>
+<text text-anchor="middle" x="2161.7" y="-349.42" font-family="Times,serif" font-size="14.00">Twisty passages - You are in a maze of twisty little passages, all alike.: can</text>
+</g>
+<!-- 12469004508810770635&#45;&gt;18396888397680678906 -->
+<g id="edge48" class="edge">
+<title>12469004508810770635-&gt;18396888397680678906</title>
+<path fill="none" stroke="black" d="M1432.31,-426.64C1589.8,-411.09 1836.95,-386.69 1999.15,-370.67"/>
+<polygon fill="black" stroke="black" points="1999.08,-374.19 2008.69,-369.73 1998.39,-367.23 1999.08,-374.19"/>
+<text text-anchor="middle" x="1815.71" y="-393.82" font-family="Times,serif" font-size="14.00">north</text>
+</g>
+<!-- 16178787705536214282&#45;&gt;16281999036973417035 -->
+<g id="edge43" class="edge">
+<title>16178787705536214282-&gt;16281999036973417035</title>
+<path fill="none" stroke="black" d="M447.33,-426.33C558.54,-414.98 716.92,-399.7 855.94,-389.62 1012.07,-378.29 1051.38,-380.02 1207.7,-371.62 1234.67,-370.17 1262.98,-368.62 1291.02,-367.06"/>
+<polygon fill="black" stroke="black" points="1290.87,-370.57 1300.66,-366.52 1290.48,-363.58 1290.87,-370.57"/>
+<text text-anchor="middle" x="866.82" y="-393.82" font-family="Times,serif" font-size="14.00">east</text>
+</g>
+<!-- 16178787705536214282&#45;&gt;16672844538226992313 -->
+<g id="edge42" class="edge">
+<title>16178787705536214282-&gt;16672844538226992313</title>
+<path fill="none" stroke="black" d="M142.18,-427.17C55.27,-413.46 -24.89,-386.85 23.15,-335.62 65.4,-290.56 1071.98,-285.19 1133.7,-282.82 1179.09,-281.08 1227.56,-279.03 1274.08,-276.97"/>
+<polygon fill="black" stroke="black" points="1274.2,-280.46 1284.04,-276.52 1273.89,-273.47 1274.2,-280.46"/>
+<text text-anchor="middle" x="37.93" y="-349.42" font-family="Times,serif" font-size="14.00">north</text>
+</g>
+<!-- 16178787705536214282&#45;&gt;16178787705536214282 -->
+<g id="edge44" class="edge">
+<title>16178787705536214282-&gt;16178787705536214282</title>
+<path fill="none" stroke="black" d="M575.56,-448.79C597.46,-447.4 611.03,-445.28 611.03,-442.42 611.03,-440.09 602.07,-438.25 586.96,-436.9"/>
+<polygon fill="black" stroke="black" points="587.3,-433.42 577.07,-436.16 586.78,-440.4 587.3,-433.42"/>
+<text text-anchor="middle" x="626.2" y="-438.22" font-family="Times,serif" font-size="14.00">south</text>
+</g>
+<!-- 18396888397680678906&#45;&gt;447285304303355626 -->
+<g id="edge52" class="edge">
+<title>18396888397680678906-&gt;447285304303355626</title>
+<path fill="none" stroke="black" d="M2125.83,-371.96C2045.92,-410.52 1847.13,-506.13 1679.7,-584.02 1670.61,-588.25 1660.89,-592.71 1651.52,-596.98"/>
+<polygon fill="black" stroke="black" points="1650.18,-593.75 1642.52,-601.08 1653.07,-600.12 1650.18,-593.75"/>
+<text text-anchor="middle" x="1916.39" y="-482.62" font-family="Times,serif" font-size="14.00">west</text>
+</g>
+</g>
+</svg>

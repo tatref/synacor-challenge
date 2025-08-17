@@ -14,6 +14,20 @@ use std::{
 
 pub struct GameSolver {}
 
+// generate unique hash for room
+fn hash_room(room: &Room) -> u64 {
+    let mut hasher = DefaultHasher::new();
+    room.hash(&mut hasher);
+    hasher.finish()
+}
+
+// generate unique hash for room
+fn hash_vm(vm: &Vm) -> u64 {
+    let mut hasher = DefaultHasher::new();
+    vm.get_mem().hash(&mut hasher);
+    hasher.finish()
+}
+
 impl GameSolver {
     pub fn explore_maze(vm: &Vm) {
         let message = vm.get_messages().last().unwrap();
@@ -31,13 +45,37 @@ impl GameSolver {
                 continue;
             }
 
-            //dbg!(explored.len(), queue.len());
-            //println!("Exploring {}", current_room.name);
+            let from = hash_room(&current_room);
+
+            let things = current_room.things.join(" ");
+
+            let color = match (current_room.things.is_empty(), current_vm.get_state()) {
+                (_, VmState::Halted) => "red",
+                (false, _) => "green",
+                (true, _) => "black",
+            };
+
+            let shape = if current_room == first_room {
+                "box"
+            } else {
+                "ellipse"
+            };
+
+            #[allow(clippy::format_in_format_args)]
+            graphviz.push_str(&format!(
+                "{} [label=\"{} - {}: {}\", color = {}, shape = {}];\n",
+                from,
+                current_room.name,
+                current_room.description.replace('\"', ""),
+                things,
+                color,
+                shape
+            ));
 
             for exit in &current_room.exits {
-                let mut vm = current_vm.clone();
-                vm.feed(exit).unwrap();
-                let _ = vm
+                let mut next_vm = current_vm.clone();
+                next_vm.feed(exit).unwrap();
+                let _ = next_vm
                     .run_until(StopVmState::new(&[
                         VmState::WaitingForInput,
                         VmState::Halted,
@@ -45,11 +83,11 @@ impl GameSolver {
                     ]))
                     .unwrap();
 
-                if vm.get_state() == VmState::Halted {
+                if next_vm.get_state() == VmState::Halted {
                     // TODO
                     //continue;
                 }
-                let message = vm.get_messages().last().unwrap();
+                let message = next_vm.get_messages().last().unwrap();
                 let new_room = match Room::from(message) {
                     Ok(l) => l,
                     Err(_) => Room {
@@ -60,57 +98,24 @@ impl GameSolver {
                     },
                 };
 
-                fn hash_string(input: &str) -> u64 {
-                    let mut hasher = DefaultHasher::new();
-                    input.hash(&mut hasher);
-                    hasher.finish()
-                }
-                let from = hash_string(&format!(
-                    "{}{}",
-                    current_room.name, current_room.description
-                ));
-                let to = hash_string(&format!("{}{}", new_room.name, new_room.description));
+                let to = hash_room(&new_room);
 
-                let things = current_room.things.join(" ");
-                //let color = if current_room.things.is_empty() {
-                //    "black"
-                //} else {
-                //    "green"
-                //};
-
-                let color = match (current_room.things.is_empty(), vm.get_state()) {
-                    (_, VmState::Halted) => "red",
-                    (false, _) => "green",
-                    (true, _) => "black",
-                };
-
-                let shape = if current_room == first_room {
-                    "Mdiamond"
-                } else {
-                    "ellipse"
-                };
                 graphviz.push_str(&format!("{} -> {} [label =\"{}\"];\n", from, to, exit));
 
-                #[allow(clippy::format_in_format_args)]
-                graphviz.push_str(&format!(
-                    "{} [label=\"{} - {}: {}\", color = {}, shape = {}];\n",
-                    from,
-                    current_room.name,
-                    current_room.description.replace('\"', ""),
-                    things,
-                    color,
-                    shape
-                ));
-
-                if explored.contains(&new_room) {
-                    continue;
+                if !explored.contains(&new_room) {
+                    queue.insert(new_room, next_vm);
                 }
-
-                queue.insert(new_room, vm.clone());
             }
 
             explored.insert(current_room);
         }
+        graphviz.push_str("}\n\n");
+
+        match std::fs::write("graphviz.dot", graphviz) {
+            Ok(_) => (),
+            Err(x) => println!("{:?}", x),
+        }
+        println!("\nSee ./graphviz.dot");
 
         println!("Finished exploring. List of rooms:");
         for room in &explored {
@@ -119,14 +124,6 @@ impl GameSolver {
                 println!("- {}", thing);
             }
         }
-
-        graphviz.push_str("}\n\n");
-
-        match std::fs::write("graphviz.dot", graphviz) {
-            Ok(_) => (),
-            Err(x) => println!("{:?}", x),
-        }
-        println!("\nSee ./graphviz.dot");
     }
 
     pub fn trace_teleporter(vm: &Vm) -> Vm {
@@ -327,12 +324,21 @@ pub fn brute_force_fn_2027(vm: &Vm) {
     dbg!(&last_messages);
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Hash, Ord, PartialOrd)]
+#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Room {
     pub name: String,
     pub description: String,
     pub things: Vec<String>,
     pub exits: Vec<String>,
+}
+
+impl Hash for Room {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.name.hash(state);
+        self.description.hash(state);
+        self.things.hash(state);
+        self.exits.hash(state);
+    }
 }
 
 impl Room {
