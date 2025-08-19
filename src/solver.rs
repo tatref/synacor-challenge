@@ -23,10 +23,9 @@ fn log_map(value: usize, in_low: usize, in_high: usize, out_low: f32, out_high: 
 
 pub struct GameSolver {}
 
-// generate unique hash for room
-fn hash_room(room: &Room) -> u64 {
+fn hash<T: Hash>(t: &T) -> u64 {
     let mut hasher = DefaultHasher::new();
-    room.hash(&mut hasher);
+    t.hash(&mut hasher);
     hasher.finish()
 }
 
@@ -48,7 +47,7 @@ impl GameSolver {
                 continue;
             }
 
-            let from = hash_room(&current_room);
+            let from = hash(&current_room);
 
             let things = current_room.things.join(" ");
 
@@ -113,7 +112,7 @@ impl GameSolver {
                     },
                 };
 
-                let to = hash_room(&new_room);
+                let to = hash(&new_room);
 
                 graphviz.push_str(&format!("{} -> {} [label =\"{}\"];\n", from, to, exit));
 

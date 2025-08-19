@@ -2,6 +2,7 @@ use std::{
     collections::{HashMap, VecDeque},
     fmt,
     fs::File,
+    hash::Hash,
     io::Read,
     path::Path,
 };
@@ -60,6 +61,19 @@ pub struct Vm {
     scanmem: Vec<Option<u16>>,
 }
 
+impl Hash for Vm {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.memory.hash(state);
+        self.registers.hash(state);
+        self.stack.hash(state);
+        self.ip.hash(state);
+        self.state.hash(state);
+        self.input_buffer.hash(state);
+        self.output_buffer.hash(state);
+        self.messages.hash(state);
+    }
+}
+
 impl PartialEq for Vm {
     fn eq(&self, other: &Self) -> bool {
         for (x, y) in self.memory.iter().zip(other.memory.iter()) {
@@ -101,7 +115,7 @@ impl fmt::Debug for Vm {
     }
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub enum VmState {
     Running,
     Halted,
