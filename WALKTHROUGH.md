@@ -1,7 +1,7 @@
 # Intro
 Synacor Challenge is a hacking/programming challenge where you code an interpreter for a VM, then execute a program leading to more challenges
 
-The VM specs are [here](./arch-specs)
+The VM specs are [here](./arch-spec)
 
 The program is [here](./challenge.bin)
 
@@ -220,43 +220,16 @@ A strange, electronic voice is projected into your mind:
   "Unusual setting detected!  Starting confirmation process!  Estimated time to completion: 1 billion years."
 ```
 
-(emulator hangs for 30s, takes 20 GiB of RAM for the stack...)
+(emulator hangs for 30s, takes 22 GiB of RAM for the stack...)
 
 Instrumenting the VM to count specific instructions shows that some functions are called a LOT. If we limit the number of instructions to run, we note that the following calls grow with this limit
 
-Functions call graph
+Functions call graph to show the hot function: 6027
 
 ![teleporter](teleporter.svg)
 
-
-Most called functions
-
-```
-  (
-        calls: 5548,
-        ip: 6045,
-        Call(
-            6027,
-        ),
-    ),
-    (
-        calls: 7687327,
-        ip: 6065,
-        Call(
-            6027,
-        ),
-    ),
-    (
-        calls: 7692592,
-        ip: 6054,
-        Call(
-            6027,
-        ),
-    ),
-```
-
 Reimplement fn 6027 in rust
-Increase stack size to 32 MiB
+Increase stack size to 32 MiB due to high levels of recursion
 
 Now setting fn_patching = true
 After < 0.01s

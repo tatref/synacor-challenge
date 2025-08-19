@@ -146,7 +146,8 @@ impl Cli {
                 Command::new("solver")
                     .about("Challenge specific solvers")
                     .subcommand(Command::new("explore"))
-                    .subcommand(Command::new("teleporter")),
+                    .subcommand(Command::new("trace_teleporter"))
+                    .subcommand(Command::new("brute_force_fn_6027")),
             )
             .subcommand(
                 Command::new("state")
@@ -376,9 +377,11 @@ impl Cli {
                 Some(("explore", _sub)) => {
                     GameSolver::explore_maze(&self.vm);
                 }
-                Some(("teleporter", _sub)) => {
-                    let new_vm = GameSolver::trace_teleporter(&self.vm);
-                    self.vm = new_vm;
+                Some(("trace_teleporter", _sub)) => {
+                    GameSolver::trace_teleporter(&self.vm);
+                }
+                Some(("brute_force_fn_6027", _sub)) => {
+                    GameSolver::brute_force_fn_6027(&self.vm);
                 }
                 Some((_, _)) => return Err("unreachable?".into()),
                 None => (),

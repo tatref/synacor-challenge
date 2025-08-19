@@ -710,11 +710,12 @@ impl Vm {
         // tracing
         if (opcode.discriminant() & self.traced_opcodes) != 0 {
             let resolved_opcode = opcode.resolve_opcode(self);
-            self.trace_buffer.push((self.ip, opcode, resolved_opcode));
+            self.trace_buffer.push((ip, opcode, resolved_opcode));
         }
 
         // actual execution of op
         let next_instruction_ptr = self.ip + size;
+        // Execute instruction, advance ip
         self.execute(&opcode, next_instruction_ptr)?;
         self.pc += 1;
 
@@ -860,18 +861,16 @@ impl Vm {
                             self.called_patched_fn = true;
                             return Ok(());
                         }
-                        2125 => 'f2125: {
-                            //break 'f2125;
+                        //2125 => 'f2125: {
+                        //    self.stack.push(self.ip as u16);
+                        //    {
+                        //        self.patched_2125();
+                        //    }
+                        //    self.called_patched_fn = true;
+                        //    self.virtual_instructions.insert(0, Opcode::Ret);
 
-                            self.stack.push(self.ip as u16);
-                            {
-                                self.patched_2125();
-                            }
-                            self.called_patched_fn = true;
-                            self.virtual_instructions.insert(0, Opcode::Ret);
-
-                            return Ok(());
-                        }
+                        //    return Ok(());
+                        //}
                         6027 => {
                             //dbg!("patched 6027");
                             self.stack.push(self.ip as u16);
@@ -1027,11 +1026,12 @@ impl Function {
             "    <tr><td bgcolor=\"black\" colspan=\"2\" port=\"0\"><font color=\"white\">{}</font></td></tr>\n",
             self.start
         ));
-        for (offset, op) in self.code.iter().enumerate() {
-            let offset = offset + self.start;
+        let mut offset = self.start;
+        for op in self.code.iter() {
             s.push_str(&format!(
-                "    <tr><td align=\"left\" port=\"{offset}\">{offset}</td><td>{op :?}</td></tr>\n",
+                "    <tr><td align=\"left\" port=\"{offset}-offset\">{offset}</td><td port=\"{offset}-op\">{op :?}</td></tr>\n",
             ));
+            offset += op.size();
         }
         s.push_str("</table>\n");
         s.push_str(">\n");

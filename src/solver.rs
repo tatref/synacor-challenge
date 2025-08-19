@@ -1,3 +1,4 @@
+use colorgrad::Gradient;
 use itertools::Itertools;
 use regex::Regex;
 
@@ -12,19 +13,20 @@ use std::{
     hash::{Hash, Hasher},
 };
 
+fn log_map(value: usize, in_low: usize, in_high: usize, out_low: f32, out_high: f32) -> f32 {
+    let value = (value as f32).log10();
+    let max = (in_high as f32).log10();
+    let min = (in_low as f32).log10();
+
+    (value - min) / (max - min) * (out_high - out_low) + out_low
+}
+
 pub struct GameSolver {}
 
 // generate unique hash for room
 fn hash_room(room: &Room) -> u64 {
     let mut hasher = DefaultHasher::new();
     room.hash(&mut hasher);
-    hasher.finish()
-}
-
-// generate unique hash for room
-fn hash_vm(vm: &Vm) -> u64 {
-    let mut hasher = DefaultHasher::new();
-    vm.get_mem().hash(&mut hasher);
     hasher.finish()
 }
 
@@ -82,7 +84,7 @@ impl GameSolver {
                         .split_whitespace()
                         .join("_"),
                 )
-                .or_insert(Vec::new())
+                .or_default()
                 .push(graphviz_room);
 
             for exit in &current_room.exits {
@@ -160,22 +162,24 @@ impl GameSolver {
         }
     }
 
-    pub fn trace_teleporter(vm: &Vm) -> Vm {
+    pub fn trace_teleporter(vm: &Vm) {
         use Opcode::*;
         use Val::*;
 
-        let val = 1;
-        //for val in 0..u16::MAX {
-        dbg!(val);
         let mut vm = vm.clone();
         vm.set_traced_opcodes(Call(Invalid).discriminant());
 
-        vm.set_fn_patching(true);
+        println!("You will need a lot of RAM for this...");
+
+        //vm.set_fn_patching(true);
+        let val = 1;
+        dbg!(val);
         vm.set_register(7, val);
 
         let _ = vm.feed("use teleporter");
 
-        let mut steps = 1_000_000_000;
+        let mut steps = 1_000_000;
+        let chrono = std::time::Instant::now();
         while vm.get_state() == VmState::Running {
             match vm.step() {
                 Ok(_) => (),
@@ -187,20 +191,11 @@ impl GameSolver {
                 break;
             }
         }
+        dbg!(chrono.elapsed());
 
         dbg!(vm.get_trace_buffer().len());
 
-        let x = vm
-            .get_trace_buffer()
-            .iter()
-            .filter(|(_offset, op, _resolved_op)| match op {
-                Opcode::Call(Num(6026)) => true,
-                _ => false,
-            })
-            .next();
-        dbg!(x);
-
-        let counters = vm.get_trace_buffer().iter().counts();
+        let counters = vm.get_trace_buffer().iter().sorted().counts();
         let sorted_counters: Vec<_> = counters
             .iter()
             .map(|((caller_offset, op, resolved_op), count)| {
@@ -261,101 +256,112 @@ edge [fontname="Helvetica,Arial,sans-serif"]
             graphviz.push('\n');
         }
 
+        fn find_fn(functions: &[Function], offset: usize) -> Option<&Function> {
+            functions
+                .iter()
+                .find(|f| f.start <= offset && offset <= f.end)
+        }
+
+        let min_calls = counters.iter().min_by_key(|(_, calls)| *calls).unwrap().1;
+        let max_calls = counters.iter().max_by_key(|(_, calls)| *calls).unwrap().1;
+
         // draw edges
-        for function in &functions {
-            let name = format!("{}", function.start);
-
-            for (offset, op) in function.get_code().iter().enumerate() {
-                let offset = offset + function.start;
-                if let Opcode::Call(dest) = op {
-                    let addr = match dest {
-                        Val::Num(addr) => *addr,
-                        Val::Reg(_reg) => {
-                            // TODO: trace_buffer
-                            let addr = vm
-                                .get_trace_buffer()
-                                .iter()
-                                .filter(|(_offset, _op, _resolved_op)| *_offset == offset)
-                                .map(|(_, _, op)| match op.unwrap() {
-                                    Call(Num(addr)) => addr,
-                                    _ => unimplemented!(),
-                                })
-                                .next();
-
-                            // 0 = unknown
-                            addr.unwrap_or(0)
-                        }
-                        _ => todo!(),
-                    };
-
-                    let target_function = functions
-                        .iter()
-                        .find(|f| f.start <= addr as usize && (addr as usize) <= f.end);
-
-                    let target_function_name = match target_function {
-                        Some(f) => format!("{}", f.start),
-                        None => "missing".to_string(),
-                    };
-
-                    let edge_graphviz =
-                        format!("\"{name}\":\"{offset}\":w -> \"{target_function_name}\":0\n");
-                    graphviz.push_str(&edge_graphviz);
+        for ((caller_offset, op, _), calls_count) in &counters {
+            let Opcode::Call(target_offset) = op else {
+                continue;
+            };
+            let caller_function = find_fn(&functions, *caller_offset);
+            let caller_function = match caller_function {
+                Some(f) => f,
+                None => {
+                    println!("can't find caller fn containing offset {}", caller_offset);
+                    continue;
                 }
-            }
+            };
+            let caller_name = format!("{}", caller_function.start);
+
+            let target_offset = match target_offset {
+                Val::Num(addr) => *addr,
+                Val::Reg(_reg) => {
+                    let addr = vm
+                        .get_trace_buffer()
+                        .iter()
+                        .filter(|(offset, _op, _resolved_op)| *offset == *caller_offset)
+                        .map(|(_, _, op)| match op.unwrap() {
+                            Call(Num(addr)) => addr,
+                            _ => unimplemented!(),
+                        })
+                        .next();
+
+                    // 0 = unknown
+                    addr.unwrap_or(0)
+                }
+                _ => todo!(),
+            };
+
+            let target_function = find_fn(&functions, target_offset as usize)
+                .unwrap_or_else(|| panic!("Can't find target function for call {:?}", op));
+            let target_function_name = format!("{}", target_function.start);
+
+            let gradient = colorgrad::preset::turbo();
+            let t = log_map(*calls_count, *min_calls, *max_calls, 0., 1.);
+            let color = gradient.at(t).to_css_hex();
+
+            let edge_graphviz =
+                        format!("\"{caller_name}\":\"{caller_offset}-op\":e -> \"{target_function_name}\":0:w [color=\"{color}\", taillabel=\"{calls_count}\"]\n");
+            graphviz.push_str(&edge_graphviz);
         }
 
         graphviz.push_str("}\n");
 
-        std::fs::write("graphviz.txt", graphviz).unwrap();
-
-        panic!();
+        std::fs::write("graphviz.dot", graphviz).unwrap();
+        println!("See graphviz.dot");
     }
-}
 
-pub fn brute_force_fn_2027(vm: &Vm) {
-    use Opcode::*;
-    use Val::*;
+    pub fn brute_force_fn_6027(vm: &Vm) {
+        use Opcode::*;
+        use Val::*;
 
-    let mut last_messages = HashMap::new();
-    for val in 0..=u16::MAX {
-        //for val in 0..u16::MAX {
-        dbg!(val);
-        let mut vm = vm.clone();
-        vm.set_traced_opcodes(Call(Invalid).discriminant());
+        let mut last_messages = HashMap::new();
+        for val in 0..=u16::MAX {
+            dbg!(val);
+            let mut vm = vm.clone();
+            vm.set_traced_opcodes(Call(Invalid).discriminant());
 
-        vm.set_fn_patching(true);
-        vm.set_register(7, val);
+            vm.set_fn_patching(true);
+            vm.set_register(7, val);
 
-        let _ = vm.feed("use teleporter");
+            let _ = vm.feed("use teleporter");
 
-        // without 2027 patching, we need a lot of instructions
-        let mut steps = 1_000_000_000;
-        while vm.get_state() == VmState::Running {
-            match vm.step() {
-                Ok(_) => (),
-                Err(_e) => break,
+            // without 2027 patching, we need a lot of instructions
+            let mut steps = 1_000_000_000;
+            while vm.get_state() == VmState::Running {
+                match vm.step() {
+                    Ok(_) => (),
+                    Err(_e) => break,
+                }
+                steps -= 1;
+                if steps == 0 {
+                    println!("early stop {}", val);
+                    break;
+                }
             }
-            steps -= 1;
-            if steps == 0 {
-                println!("early stop {}", val);
-                break;
+
+            vm.run_until(StopVmState::new(&[VmState::WaitingForInput]))
+                .unwrap();
+
+            let last_message = vm.get_messages().last().unwrap();
+            last_messages.insert(last_message.clone(), val);
+
+            if last_message.contains("Miscalibration detected!  Aborting teleportation!") {
+                continue;
+            } else {
+                dbg!("Found", val, &last_message);
             }
         }
 
-        vm.run_until(StopVmState::new(&[VmState::WaitingForInput]))
-            .unwrap();
-
-        let last_message = vm.get_messages().last().unwrap();
-        last_messages.insert(last_message.clone(), val);
-
-        if last_message.contains("Miscalibration detected!  Aborting teleportation!") {
-            continue;
-        } else {
-            dbg!("Found", val, &last_message);
-        }
+        dbg!(&last_messages);
     }
-
-    dbg!(&last_messages);
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
