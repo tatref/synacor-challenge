@@ -8,6 +8,7 @@ use clap::builder::BoolishValueParser;
 use clap::{builder::RangedU64ValueParser, Arg, Command};
 
 use itertools::Itertools;
+use regex::Regex;
 
 pub struct Cli {
     pub cli: Command,
@@ -145,7 +146,14 @@ impl Cli {
             .subcommand(
                 Command::new("solver")
                     .about("Challenge specific solvers")
-                    .subcommand(Command::new("explore"))
+                    .subcommand(
+                        Command::new("explore").arg(
+                            Arg::new("line")
+                                .num_args(0..)
+                                .trailing_var_arg(true)
+                                .allow_hyphen_values(true),
+                        ),
+                    )
                     .subcommand(Command::new("trace_teleporter"))
                     .subcommand(Command::new("brute_force_fn_6027")),
             )
@@ -373,9 +381,14 @@ impl Cli {
                 None => println!("{:?}", self.vm),
             },
 
-            Some(("solver", sub)) => match sub.subcommand() {
-                Some(("explore", _sub)) => {
-                    GameSolver::explore_maze(&self.vm);
+            Some(("solver", sub)) => match dbg!(sub).subcommand() {
+                Some(("explore", sub)) => {
+                    let filter: Option<Regex> = sub
+                        .get_many::<String>("line")
+                        .map(|s| s.cloned().join(" "))
+                        .map(|s| Regex::new(&s).unwrap());
+
+                    GameSolver::explore_maze(&self.vm, &filter);
                 }
                 Some(("trace_teleporter", _sub)) => {
                     GameSolver::trace_teleporter(&self.vm);

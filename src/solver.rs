@@ -30,7 +30,7 @@ fn hash<T: Hash>(t: &T) -> u64 {
 }
 
 impl GameSolver {
-    pub fn explore_maze(vm: &Vm) {
+    pub fn explore_maze(vm: &Vm, limit: &Option<Regex>) {
         let message = vm.get_messages().last().unwrap();
         let mut clusters: HashMap<String, Vec<String>> = HashMap::new();
         let room = Room::from(message).expect("Missing room name (look)");
@@ -44,6 +44,11 @@ impl GameSolver {
 
         while let Some((current_room, current_vm)) = queue.pop_first() {
             if explored.contains(&current_room) {
+                continue;
+            }
+
+            if limit.is_some() && !limit.as_ref().unwrap().is_match(&current_room.name) {
+                explored.insert(current_room);
                 continue;
             }
 
