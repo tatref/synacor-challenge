@@ -154,6 +154,7 @@ impl Cli {
                                 .allow_hyphen_values(true),
                         ),
                     )
+                    .subcommand(Command::new("vault"))
                     .subcommand(Command::new("trace_teleporter"))
                     .subcommand(Command::new("brute_force_fn_6027")),
             )
@@ -389,6 +390,13 @@ impl Cli {
                         .map(|s| Regex::new(&s).unwrap());
 
                     GameSolver::explore_maze(&self.vm, &filter);
+                }
+                Some(("vault", _sub)) => {
+                    let maze: HashMap<u64, (crate::solver::Room, HashMap<String, u64>)> =
+                        GameSolver::explore_maze(
+                            &self.vm,
+                            &Some(Regex::new("Vault Lock").unwrap()),
+                        );
                 }
                 Some(("trace_teleporter", _sub)) => {
                     GameSolver::trace_teleporter(&self.vm);

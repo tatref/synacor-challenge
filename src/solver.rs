@@ -30,12 +30,18 @@ fn hash<T: Hash>(t: &T) -> u64 {
 }
 
 impl GameSolver {
-    pub fn explore_maze(vm: &Vm, limit: &Option<Regex>) {
+    pub fn explore_maze(
+        vm: &Vm,
+        limit: &Option<Regex>,
+    ) -> HashMap<u64, (Room, HashMap<String, u64>)> {
         let message = vm.get_messages().last().unwrap();
         let mut clusters: HashMap<String, Vec<String>> = HashMap::new();
         let room = Room::from(message).expect("Missing room name (look)");
         let first_room = room.clone();
 
+        let mut maze: HashMap<u64, (Room, HashMap<String, u64>)> = HashMap::new();
+
+        // graph search datastructures
         let mut explored: HashSet<Room> = Default::default();
         let mut queue: BTreeMap<Room, Vm> = Default::default();
         queue.insert(room, vm.clone());
@@ -91,6 +97,7 @@ impl GameSolver {
                 .or_default()
                 .push(graphviz_room);
 
+            let mut exits: HashMap<String, u64> = HashMap::new();
             for exit in &current_room.exits {
                 let mut next_vm = current_vm.clone();
                 next_vm.feed(exit).unwrap();
@@ -120,12 +127,14 @@ impl GameSolver {
                 let to = hash(&new_room);
 
                 graphviz.push_str(&format!("{} -> {} [label =\"{}\"];\n", from, to, exit));
+                exits.insert(exit.clone(), to);
 
                 if !explored.contains(&new_room) {
                     queue.insert(new_room, next_vm);
                 }
             }
 
+            maze.insert(from, (current_room.clone(), exits));
             explored.insert(current_room);
         }
 
@@ -164,6 +173,8 @@ impl GameSolver {
                 println!("- {}", thing);
             }
         }
+
+        maze
     }
 
     pub fn trace_teleporter(vm: &Vm) {
