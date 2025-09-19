@@ -11,7 +11,17 @@ The official site is down (https://challenge.synacor.com/)
 
 But you can validate codes via https://github.com/Aneurysm9/vm_challenge
 
-# Simple instructions
+# The emulator
+
+To solve all puzzles, I implemented:
+- basic emulation, I/O
+- turn the emulator into a lib, controlled via CLI
+- snapshots
+- graph traversal and graphviz (dot) rendering
+- tracing, breakpoints, assembler, disassembler
+- function patching
+
+# 1/8 Simple instructions
 
 Implementing the first instructions `Noop`, `Out` and `Halt` will display the welcome message
 
@@ -21,7 +31,7 @@ Please record your progress by putting codes like
 this one into the challenge website: hKRuXKPwTwlo
 ```
 
-# Self test
+# 2/8 Self test
 
 Implement the remaining instruction to complete the self-test
 
@@ -32,7 +42,7 @@ self-test complete, all tests pass
 The self-test completion code is: NhMSeBfjuEsD
 ```
 
-# Tablet
+# 3/8 Tablet
 
 We are now in some kind of text-based game
 
@@ -56,7 +66,7 @@ $ i use tablet
 You find yourself writing "jtQUShZPqyoL" on the tablet.  Perhaps it's some kind of code?
 ```
 
-# Maze
+# 4/8 Maze
 
 Trying to explore the world is difficult, as there is a lot of rooms.
 
@@ -85,7 +95,7 @@ Chiseled on the wall of one of the passageways, you see:
 
 Go to the dark passage (2 times west)
 
-# Ruins
+# 5/8 Ruins
 
 We reuse the graph explorer to get a new map for the Ruins
 
@@ -159,7 +169,7 @@ You activate the teleporter!  As you spiral through time and space, you think yo
 After a few moments, you find yourself back on solid ground and a little disoriented.
 ```
 
-# Synacor Headquarters
+# 6/8 Synacor Headquarters
 
 The `strange book` gives some guidelines
 
@@ -222,7 +232,7 @@ A strange, electronic voice is projected into your mind:
   "Unusual setting detected!  Starting confirmation process!  Estimated time to completion: 1 billion years."
 ```
 
-(emulator hangs for 30s, takes 22 GiB of RAM for the stack...)
+(emulator hangs for 30s, takes 22 GiB of RAM for stack allocations...)
 
 Instrumenting the VM to count specific instructions shows that some functions are called a LOT. If we limit the number of instructions to run, we note that the following calls grow with this limit
 
@@ -269,7 +279,7 @@ It begins to rain.  The message washes away.  You take a deep breath and feel fi
 
 ```
 
-# Beach
+# 7/8 Beach
 
 
 ```
@@ -307,3 +317,58 @@ Day 144: We are abandoning the mission.  None of us can work out the solution to
 ```
 
 ![beach](beach.svg)
+
+
+The orb has an internal value. To find it's value, pick the orb, 
+
+```
+$ mem init
+$ mem filter = 22
+Selected 3 values
+$ mem list
+3952: 22 -> 22
+4664: 22 -> 22
+27432: 22 -> 22
+Listed 3 values
+```
+
+Then go north, north (+ 4), the orb offset is 3952:
+
+```
+$ mem list
+3952: 22 -> 26
+```
+
+I couldn't get the graph search to work, so I brute forced by standing in the room next to the vault door depicting a '-'
+
+$ state diskload vault_puzzle.json
+$ solver vault
+$ $ mem set 3952 31
+$ i east
+
+```
+As you approach the vault door, the number on the vault door flashes white!  The hourglass is still running!  It flashes white!  You hear a click from the vault door.  The orb evaporates out of hour hands.
+
+== Vault ==
+This vault contains incredible riches!  Piles of gold and platinum coins surround you, and the walls are adorned with topazes, rubies, sapphires, emeralds, opals, dilithium crystals, elerium-115, and unobtainium.
+
+Things of interest here:
+- mirror
+
+There is 1 exit:
+- leave
+
+$ i take mirror
+
+
+Taken.
+
+What do you do?
+
+$ i use mirror
+
+
+You gaze into the mirror, and you see yourself gazing back.  But wait!  It looks like someone wrote on your face while you were unconscious on the beach!  Through the mirror, you see "iTodwMouiWIT" scrawled in charcoal on your forehead.
+
+Congratulations; you have reached the end of the challenge!
+```

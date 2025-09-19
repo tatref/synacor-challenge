@@ -392,11 +392,7 @@ impl Cli {
                     GameSolver::explore_maze(&self.vm, &filter);
                 }
                 Some(("vault", _sub)) => {
-                    let maze: HashMap<u64, (crate::solver::Room, HashMap<String, u64>)> =
-                        GameSolver::explore_maze(
-                            &self.vm,
-                            &Some(Regex::new("Vault Lock").unwrap()),
-                        );
+                    GameSolver::solve_vault(&self.vm);
                 }
                 Some(("trace_teleporter", _sub)) => {
                     GameSolver::trace_teleporter(&self.vm);

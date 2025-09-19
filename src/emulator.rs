@@ -10,10 +10,14 @@ use std::{
 use std::fmt::Debug;
 
 use byteorder::{ByteOrder, LittleEndian};
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 
-use crate::assembly::{Opcode, Val};
+use crate::{
+    assembly::{Opcode, Val},
+    solver::Room,
+};
 
 const MEM_SIZE: usize = 32768;
 
@@ -702,6 +706,42 @@ impl Vm {
         self.state = VmState::Running;
 
         Ok(())
+    }
+
+    pub fn feed_and_return(&mut self, input: &str) -> Result<String, Box<dyn std::error::Error>> {
+        self.feed(input)?;
+        self.run_until(StopVmState::new(&[VmState::WaitingForInput]))?;
+
+        let result = self.messages.last().unwrap().clone();
+        Ok(result)
+    }
+
+    pub fn feed_and_parse(
+        &mut self,
+        input: &str,
+    ) -> Result<(Option<String>, Room), Box<dyn std::error::Error>> {
+        let text = self.feed_and_return(input)?;
+
+        //let re = Regex::new(r"^(\n\n.+\n\n)?== (.*) ==\n").unwrap();
+        //let message = re
+        //    .captures(&text)
+        //    .map(|cap| cap.get(1).unwrap().as_str().trim().to_string());
+        //let current_room: Room = text.parse()?;
+
+        use itertools::Itertools;
+
+        //let message = next_vm.get_messages().last().unwrap();
+        let new_room = match text.parse() {
+            Ok(l) => l,
+            Err(_) => Room {
+                name: "custom room".into(),
+                description: text.split_whitespace().join(" "),
+                exits: Vec::new(),
+                things: Vec::new(),
+            },
+        };
+
+        Ok((Some(text.clone()), new_room))
     }
 
     pub fn step(&mut self) -> Result<(usize, Opcode), Box<dyn std::error::Error>> {

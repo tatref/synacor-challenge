@@ -1,8 +1,9 @@
 use colorgrad::Gradient;
 use itertools::Itertools;
+use rand::seq::IndexedRandom;
 use regex::Regex;
 
-use std::{collections::HashMap, fmt::Debug};
+use std::{collections::HashMap, fmt::Debug, str::FromStr};
 
 use crate::{
     assembly::{Opcode, Val},
@@ -36,7 +37,7 @@ impl GameSolver {
     ) -> HashMap<u64, (Room, HashMap<String, u64>)> {
         let message = vm.get_messages().last().unwrap();
         let mut clusters: HashMap<String, Vec<String>> = HashMap::new();
-        let room = Room::from(message).expect("Missing room name (look)");
+        let room: Room = message.parse().expect("Missing room name (look)");
         let first_room = room.clone();
 
         let mut maze: HashMap<u64, (Room, HashMap<String, u64>)> = HashMap::new();
@@ -114,7 +115,7 @@ impl GameSolver {
                     //continue;
                 }
                 let message = next_vm.get_messages().last().unwrap();
-                let new_room = match Room::from(message) {
+                let new_room = match message.parse() {
                     Ok(l) => l,
                     Err(_) => Room {
                         name: "custom room".into(),
@@ -377,6 +378,112 @@ edge [fontname="Helvetica,Arial,sans-serif"]
 
         dbg!(&last_messages);
     }
+
+    pub fn solve_vault(vm: &Vm) {
+        for val in 0..u16::MAX {
+            let mut game = Game::from_vm(vm);
+            game.vm.mem_set(3952, val);
+            game.action("east").unwrap();
+
+            let m = game.message.as_ref().unwrap();
+            if m.contains("The orb shatters") || m.contains("The orb evaporates out of your hands.")
+            {
+                // lost
+            } else {
+                dbg!(m);
+                dbg!(val);
+            }
+        }
+
+        //let game = Game::from_vm(vm);
+        //inner(game, Vec::new(), 20);
+        //println!("no solution");
+        //fn inner(game: Game, path: Vec<String>, depth: i32) {
+        //    if depth == 0 {
+        //        // early stop
+        //        return;
+        //    }
+        //    let m = game.message.as_ref().unwrap();
+        //    if m.contains("You hear a click from the vault door.") {
+        //        // WIN
+        //        println!("{:?}", path);
+        //        panic!();
+        //        return;
+        //    }
+        //    if m.contains("The orb shatters!") || m.contains("evaporates") {
+        //        // lost
+        //        return;
+        //    }
+        //    for exit in &game.room.exits {
+        //        // recurse
+        //        let mut new_game = game.clone();
+        //        new_game.action(&exit).unwrap();
+        //        let mut new_path = path.clone();
+        //        new_path.push(exit.to_string());
+        //        inner(new_game, new_path, depth - 1);
+        //    }
+        //}
+    }
+}
+
+#[derive(Clone)]
+struct Game {
+    vm: Vm,
+    room: Room,
+    message: Option<String>,
+}
+
+impl Game {
+    pub fn from_vm(vm: &Vm) -> Self {
+        let mut vm = vm.clone();
+
+        let (message, room) = vm.feed_and_parse("look").unwrap();
+
+        Self {
+            vm: vm.clone(),
+            room,
+            message,
+        }
+    }
+
+    pub fn action(&mut self, action: &str) -> Result<(), Box<dyn std::error::Error>> {
+        (self.message, self.room) = self.vm.feed_and_parse(action)?;
+
+        Ok(())
+    }
+}
+
+enum Node {
+    Number(i32),
+    Operation(Operation),
+}
+impl FromStr for Node {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        s.parse::<Operation>()
+            .map(|op| Node::Operation(op))
+            .or_else(|_| Ok(Node::Number(s.parse::<i32>().map_err(|_| ())?)))
+    }
+}
+
+enum Operation {
+    Plus,
+    Minus,
+    Mult,
+    Div,
+}
+
+impl FromStr for Operation {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "+" => Ok(Operation::Plus),
+            "-" => Ok(Operation::Minus),
+            "*" => Ok(Operation::Mult),
+            "/" => Ok(Operation::Div),
+            _ => Err(()),
+        }
+    }
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
@@ -396,11 +503,12 @@ impl Hash for Room {
     }
 }
 
-impl Room {
-    pub fn from(raw: &str) -> Result<Self, Box<dyn std::error::Error>> {
-        let re_name = Regex::new(r"== (.+?) ==\n(.+?)\n").unwrap();
+impl FromStr for Room {
+    type Err = Box<dyn std::error::Error>;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let re_name = Regex::new(r"== (.+?) ==\n(.+?)\n")?;
         let (name, mut description) = {
-            let caps = re_name.captures(raw).ok_or("No room name")?;
+            let caps = re_name.captures(s).ok_or("No room name")?;
 
             (
                 caps.get(1).unwrap().as_str().to_string(),
@@ -409,7 +517,7 @@ impl Room {
         };
 
         if description.contains("You are in a grid of rooms that control the door to the vault.") {
-            description.push_str(raw.lines().nth(5).unwrap());
+            description.push_str(s.lines().nth(5).unwrap());
             description = description.replace('\n', " ");
         }
 
@@ -427,7 +535,7 @@ impl Room {
                 .collect::<Vec<_>>();
             things
         }
-        let things = get_things(raw);
+        let things = get_things(s);
 
         fn get_exits(raw: &str) -> Vec<String> {
             let re_exits = Regex::new(r"(?s)There \w+ \d+ exits?:\n([^\n]+\n)+").unwrap();
@@ -443,7 +551,7 @@ impl Room {
                 .collect::<Vec<_>>();
             exits
         }
-        let exits = get_exits(raw);
+        let exits = get_exits(s);
 
         let room = Room {
             description,
@@ -455,3 +563,5 @@ impl Room {
         Ok(room)
     }
 }
+
+impl Room {}
