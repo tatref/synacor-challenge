@@ -21,7 +21,17 @@ To solve all puzzles, I implemented:
 - tracing, breakpoints, assembler, disassembler
 - function patching
 
-# 1/8 Simple instructions
+
+# 1/8 arch-spec
+
+The first code is in the specs
+
+```
+- Here's a code for the challenge website: duZSrqXIPoZA
+```
+
+
+# 2/8 Simple instructions
 
 Implementing the first instructions `Noop`, `Out` and `Halt` will display the welcome message
 
@@ -31,7 +41,7 @@ Please record your progress by putting codes like
 this one into the challenge website: hKRuXKPwTwlo
 ```
 
-# 2/8 Self test
+# 3/8 Self test
 
 Implement the remaining instruction to complete the self-test
 
@@ -42,7 +52,7 @@ self-test complete, all tests pass
 The self-test completion code is: NhMSeBfjuEsD
 ```
 
-# 3/8 Tablet
+# 4/8 Tablet
 
 We are now in some kind of text-based game
 
@@ -66,7 +76,7 @@ $ i use tablet
 You find yourself writing "jtQUShZPqyoL" on the tablet.  Perhaps it's some kind of code?
 ```
 
-# 4/8 Maze
+# 5/8 Maze
 
 Trying to explore the world is difficult, as there is a lot of rooms.
 
@@ -95,7 +105,7 @@ Chiseled on the wall of one of the passageways, you see:
 
 Go to the dark passage (2 times west)
 
-# 5/8 Ruins
+# 6/8 Ruins
 
 We reuse the graph explorer to get a new map for the Ruins
 
@@ -169,7 +179,9 @@ You activate the teleporter!  As you spiral through time and space, you think yo
 After a few moments, you find yourself back on solid ground and a little disoriented.
 ```
 
-# 6/8 Synacor Headquarters
+# 7/8 Synacor Headquarters
+
+This is the hardest code
 
 The `strange book` gives some guidelines
 
@@ -279,7 +291,7 @@ It begins to rain.  The message washes away.  You take a deep breath and feel fi
 
 ```
 
-# 7/8 Beach
+# 8/8 Beach
 
 
 ```
