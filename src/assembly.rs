@@ -398,19 +398,58 @@ impl std::str::FromStr for Opcode {
 }
 
 impl Opcode {
+    pub fn make_dummy(input: &str) -> Result<Self, Box<dyn std::error::Error>> {
+        use Opcode::*;
+        let instr = match input {
+            "halt" => Halt,
+            "set" => Set(Val::Invalid, Val::Invalid),
+            "push" => Push(Val::Invalid),
+            "pop" => Pop(Val::Invalid),
+            "eq" => Eq(Val::Invalid, Val::Invalid, Val::Invalid),
+            "gt" => Gt(Val::Invalid, Val::Invalid, Val::Invalid),
+            "jmp" => Jmp(Val::Invalid),
+            "jt" => Jt(Val::Invalid, Val::Invalid),
+            "jf" => Jf(Val::Invalid, Val::Invalid),
+            "add" => Add(Val::Invalid, Val::Invalid, Val::Invalid),
+            "mult" => Mult(Val::Invalid, Val::Invalid, Val::Invalid),
+            "mod" => Mod(Val::Invalid, Val::Invalid, Val::Invalid),
+            "and" => And(Val::Invalid, Val::Invalid, Val::Invalid),
+            "or" => Or(Val::Invalid, Val::Invalid, Val::Invalid),
+            "not" => Not(Val::Invalid, Val::Invalid),
+            "rmem" => Rmem(Val::Invalid, Val::Invalid),
+            "wmem" => Wmem(Val::Invalid, Val::Invalid),
+            "call" => Call(Val::Invalid),
+            "ret" => Ret,
+            "out" => Out(Val::Invalid),
+            "in" => In(Val::Invalid),
+            "noop" => Noop,
+            x => return Err(format!("Unknown instruction {:?}", x).into()),
+        };
+
+        Ok(instr)
+    }
+
     pub fn discriminant(&self) -> u32 {
         unsafe { *(self as *const Self as *const u32) }
     }
 
+    /// Virtual instruction that try to match the real executed instruction
+    /// Call(Reg(x)) => Call(Num(value at reg[x]))
     pub fn resolve_opcode(&self, vm: &Vm) -> Option<Opcode> {
         use Opcode::*;
         use Val::*;
 
         match self {
+            Halt => None,
+            Set(Reg(a), Reg(reg)) => Some(Set(Reg(*a), Num(vm.get_registers()[*reg]))),
+            Push(Reg(a)) => Some(Push(Num(vm.get_registers()[*a]))),
+            Pop(Reg(a)) => Some(Pop(Num(vm.get_registers()[*a]))),
             Call(Num(_)) => None,
             Call(Reg(reg)) => Some(Call(Num(vm.get_registers()[*reg]))),
             Call(Invalid) => unimplemented!(),
-            _ => unimplemented!(),
+            //Out(Reg(a)) => Some(),
+            // TODO: complete list
+            x => Some(*x), // unchanged opcode
         }
     }
 

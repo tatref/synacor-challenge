@@ -42,6 +42,21 @@ impl Cli {
                     .arg(Arg::new("offset").value_parser(RangedU64ValueParser::<usize>::new())),
             )
             .subcommand(
+                Command::new("trace")
+                    // TODO
+                    .about("Opcode tracing")
+                    .subcommand(Command::new("clear").about("Clear trace buffer"))
+                    .subcommand(
+                        Command::new("set").about("Trace selected opcodes").arg(
+                            Arg::new("opcodes")
+                                .num_args(1..)
+                                .trailing_var_arg(true)
+                                .allow_hyphen_values(true),
+                        ),
+                    )
+                    .subcommand(Command::new("get").about("Get trace buffer")),
+            )
+            .subcommand(
                 Command::new("dis")
                     .about("Disassembler")
                     .subcommand(
@@ -335,6 +350,38 @@ impl Cli {
                 Some(("unset", sub)) => {
                     let offset = *sub.get_one::<usize>("offset").unwrap();
                     self.vm.unset_breakpoint(offset);
+                }
+                Some(_) => (),
+
+                None => (),
+            },
+            Some(("trace", sub)) => match sub.subcommand() {
+                Some(("clear", _sub)) => {
+                    self.vm.clear_trace_buffer();
+                }
+                Some(("set", sub)) => {
+                    let input = match sub.get_many::<String>("opcodes") {
+                        Some(x) => x,
+                        None => return Ok(()),
+                    };
+
+                    let mask;
+                    if input.len() == 1 && input.clone().next().unwrap() == "all" {
+                        mask = u32::MAX;
+                    } else {
+                        let opcodes: Vec<Opcode> =
+                            input.map(|s| Opcode::make_dummy(s).unwrap()).collect();
+                        mask = opcodes.iter().fold(0, |acc, op| acc | op.discriminant());
+                    }
+                    self.vm.set_traced_opcodes(mask);
+                }
+                Some(("get", _sub)) => {
+                    let buffer = self.vm.get_trace_buffer();
+                    for (ip, instr, _real_instr) in buffer {
+                        println!("{}: {:?}", ip, instr);
+                    }
+
+                    println!("{} instructions", buffer.len());
                 }
                 Some(_) => (),
 

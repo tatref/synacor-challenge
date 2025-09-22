@@ -10,8 +10,8 @@ regex = "1"
 rustyline = "17"
 clap = "4"
 serde = { version = "1.0", features = ["derive"] }
-serde_with = "3.2.0"
-serde_json = "1.0.105"
-itertools = "0.14.0"
-colorgrad = { version = "0.7.2", default-features = false, features = ["preset"] }
-rand = "0.9.2"
+serde_with = "3.2"
+serde_json = "1.0"
+itertools = "0.14"
+colorgrad = { version = "0.7", default-features = false, features = ["preset"] }
+rand = "0.9"

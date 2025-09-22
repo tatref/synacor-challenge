@@ -1,6 +1,5 @@
 use colorgrad::Gradient;
 use itertools::Itertools;
-use rand::seq::IndexedRandom;
 use regex::Regex;
 
 use std::{collections::HashMap, fmt::Debug, str::FromStr};

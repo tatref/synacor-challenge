@@ -10,7 +10,6 @@ use std::{
 use std::fmt::Debug;
 
 use byteorder::{ByteOrder, LittleEndian};
-use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 
@@ -350,6 +349,10 @@ impl Vm {
 
     pub fn get_trace_buffer(&self) -> &[(usize, Opcode, Option<Opcode>)] {
         &self.trace_buffer
+    }
+
+    pub fn clear_trace_buffer(&mut self) {
+        self.trace_buffer.clear();
     }
 
     pub fn set_fn_patching(&mut self, val: bool) {
